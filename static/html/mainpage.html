@@ -1,0 +1,52 @@
+<!-- mainpage.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literary Lions Forum</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <!-- header ----------------------- -->
+    <header>
+        <h1>Welcome to Literary Lions Forum</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/post">Posts</a>
+            {{if .Authenticated}}
+                <a href="/logout">Logout</a>
+                <p>Welcome, {{.Username}}!</p>
+            {{else}}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {{end}}
+        </nav>
+    </header>
+
+    <!-- main ----------------------- -->
+    <main>
+
+            <img class="bookimage" src="static/image/book.jpg" alt="book">
+
+    </main>
+
+        <!-- footer ----------------------- -->
+        <footer>
+            <p>&copy; 2024 Literary Lions Forum</p>
+        </footer>
+
+
+    <!-- modal popup ÄLÄ POISTA VIELÄ----------------------- 
+    <a href="#modal" class="modal-trigger">Open Modal</a>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>Modal Header</h2>
+            <p>This is the modal content.</p>
+            <a href="#" class="close">Close</a>
+        </div>
+    </div>-->
+
+</body>
+</html>

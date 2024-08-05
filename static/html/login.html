@@ -1,0 +1,53 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <!-- header ----------------------- -->
+    <header>
+        <h1>Welcome to Literary Lions Forum</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/post">Posts</a>
+            {{if .Authenticated}}
+                <a href="/logout">Logout</a>
+                <p>Hello, {{.Username}}!</p>
+            {{else}}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {{end}}
+        </nav>
+    </header>
+
+    <!-- login ----------------------- -->
+    {{if not .Authenticated}} <!-- Show login form only if not authenticated -->
+    <div class="container">
+        <h1>Login</h1>
+        <form action="/login" method="post" class="login-form">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required><br>
+            <div class="password">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required><br>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    {{else}}
+    <p>You are already logged in. <a href="/">Go to Home</a></p>
+    {{end}}
+
+    <!-- footer ----------------------- -->
+    <footer>
+        <p>&copy; 2024 Literary Lions Forum</p>
+    </footer>
+
+
+
+</body>
+</html>

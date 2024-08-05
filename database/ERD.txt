@@ -1,0 +1,51 @@
+```
+┌───────────┐        ┌───────────┐        ┌───────────┐
+│   User    │        │  Category │        │  Session  │
+│───────────│        │───────────│        │───────────│
+│ UserID PK │◄──────┬│ CategoryID│        │ SessionID │
+│ Username  │       ││ Name      │        │ UserID FK │
+│ Email     │       │└───────────┘        │ Authenticated│
+│ Password  │       │                      │ Username  │
+└───────────┘       │                      └───────────┘
+    │               │                          ▲
+    │  ┌───────────►│                          │
+    │  │            │                          │
+    │  │            │                          │
+    ▼  │            │                          │
+┌───────────┐       │                          │
+│   Post    │       │                          │
+│───────────│       │                          │
+│ PostID PK │       │                          │
+│ Title     │       │                          │
+│ Content   │       │                          │
+│ CategoryID│──────►┘                          │
+│ UserID FK │                                  │
+└───────────┘                                  │
+    ▲                                          │
+    │                                          │
+    │                                          │
+    │                                          │
+    │                                          │
+    │     ┌─────────────┐                      │
+    │     │ LikeDislike │                      │
+    │     ├─────────────┤                      │
+    │     │ LikeDislikeID│                      │
+    │     │ PostID FK    │                      │
+    └────►│ UserID FK    │                      │
+          │ Type         │                      │
+          └─────────────┘                      │
+                                               │
+                                               │
+                                               │
+                                               │
+                                               │
+      ┌────────────┐                           │
+      │  Comment   │                           │
+      ├────────────┤                           │
+      │ CommentID  │                           │
+      │ Content    │                           │
+      │ PostID FK  │◄──────────────────────────┘
+      │ UserID FK  │
+      └────────────┘
+
+```
