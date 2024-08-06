@@ -2,7 +2,7 @@
 
 # Checking the Working Tree
 
-#### Check the Status of the Working Tree:
+Check the Status of the Working Tree:
 ```
 git status
 ```
