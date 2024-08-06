@@ -1,5 +1,5 @@
 
-///////////////////////////////////////////////////////////
+
 #Checking the Working Tree
 
 Check the Status of the Working Tree:
@@ -14,7 +14,7 @@ View Changes Staged for the Next Commit:
 ```
 git diff --staged
 ```
-///////////////////////////////////////////////////////////
+
 #Creating and Moving Through Branches
 
 List All Branches:
@@ -41,7 +41,7 @@ or with Git 2.23 and later:
 ```
 git switch -c <new-branch-name>
 ```
-///////////////////////////////////////////////////////////
+
 #Pulling and Pushing Changes
 
 Pull Changes from Remote Repository:
@@ -56,7 +56,7 @@ Push a Specific Branch to the Remote Repository:
 ```
 git push origin <branch-name>
 ```
-///////////////////////////////////////////////////////////
+
 #Dealing with Conflicts
 
 After Pulling Changes that Cause Conflicts:
@@ -83,7 +83,7 @@ Abort a Rebase if You Want to Start Over:
 ```
 git rebase --abort
 ```
-///////////////////////////////////////////////////////////
+
 #Additional Useful Commands
 
 View Commit History:
@@ -111,7 +111,7 @@ Force delete a branch:
 ```
 git branch -D <branch-name>
 ```
-///////////////////////////////////////////////////////////
+
 #Working in Different Branches
 
 Create and Switch to a New Branch:
@@ -163,7 +163,7 @@ or:
 ```
 git push origin master
 ```
-///////////////////////////////////////////////////////////
+
 #Changing to a Different Commit
 
 View Commit History to Find the Commit Hash:
@@ -191,7 +191,7 @@ Revert a Single Commit by Creating a New Commit:
 ```
 git revert <commit-hash>
 ```
-///////////////////////////////////////////////////////////
+
 #Additional Tips
 
 Rebasing Branches:
