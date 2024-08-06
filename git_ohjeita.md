@@ -251,7 +251,7 @@ Be very careful with this, as it can overwrite changes in the remote branch.
 
     git push --force origin branch1:main
 
-##Example Workflow
+## Example Workflow
 
 #### Here is an example of how you might pull changes from main into branch1 and then push changes from branch1 to main:
 
