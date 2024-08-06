@@ -28,7 +28,7 @@ Mandatory
 
     The database is designed with an Entity Relationship Diagram ERD
 
-with clear modeling of relationships between entities.
+    with clear modeling of relationships between entities.
 
     The server uses appropriate HTTP response codes, 2XX, 4XX.
 
