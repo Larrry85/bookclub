@@ -223,3 +223,13 @@ git rebase -i <base-commit>
 Then follow the instructions in the interactive rebase interface.
 
 
+# Fetching
+
+Fetch Updates from Remote Without Merging:
+```
+git fetch
+```
+Fetch from a Specific Branch:
+```
+git fetch origin <branch-name>
+```
