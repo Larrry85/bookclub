@@ -1,8 +1,8 @@
 
 
-#Checking the Working Tree
+# Checking the Working Tree
 
-Check the Status of the Working Tree:
+#### Check the Status of the Working Tree:
 ```
 git status
 ```
@@ -15,7 +15,7 @@ View Changes Staged for the Next Commit:
 git diff --staged
 ```
 
-#Creating and Moving Through Branches
+# Creating and Moving Through Branches
 
 List All Branches:
 ```
@@ -42,7 +42,7 @@ or with Git 2.23 and later:
 git switch -c <new-branch-name>
 ```
 
-#Pulling and Pushing Changes
+# Pulling and Pushing Changes
 
 Pull Changes from Remote Repository:
 ```
@@ -57,12 +57,13 @@ Push a Specific Branch to the Remote Repository:
 git push origin <branch-name>
 ```
 
-#Dealing with Conflicts
+# Dealing with Conflicts
 
-After Pulling Changes that Cause Conflicts:
-Git will indicate which files have conflicts. You need to open these files and manually resolve the conflicts.
+#### After Pulling Changes that Cause Conflicts:
+#### Git will indicate which files have conflicts. You need to open these files and manually resolve the conflicts.
 
-Mark a Conflict as Resolved:
+#### Mark a Conflict as Resolved:
+
 After resolving the conflicts in a file, mark it as resolved:
 ```
 git add <file-name>
@@ -84,7 +85,7 @@ Abort a Rebase if You Want to Start Over:
 git rebase --abort
 ```
 
-#Additional Useful Commands
+# Additional Useful Commands
 
 View Commit History:
 ```
@@ -94,7 +95,8 @@ View a More Compact Commit History:
 ```
 git log --oneline
 ```
-Stash Changes:
+# Stash Changes:
+
 Save changes to a stash:
 ```
 git stash
@@ -112,7 +114,7 @@ Force delete a branch:
 git branch -D <branch-name>
 ```
 
-#Working in Different Branches
+# Working in Different Branches
 
 Create and Switch to a New Branch:
 ```
@@ -134,7 +136,8 @@ List All Branches:
 ```
 git branch
 ```
-Pushing to the Main Branch
+# Pushing to the Main Branch
+
 Switch to the Main Branch (usually main or master):
 ```
 git checkout main
@@ -164,7 +167,7 @@ or:
 git push origin master
 ```
 
-#Changing to a Different Commit
+# Changing to a Different Commit
 
 View Commit History to Find the Commit Hash:
 ```
@@ -174,8 +177,8 @@ Checkout a Specific Commit:
 ```
 git checkout <commit-hash>
 ```
-Note: This puts your repository in a "detached HEAD" state. You can make changes,
-but it's often best to create a new branch if you intend to work from this commit:
+#### Note: This puts your repository in a "detached HEAD" state. You can make changes,
+#### but it's often best to create a new branch if you intend to work from this commit:
 ```
 git checkout -b <new-branch-name> <commit-hash>
 ```
@@ -192,9 +195,10 @@ Revert a Single Commit by Creating a New Commit:
 git revert <commit-hash>
 ```
 
-#Additional Tips
+# Additional Tips
 
-Rebasing Branches:
+#### Rebasing Branches:
+
 To apply your branch changes on top of another branch:
 ```
 git rebase <base-branch>
@@ -204,12 +208,14 @@ For example, to rebase your feature branch onto the latest main:
 git checkout <feature-branch>
 git rebase main
 ```
-Cherry-Picking a Commit:
+#### Cherry-Picking a Commit:
+
 To apply a specific commit from another branch:
 ```
 git cherry-pick <commit-hash>
 ```
-Squashing Commits:
+#### Squashing Commits:
+
 To combine multiple commits into one:
 ```
 git rebase -i <base-commit>
