@@ -21,8 +21,10 @@ The forum detects incorrect email or password during login. OK!
 *************************************************************************
 TEKEMÄSSÄ???
 *************************************************************************
-
-
+Rekisteröidyt käyttäjät:
+Registered users can view their created posts and liked posts.
+Only registered users can create posts and comments.
+Only registered users can like or dislike posts and comments
 
 
 ***********************************
