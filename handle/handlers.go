@@ -109,7 +109,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Send welcome email
 		subject := "Welcome to Our Service"
-		body := fmt.Sprintf("Hello %s,\n\nWelcome to our service!\n\nThank you for registering.", name)
+		body := fmt.Sprintf("Hello %s,\n\nWelcome to our literary-lions task!\n\nThank you for registering.\n\nBest regards\nLaura and Jonathan", name)
 		err = email.SendEmail(emailAddr, subject, body)
 		if err != nil {
 			log.Println("Error sending welcome email:", err)

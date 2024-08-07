@@ -5,7 +5,7 @@ Rekisteröidyt käyttäjät:
 Users can register successfully.
 The forum requires email, username and password for registration.
 Registered users can log in and access features.
-
+muokkaa tervetuola sähköposti viesti
 
 Tietoturva:
 The forum detects duplicate email or username during registration. OK!
@@ -51,7 +51,7 @@ Passwords are secured and encrypted using bcrypt or other strong algorithms. XXX
 TEKEMÄTTÄ
 *************************************************************************
 pari test sähköpostiviestiä
-muokkaa tervetuola sähköposti viesti
+
 
 ***********************************
 Rekisteröidyt käyttäjät:
