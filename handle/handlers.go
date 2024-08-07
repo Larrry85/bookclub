@@ -107,16 +107,13 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Generate confirmation link
-		confirmationLink := fmt.Sprintf("http://localhost:8080/confirm?email=%s", emailAddr)
-
-		// Send confirmation email
-		subject := "Please confirm your email address"
-		body := fmt.Sprintf("Hello %s,\n\nPlease confirm your email address by clicking on the following link: %s\n\nThank you!", name, confirmationLink)
+		// Send welcome email
+		subject := "Welcome to Our Service"
+		body := fmt.Sprintf("Hello %s,\n\nWelcome to our service!\n\nThank you for registering.", name)
 		err = email.SendEmail(emailAddr, subject, body)
 		if err != nil {
-			log.Println("Error sending confirmation email:", err)
-			http.Error(w, "Failed to send confirmation email", http.StatusInternalServerError)
+			log.Println("Error sending welcome email:", err)
+			http.Error(w, "Failed to send welcome email", http.StatusInternalServerError)
 			return
 		}
 

@@ -26,5 +26,6 @@ func SendEmail(to, subject, body string) error {
 		fmt.Printf("Error sending email: %v\n", err)
 		return err
 	}
+	fmt.Println("Email sent successfully!")
 	return nil
 }

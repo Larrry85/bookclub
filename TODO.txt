@@ -51,6 +51,7 @@ Passwords are secured and encrypted using bcrypt or other strong algorithms. XXX
 TEKEMÄTTÄ
 *************************************************************************
 pari test sähköpostiviestiä
+muokkaa tervetuola sähköposti viesti
 
 ***********************************
 Rekisteröidyt käyttäjät:
