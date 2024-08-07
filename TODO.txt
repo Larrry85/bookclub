@@ -2,6 +2,8 @@
 TEHTY
 *************************************************************************
 
+SQlite login/logout/register
+bcrypt
 
 
 
@@ -14,18 +16,21 @@ TEHTY
 *************************************************************************
 TEKEMÄSSÄ???
 *************************************************************************
+post/comment
+
+
 
 ***********************************
 Tietoturva:
 ***********************************
-The forum detects duplicate email or username during registration.
-The forum displays a warning message for invalid login attempts.
-The forum detects incorrect email or password during login.
+The forum detects duplicate email or username during registration. OK!
+The forum displays a warning message for invalid login attempts. OK!
+The forum detects incorrect email or password during login. OK!
 Multiple browser sessions function correctly.
 Sessions are implemented for user persistence.
-The registration process is user-friendly and secure. XXXEXTRAXXXX
+The registration process is user-friendly and secure. XXXEXTRAXXXX  OK! (mitä tarkoitaa secure?)
 UUIDs are used to manage sessions. XXXEXTRAXXXX
-Passwords are secured and encrypted using bcrypt or other strong algorithms. XXXEXTRAXXXX
+Passwords are secured and encrypted using bcrypt or other strong algorithms. XXXEXTRAXXXX OK!
 
 
 
