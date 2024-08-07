@@ -36,6 +36,7 @@ func main() {
 	http.Handle("/post/create", handle.SessionMiddleware(http.HandlerFunc(post.CreatePost)))
 	http.Handle("/mainpage", handle.SessionMiddleware(http.HandlerFunc(handle.MainPageHandler)))
 	http.Handle("/post/view", handle.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
+	http.HandleFunc("/confirm", handle.ConfirmEmailHandler)
 
 	// Serve static HTML files
 	http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/post.html"))))

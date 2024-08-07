@@ -3,8 +3,10 @@ package handle
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"html/template"
 	"lions/database"
+	"lions/email"
 	"lions/post"
 	"log"
 	"net/http"
@@ -61,6 +63,25 @@ func MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ConfirmEmailHandler(w http.ResponseWriter, r *http.Request) {
+	emailAddr := r.URL.Query().Get("email")
+	if emailAddr == "" {
+		http.Error(w, "Email not provided", http.StatusBadRequest)
+		return
+	}
+
+	// Update the user's status to confirmed in the database
+	_, err := database.DB.Exec(`UPDATE User SET Confirmed = 1 WHERE Email = ?`, emailAddr)
+	if err != nil {
+		log.Println("Error confirming email:", err)
+		http.Error(w, "Failed to confirm email", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("Email confirmed: %s", emailAddr)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		tmpl, err := template.ParseFiles("static/html/register.html")
@@ -71,7 +92,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, nil)
 	} else if r.Method == "POST" {
 		name := r.FormValue("username")
-		email := r.FormValue("email")
+		emailAddr := r.FormValue("email")
 		password := r.FormValue("password")
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -80,12 +101,26 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = database.DB.Exec(`INSERT INTO User (Username, Email, Password) VALUES (?, ?, ?)`, name, email, hashedPassword)
+		_, err = database.DB.Exec(`INSERT INTO User (Username, Email, Password) VALUES (?, ?, ?)`, name, emailAddr, hashedPassword)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("User registered: username=%s, email=%s", name, email)
+
+		// Generate confirmation link
+		confirmationLink := fmt.Sprintf("http://localhost:8080/confirm?email=%s", emailAddr)
+
+		// Send confirmation email
+		subject := "Please confirm your email address"
+		body := fmt.Sprintf("Hello %s,\n\nPlease confirm your email address by clicking on the following link: %s\n\nThank you!", name, confirmationLink)
+		err = email.SendEmail(emailAddr, subject, body)
+		if err != nil {
+			log.Println("Error sending confirmation email:", err)
+			http.Error(w, "Failed to send confirmation email", http.StatusInternalServerError)
+			return
+		}
+
+		log.Printf("User registered: username=%s, email=%s", name, emailAddr)
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	}
 }

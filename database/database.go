@@ -1,4 +1,3 @@
-// database.go
 package database
 
 import (
@@ -19,12 +18,15 @@ func Init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Execute schema creation
 	schema := `
 	CREATE TABLE IF NOT EXISTS User (
 		UserID INTEGER PRIMARY KEY AUTOINCREMENT,
 		Username TEXT NOT NULL UNIQUE,  -- Ensure usernames are unique
 		Email TEXT NOT NULL UNIQUE,     -- Ensure emails are unique
-		Password TEXT NOT NULL
+		Password TEXT NOT NULL,
+		Confirmed INTEGER DEFAULT 0    -- Ensure new column is added
 	);
 	
 	CREATE TABLE IF NOT EXISTS Category (
@@ -62,12 +64,25 @@ func Init() {
 		FOREIGN KEY (CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE
 	);
 	`
-	// Execute the schema creation
 	_, err = DB.Exec(schema)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Alter table to add the new column if it doesn't exist
+	alterTable := `
+		PRAGMA foreign_keys=OFF;
+		CREATE TABLE User_new AS SELECT UserID, Username, Email, Password, Confirmed FROM User;
+		DROP TABLE User;
+		ALTER TABLE User_new RENAME TO User;
+		PRAGMA foreign_keys=ON;
+	`
+	_, err = DB.Exec(alterTable)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create indexes
 	indexes := `
 	CREATE INDEX IF NOT EXISTS idx_post_user ON Post(UserID);
 	CREATE INDEX IF NOT EXISTS idx_post_category ON Post(CategoryID);
