@@ -2,6 +2,7 @@ package handle
 
 import (
 	"context"
+	"database/sql"
 	"html/template"
 	"lions/database"
 	"lions/post"
@@ -102,29 +103,48 @@ func PostsHandler(w http.ResponseWriter, r *http.Request) {
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		username := r.FormValue("username")
+		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		var dbPassword string
-		err := database.DB.QueryRow(`SELECT Password FROM User WHERE Username = ?`, username).Scan(&dbPassword)
+		log.Printf("Login attempt with email: %s", email)
+
+		var dbPassword, username string
+		err := database.DB.QueryRow(`SELECT Password, Username FROM User WHERE Email = ?`, email).Scan(&dbPassword, &username)
 		if err != nil {
-			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+			if err == sql.ErrNoRows {
+				log.Printf("Email not found: %s", email)
+				http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+				return
+			}
+			log.Println("Database error:", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		if password == dbPassword {
-			session, _ := store.Get(r, "session")
-			session.Values["authenticated"] = true
-			session.Values["username"] = username
-			session.Save(r, w)
+		log.Printf("Fetched hashed password for email: %s", email)
 
-			http.Redirect(w, r, "/mainpage", http.StatusSeeOther)
+		// Compare the hashed password with the plain text password
+		err = bcrypt.CompareHashAndPassword([]byte(dbPassword), []byte(password))
+		if err != nil {
+			log.Printf("Invalid password for email: %s", email)
+			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 			return
-		} else {
-			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		}
+
+		session, _ := store.Get(r, "session")
+		session.Values["authenticated"] = true
+		session.Values["username"] = username
+		session.Save(r, w)
+
+		http.Redirect(w, r, "/mainpage", http.StatusSeeOther)
+		return
 	} else {
-		tmpl, _ := template.ParseFiles("static/html/login.html")
+		tmpl, err := template.ParseFiles("static/html/login.html")
+		if err != nil {
+			log.Println("Template parsing error:", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		tmpl.Execute(w, nil)
 	}
 }
