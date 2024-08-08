@@ -23,15 +23,16 @@ func Init() {
 	schema := `
 	CREATE TABLE IF NOT EXISTS User (
 		UserID INTEGER PRIMARY KEY AUTOINCREMENT,
-		Username TEXT NOT NULL UNIQUE,  -- Ensure usernames are unique
-		Email TEXT NOT NULL UNIQUE,     -- Ensure emails are unique
+		Username TEXT NOT NULL UNIQUE,
+		Email TEXT NOT NULL UNIQUE,
 		Password TEXT NOT NULL,
-		Confirmed INTEGER DEFAULT 0    -- Ensure new column is added
+		Confirmed INTEGER DEFAULT 0
+		
 	);
 	
 	CREATE TABLE IF NOT EXISTS Category (
 		CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
-		CategoryName TEXT NOT NULL UNIQUE  -- Ensure category names are unique
+		CategoryName TEXT NOT NULL UNIQUE
 	);
 	
 	CREATE TABLE IF NOT EXISTS Post (
@@ -40,8 +41,8 @@ func Init() {
 		Content TEXT NOT NULL,
 		UserID INTEGER NOT NULL,
 		CategoryID INTEGER,
-		FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,  -- Delete posts if user is deleted
-		FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) ON DELETE SET NULL  -- Set CategoryID to NULL if Category is deleted
+		FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,
+		FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) ON DELETE SET NULL
 	);
 	
 	CREATE TABLE IF NOT EXISTS Comment (
@@ -49,8 +50,8 @@ func Init() {
 		Content TEXT NOT NULL,
 		PostID INTEGER NOT NULL,
 		UserID INTEGER NOT NULL,
-		FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,  -- Delete comments if post is deleted
-		FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL  -- Set UserID to NULL if User is deleted
+		FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
+		FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL
 	);
 	
 	CREATE TABLE IF NOT EXISTS Like (
@@ -65,19 +66,6 @@ func Init() {
 	);
 	`
 	_, err = DB.Exec(schema)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Alter table to add the new column if it doesn't exist
-	alterTable := `
-		PRAGMA foreign_keys=OFF;
-		CREATE TABLE User_new AS SELECT UserID, Username, Email, Password, Confirmed FROM User;
-		DROP TABLE User;
-		ALTER TABLE User_new RENAME TO User;
-		PRAGMA foreign_keys=ON;
-	`
-	_, err = DB.Exec(alterTable)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -99,55 +87,19 @@ func Init() {
 	log.Println("Database schema and indexes created or already exist.")
 }
 
-/*
-tämä lukee schema.sql mutta shema.sql ei ole oikein vielä niin että kaikki toimis
-
-package database
-
-import (
-	"bufio"
-	"database/sql"
-	"log"
-	"os"
-
-	_ "github.com/mattn/go-sqlite3"
-)
-
-var (
-	DB       *sql.DB
-	Sessions = make(map[string]string) // Session ID -> User ID
-)
-
-func Init() {
-	var err error
-	DB, err = sql.Open("sqlite3", "./user.db")
+// GetUserStats retrieves the number of posts and comments for a user
+func GetUserStats(userID int) (numPosts, numComments int, err error) {
+	// Count posts
+	err = DB.QueryRow(`SELECT COUNT(*) FROM Post WHERE UserID = ?`, userID).Scan(&numPosts)
 	if err != nil {
-		log.Fatal(err)
+		return 0, 0, err
 	}
 
-	// Read the schema.sql file
-	file, err := os.Open("database/schema.sql")
+	// Count comments
+	err = DB.QueryRow(`SELECT COUNT(*) FROM Comment WHERE UserID = ?`, userID).Scan(&numComments)
 	if err != nil {
-		log.Fatal("Error opening schema.sql:", err)
-	}
-	defer file.Close()
-
-	var schema string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		schema += scanner.Text() + "\n"
+		return 0, 0, err
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal("Error reading schema.sql:", err)
-	}
-
-	// Execute the SQL schema
-	_, err = DB.Exec(schema)
-	if err != nil {
-		log.Fatal("Error executing schema:", err)
-	}
-
-	log.Println("Database schema and indexes created or already exist.")
+	return numPosts, numComments, nil
 }
-*/

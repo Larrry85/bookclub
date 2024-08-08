@@ -20,7 +20,6 @@ var (
 	store = sessions.NewCookieStore(key)
 )
 
-// Middleware to check session and set user data
 func SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, _ := store.Get(r, "session")
@@ -188,4 +187,53 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+	username, _ := session.Values["username"].(string)
+
+	var email string
+	var userID int
+
+	// Fetch user details
+	err := database.DB.QueryRow(`
+        SELECT UserID, Email 
+        FROM User 
+        WHERE Username = ?`, username).Scan(&userID, &email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		log.Println("Database error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Get number of posts and comments
+	numPosts, numComments, err := database.GetUserStats(userID)
+	if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{
+		"Username":    username,
+		"Email":       email,
+		"NumPosts":    numPosts,
+		"NumComments": numComments,
+	}
+
+	tmpl, err := template.ParseFiles("static/html/profile.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

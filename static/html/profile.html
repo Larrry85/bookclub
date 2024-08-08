@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literary Lions Forum</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <!-- header ----------------------- -->
+    <header>
+        <h1>Welcome to Literary Lions Forum</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/post">Forum</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <!-- main ----------------------- -->
+    <main>
+        <h1>{{.Username}}'s Profile</h1>
+        <p>Email: {{.Email}}</p>
+        <p>Number of Comments: {{.NumComments}}</p>
+        <p>Number of Posts: {{.NumPosts}}</p>
+    </main>
+
+    <!-- footer ----------------------- -->
+    <footer>
+        <p>&copy; 2024 Literary Lions Forum</p>
+    </footer>
+</body>
+</html>
