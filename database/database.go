@@ -98,3 +98,56 @@ func Init() {
 	}
 	log.Println("Database schema and indexes created or already exist.")
 }
+
+/*
+tämä lukee schema.sql mutta shema.sql ei ole oikein vielä niin että kaikki toimis
+
+package database
+
+import (
+	"bufio"
+	"database/sql"
+	"log"
+	"os"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+var (
+	DB       *sql.DB
+	Sessions = make(map[string]string) // Session ID -> User ID
+)
+
+func Init() {
+	var err error
+	DB, err = sql.Open("sqlite3", "./user.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Read the schema.sql file
+	file, err := os.Open("database/schema.sql")
+	if err != nil {
+		log.Fatal("Error opening schema.sql:", err)
+	}
+	defer file.Close()
+
+	var schema string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		schema += scanner.Text() + "\n"
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal("Error reading schema.sql:", err)
+	}
+
+	// Execute the SQL schema
+	_, err = DB.Exec(schema)
+	if err != nil {
+		log.Fatal("Error executing schema:", err)
+	}
+
+	log.Println("Database schema and indexes created or already exist.")
+}
+*/
