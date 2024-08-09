@@ -26,7 +26,7 @@
 
     <!-- login ----------------------- -->
     {{if not .Authenticated}} <!-- Show login form only if not authenticated -->
-    <div class="container">
+    <div class="login">
         <h1>Login</h1>
         <form action="/login" method="post" class="login-form">
             <label for="email">Email:</label>
@@ -40,10 +40,10 @@
     </div>
 
 
-    
-    <p style="text-align: center;">Forgot your password?</p>
-    <p style="text-align: center;"><a href="/password-reset-request">Reset Password</a></p>
-
+    <div class="login">
+    Forgot your password?
+    <a href="/password-reset-request">Reset Password</a>
+    </div>
     {{else}}
     <p>You are already logged in. <a href="/">Go to Home</a></p>
     {{end}}
