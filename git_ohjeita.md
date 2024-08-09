@@ -272,3 +272,18 @@ Git will indicate if there are any merge conflicts that need to be resolved. Aft
 Push Changes from branch1 to main:
 
     git push origin branch1:main
+
+
+#### Pull the latest changes from the main branch into your current branch
+
+Ensure You Are on Your Branch:
+
+    git checkout your-branch-name
+
+Fetch the Latest Changes:
+
+    git fetch origin
+
+Merge main into Your Branch:
+
+    git merge origin/main    
