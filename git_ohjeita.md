@@ -274,7 +274,7 @@ Push Changes from branch1 to main:
     git push origin branch1:main
 
 
-#### Pull the latest changes from the main branch into your current branch
+# Pull the latest changes from the main branch into your current branch
 
 Ensure You Are on Your Branch:
 
