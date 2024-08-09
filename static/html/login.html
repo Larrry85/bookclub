@@ -48,16 +48,6 @@
     </form>
 
 
-
-    <h2>Enter a new password</h2>
-    <form method="post" action="/reset-password">
-        <input type="hidden" name="token" value="{{.Token}}">
-        <label for="password">New Password:</label>
-        <input type="password" name="password" id="password" required>
-        <button type="submit">Reset Password</button>
-    </form>
-
-
     {{else}}
     <p>You are already logged in. <a href="/">Go to Home</a></p>
     {{end}}
