@@ -194,6 +194,45 @@ footer {
             <p>No posts available.</p>
             {{end}}
         </section>
+
+
+
+        <!-- Post Details -->
+        <section class="post-details">
+            <h2>{{.Post.Title}}</h2>
+            <p>{{.Post.Content}}</p>
+            <p>Category: {{.Post.Category}}</p>
+            <p>Posted by {{.Post.Username}}</p>
+            <p>Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
+        </section>
+
+        <!-- Comments Section -->
+        <section class="comments">
+            <h2>Comments</h2>
+            {{range .Replies}}
+            <div class="comment">
+                <p>{{.Content}}</p>
+            </div>
+            {{else}}
+            <p>No comments yet.</p>
+            {{end}}
+
+            <!-- Add Comment Form -->
+            {{if .Authenticated}}
+            <section class="add-comment">
+                <h3>Add a Comment</h3>
+                <form action="/comment/add" method="post">
+                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                    <label for="comment">Comment:</label>
+                    <textarea id="comment" name="content" required></textarea>
+                    <button type="submit">Add Comment</button>
+                </form>
+            </section>
+            {{end}}
+        </section>
+
+
+
     </main>
 
     <footer>
