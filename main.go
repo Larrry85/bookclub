@@ -13,13 +13,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-/*/ Define the store variable
-var (
-	// Replace with your own secret key
-	key   = []byte("super-secret-key")
-	store = sessions.NewCookieStore(key)
-)*/
-
 func main() {
 	// Initialize the database connection
 	database.Init()
@@ -40,9 +33,9 @@ func main() {
 	http.HandleFunc("/confirm", handle.ConfirmEmailHandler)
 	http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
 	//http.Handle("/post/view", handle.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
-	http.Handle("/post/reply", handle.SessionMiddleware(http.HandlerFunc(post.AddReply))) 
-
-
+	http.Handle("/post/reply", handle.SessionMiddleware(http.HandlerFunc(post.AddReply)))
+	http.HandleFunc("/password-reset-request", handle.PasswordResetRequestHandler)
+	http.HandleFunc("/reset-password", handle.ResetPasswordHandler)
 
 	// Serve static HTML files
 	//http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/post.html"))))
@@ -78,4 +71,3 @@ func servePage(filePath string) http.HandlerFunc {
 		}
 	}
 }*/
-

@@ -2,17 +2,16 @@ package handle
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"html/template"
 	"lions/database"
-	"lions/password"
 	"lions/email"
 	"lions/post"
 	"log"
 	"net/http"
 	"time"
-    "crypto/rand"
 
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -30,8 +29,8 @@ var (
 type contextKey string
 
 const (
-    UsernameKey      = contextKey("Username")
-    AuthenticatedKey = contextKey("Authenticated")
+	UsernameKey      = contextKey("Username")
+	AuthenticatedKey = contextKey("Authenticated")
 )
 
 func SessionMiddleware(next http.Handler) http.Handler {
@@ -252,87 +251,142 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func GenerateResetToken(userID int) (string, error) {
-    token := make([]byte, 32) // Generate a 32-byte token
-    _, err := rand.Read(token)
-    if err != nil {
-        return "", err
-    }
-    tokenStr := fmt.Sprintf("%x", token)
+	token := make([]byte, 32) // Generate a 32-byte token
+	_, err := rand.Read(token)
+	if err != nil {
+		return "", err
+	}
+	tokenStr := fmt.Sprintf("%x", token)
 
-    expiration := time.Now().Add(1 * time.Hour) // Token valid for 1 hour
+	expiration := time.Now().Add(1 * time.Hour) // Token valid for 1 hour
 
-    _, err = DB.Exec("INSERT INTO PasswordResetToken (UserID, Token, Expiration) VALUES (?, ?, ?)", userID, tokenStr, expiration)
-    if err != nil {
-        return "", fmt.Errorf("failed to store reset token: %w", err)
-    }
-
-    return tokenStr, nil
-}
-
-
-func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		// Show the reset password form
-		token := r.URL.Query().Get("token")
-		if token == "" {
-			http.Error(w, "Token not provided", http.StatusBadRequest)
-			return
-		}
-
-		// Render the form with the token
-		data := map[string]string{"Token": token}
-		tmpl, err := template.ParseFiles("static/html/password_reset_form.html")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if err := tmpl.Execute(w, data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
+	_, err = database.DB.Exec("INSERT INTO PasswordResetToken (UserID, Token, Expiration) VALUES (?, ?, ?)", userID, tokenStr, expiration)
+	if err != nil {
+		return "", fmt.Errorf("failed to store reset token: %w", err)
 	}
 
+	return tokenStr, nil
+}
+
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Handle the form submission
+		// Parse the form
+		r.ParseForm()
 		token := r.FormValue("token")
 		newPassword := r.FormValue("password")
 
-		if token == "" || newPassword == "" {
-			http.Error(w, "Token or password not provided", http.StatusBadRequest)
+		// Validate the token and get the associated user
+		var userID int
+		var expiration time.Time
+		err := database.DB.QueryRow("SELECT UserID, Expiration FROM PasswordResetToken WHERE Token = ?", token).Scan(&userID, &expiration)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "Invalid or expired token", http.StatusBadRequest)
+				return
+			}
+			log.Printf("Error fetching token: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		// Fetch the userID associated with the token
-		var userID int
-		err := DB.QueryRow("SELECT UserID FROM PasswordResetTokens WHERE Token = ?", token).Scan(&userID)
-		if err != nil {
-			http.Error(w, "Invalid or expired token", http.StatusBadRequest)
+		// Check if the token is expired
+		if time.Now().After(expiration) {
+			http.Error(w, "Token expired", http.StatusBadRequest)
 			return
 		}
 
 		// Hash the new password
-		hash, err := password.HashPassword(newPassword)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 		if err != nil {
-			http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+			log.Printf("Error hashing new password: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		// Update the password
-		_, err = DB.Exec("UPDATE User SET Password = ? WHERE UserID = ?", hash, userID)
+		// Update the user's password
+		_, err = database.DB.Exec("UPDATE User SET Password = ? WHERE UserID = ?", hashedPassword, userID)
 		if err != nil {
-			http.Error(w, "Failed to update password", http.StatusInternalServerError)
+			log.Printf("Error updating password: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		// Delete the token
-		_, err = DB.Exec("DELETE FROM PasswordResetTokens WHERE Token = ?", token)
+		// Delete the token after successful password reset
+		_, err = database.DB.Exec("DELETE FROM PasswordResetToken WHERE Token = ?", token)
 		if err != nil {
-			http.Error(w, "Failed to delete token", http.StatusInternalServerError)
-			return
+			log.Printf("Error deleting password reset token: %v", err)
 		}
 
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	} else {
+		// Render the reset password page if method is GET
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			http.Error(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
+
+		tmpl, err := template.ParseFiles("static/html/reset_password.html")
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		tmpl.Execute(w, map[string]interface{}{
+			"Token": token,
+		})
+	}
+}
+
+func PasswordResetRequestHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		sent := r.URL.Query().Get("sent") == "true"
+
+		tmpl, err := template.ParseFiles("static/html/password_reset_request.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		tmpl.Execute(w, map[string]interface{}{
+			"Sent": sent,
+		})
+	} else if r.Method == http.MethodPost {
+		emailAddr := r.FormValue("email")
+
+		// Verify the email exists in the database
+		var userID int
+		err := database.DB.QueryRow("SELECT UserID FROM User WHERE Email = ?", emailAddr).Scan(&userID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "No user found with that email address", http.StatusBadRequest)
+				return
+			}
+			log.Println("Database error:", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		// Generate a reset token
+		token, err := GenerateResetToken(userID)
+		if err != nil {
+			http.Error(w, "Failed to generate reset token", http.StatusInternalServerError)
+			return
+		}
+
+		// Send reset email
+		resetURL := fmt.Sprintf("http://%s/reset-password?token=%s", r.Host, token)
+		subject := "Password Reset Request"
+		body := fmt.Sprintf("Click the following link to reset your password: %s", resetURL)
+
+		err = email.SendEmail(emailAddr, subject, body)
+		if err != nil {
+			http.Error(w, "Failed to send email", http.StatusInternalServerError)
+			return
+		}
+
+		// Redirect to the same page with the "sent" query parameter
+		http.Redirect(w, r, "/password-reset-request?sent=true", http.StatusSeeOther)
 	}
 }

@@ -1,41 +1,43 @@
-//password.go
+// password.go
 package password
 
 import (
-
-    "golang.org/x/crypto/bcrypt"
-    "fmt"
+	"crypto/rand"
 	"database/sql"
-    "time"
+	"encoding/hex"
+	"fmt"
 	"net/smtp"
-    "crypto/rand"
-    "encoding/hex"
-    //"crypto/sha256"
-   // "encoding/base64"
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
+	//"crypto/sha256"
+	// "encoding/base64"
 )
 
-/*/ Hashes passwords using SHA256 (consider using a better approach in production)
-func HashPassword(password string) string {
-    hash := sha256.Sum256([]byte(password))
-    return base64.URLEncoding.EncodeToString(hash[:])
-}
+/*
+/ Hashes passwords using SHA256 (consider using a better approach in production)
 
+	func HashPassword(password string) string {
+	    hash := sha256.Sum256([]byte(password))
+	    return base64.URLEncoding.EncodeToString(hash[:])
+	}
 */
 var (
 	DB *sql.DB
 )
 
-
+// HashPassword hashes a plaintext password
 func HashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
-	return string(hash), nil
+	return string(hashedPassword), nil
 }
 
-func CheckPassword(hash, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+// CheckPassword compares a hashed password with a plaintext password
+func CheckPassword(hashedPassword, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
 /*
@@ -111,7 +113,6 @@ func ResetPassword(tokenStr, newPassword string) error {
 	return nil
 }
 
-
 // Generate a random token
 func generateToken() (string, error) {
 	token := make([]byte, 32)
@@ -129,12 +130,12 @@ func SendResetEmail(email, token string) error {
 	to := email
 	subject := "Password Reset Request"
 	body := fmt.Sprintf("Click the following link to reset your password: http://yourdomain.com/reset-password?token=%s", token)
-	
+
 	msg := []byte("To: " + to + "\r\n" +
 		"Subject: " + subject + "\r\n" +
 		"\r\n" +
 		body + "\r\n")
-	
+
 	smtpServer := "smtp.yourdomain.com:587"
 	auth := smtp.PlainAuth("", from, password, "smtp.yourdomain.com")
 
