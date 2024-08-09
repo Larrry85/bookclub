@@ -41,9 +41,9 @@ func main() {
 
 	// Serve static HTML files
 	http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/post.html"))))
-	http.Handle("/general", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/general.html"))))
-	http.Handle("/genres", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/genres.html"))))
-	http.Handle("/book_specific", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/book_specific.html"))))
+	//http.Handle("/general", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/general.html"))))
+	//http.Handle("/genres", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/genres.html"))))
+	//http.Handle("/book_specific", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/book_specific.html"))))
 
 	log.Println("Server starting on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
