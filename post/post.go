@@ -197,7 +197,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Printf("Post created successfully for user ID: %d", userID)
-		http.Redirect(w, r, "/posts", http.StatusSeeOther)
+		http.Redirect(w, r, "/post", http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
