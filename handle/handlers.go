@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"html/template"
 	"lions/database"
+	"lions/password"
 	"lions/email"
 	"lions/post"
 	"log"
 	"net/http"
+	"time"
+    "crypto/rand"
 
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -18,6 +21,17 @@ import (
 var (
 	key   = []byte("super-secret-key")
 	store = sessions.NewCookieStore(key)
+)
+
+var (
+	DB *sql.DB
+)
+
+type contextKey string
+
+const (
+    UsernameKey      = contextKey("Username")
+    AuthenticatedKey = contextKey("Authenticated")
 )
 
 func SessionMiddleware(next http.Handler) http.Handler {
@@ -235,5 +249,90 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+
+func GenerateResetToken(userID int) (string, error) {
+    token := make([]byte, 32) // Generate a 32-byte token
+    _, err := rand.Read(token)
+    if err != nil {
+        return "", err
+    }
+    tokenStr := fmt.Sprintf("%x", token)
+
+    expiration := time.Now().Add(1 * time.Hour) // Token valid for 1 hour
+
+    _, err = DB.Exec("INSERT INTO PasswordResetToken (UserID, Token, Expiration) VALUES (?, ?, ?)", userID, tokenStr, expiration)
+    if err != nil {
+        return "", fmt.Errorf("failed to store reset token: %w", err)
+    }
+
+    return tokenStr, nil
+}
+
+
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		// Show the reset password form
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			http.Error(w, "Token not provided", http.StatusBadRequest)
+			return
+		}
+
+		// Render the form with the token
+		data := map[string]string{"Token": token}
+		tmpl, err := template.ParseFiles("static/html/password_reset_form.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := tmpl.Execute(w, data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		// Handle the form submission
+		token := r.FormValue("token")
+		newPassword := r.FormValue("password")
+
+		if token == "" || newPassword == "" {
+			http.Error(w, "Token or password not provided", http.StatusBadRequest)
+			return
+		}
+
+		// Fetch the userID associated with the token
+		var userID int
+		err := DB.QueryRow("SELECT UserID FROM PasswordResetTokens WHERE Token = ?", token).Scan(&userID)
+		if err != nil {
+			http.Error(w, "Invalid or expired token", http.StatusBadRequest)
+			return
+		}
+
+		// Hash the new password
+		hash, err := password.HashPassword(newPassword)
+		if err != nil {
+			http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+			return
+		}
+
+		// Update the password
+		_, err = DB.Exec("UPDATE User SET Password = ? WHERE UserID = ?", hash, userID)
+		if err != nil {
+			http.Error(w, "Failed to update password", http.StatusInternalServerError)
+			return
+		}
+
+		// Delete the token
+		_, err = DB.Exec("DELETE FROM PasswordResetTokens WHERE Token = ?", token)
+		if err != nil {
+			http.Error(w, "Failed to delete token", http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	}
 }

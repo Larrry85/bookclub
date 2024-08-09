@@ -3,19 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Literary Lions Forum</title>
+    <title>Forum</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        /* Reset some default styling */
+body, h1, h2, h3, p, form, input, textarea, select, button {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+header {
+    background: #333;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 10px;
+}
+
+nav a {
+    color: #fff;
+    margin: 0 15px;
+    text-decoration: none;
+}
+
+main {
+    padding: 20px;
+}
+
+.create-post, .filter-posts {
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 5px;
+}
+
+input[type="text"], textarea, select {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    background: #007BFF;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.posts {
+    margin-top: 20px;
+}
+
+.post {
+    background: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.post h3 {
+    margin-bottom: 10px;
+}
+
+.post p {
+    margin-bottom: 10px;
+}
+
+footer {
+    background: #333;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+    </style>
 </head>
 <body>
     <header>
         <h1>Literary Lions Forum</h1>
         <nav>
             <a href="/">Home</a>
-            <a href="/posts">Forum</a>
+            <a href="/post">Forum</a>
             {{if .Authenticated}}
                 <a href="/logout">Logout</a>
-                <a href="/profile">Profile</a>
-                
+                <a href="/profile">My Page</a>
+                <p>Welcome, {{.Username}}!</p>
             {{else}}
                 <a href="/login">Login</a>
                 <a href="/register">Register</a>
@@ -24,36 +122,119 @@
     </header>
 
     <main>
-        <section class="new-post">
+        <!-- Create New Post Section -->
+        {{if .Authenticated}}
+        <section class="create-post">
             <h2>Create a New Post</h2>
-            {{if .Authenticated}}
             <form action="/post/create" method="post">
                 <label for="title">Title:</label>
                 <input type="text" id="title" name="title" required>
                 <label for="content">Content:</label>
                 <textarea id="content" name="content" required></textarea>
                 <label for="category">Category:</label>
-                <input type="text" id="category" name="category" required>
+                <select id="category" name="category" required>
+                    <option value="recent">Recent</option>
+                    <option value="general">General</option>
+                    <option value="genres">Genres</option>
+                </select>
                 <button type="submit">Post</button>
             </form>
             {{else}}
-            <p>You need to <a href="/login">login</a> to create a post.</p>
-            {{end}}
+            <p>You need to <a href="/login">login</a> to post.</p>
+        </section>
+        {{end}}
+
+        <!-- Filter Posts Section -->
+        <section class="filter-posts">
+            <h2>Filter Posts</h2>
+            <form action="/forum/filter" method="get">
+                <label for="category-filter">Category:</label>
+                <select id="category-filter" name="category">
+                    <option value="all">All</option>
+                    <option value="recent">Recent</option>
+                    <option value="general">General</option>
+                    <option value="genres">Genres</option>
+                </select>
+                {{if .Authenticated}}
+                <label for="time-filter">Sort by Time:</label>
+                <select id="time-filter" name="sort">
+                    <option value="asc">Oldest First</option>
+                    <option value="desc">Newest First</option>
+                </select>
+                <label for="likes-filter">Sort by Likes:</label>
+                <select id="likes-filter" name="likes">
+                    <option value="asc">Least Likes</option>
+                    <option value="desc">Most Likes</option>
+                </select>
+                {{end}}
+                <button type="submit">Filter</button>
+            </form>
         </section>
 
+        <!-- Posts Section -->
         <section class="posts">
-            <h2>Recent Posts</h2>
+            <h2>Posts</h2>
             {{range .Posts}}
-            <article>
+            <article class="post">
                 <h3><a href="/post/view?id={{.ID}}">{{.Title}}</a></h3>
                 <p>{{.Content}}</p>
                 <p>Category: {{.Category}}</p>
                 <p>Posted by {{.Username}}</p>
+                <p>Likes: {{.Likes}} | Dislikes: {{.Dislikes}}</p>
+                {{if .Authenticated}}
+                <form action="/post/like" method="post">
+                    <input type="hidden" name="post_id" value="{{.ID}}">
+                    <button type="submit">Like</button>
+                </form>
+                <form action="/post/dislike" method="post">
+                    <input type="hidden" name="post_id" value="{{.ID}}">
+                    <button type="submit">Dislike</button>
+                </form>
+                {{end}}
             </article>
             {{else}}
-            <p>No posts yet. Be the first to post!</p>
+            <p>No posts available.</p>
             {{end}}
         </section>
+
+
+
+        <!-- Post Details -->
+        <section class="post-details">
+            <h2>{{.Post.Title}}</h2>
+            <p>{{.Post.Content}}</p>
+            <p>Category: {{.Post.Category}}</p>
+            <p>Posted by {{.Post.Username}}</p>
+            <p>Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
+        </section>
+
+        <!-- Comments Section -->
+        <section class="comments">
+            <h2>Comments</h2>
+            {{range .Replies}}
+            <div class="comment">
+                <p>{{.Content}}</p>
+            </div>
+            {{else}}
+            <p>No comments yet.</p>
+            {{end}}
+
+            <!-- Add Comment Form -->
+            {{if .Authenticated}}
+            <section class="add-comment">
+                <h3>Add a Comment</h3>
+                <form action="/comment/add" method="post">
+                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                    <label for="comment">Comment:</label>
+                    <textarea id="comment" name="content" required></textarea>
+                    <button type="submit">Add Comment</button>
+                </form>
+            </section>
+            {{end}}
+        </section>
+
+
+
     </main>
 
     <footer>

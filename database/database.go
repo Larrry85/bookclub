@@ -2,7 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"bufio"
 	"log"
+	"os"
+	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -19,72 +22,59 @@ func Init() {
 		log.Fatal(err)
 	}
 
-	// Execute schema creation
-	schema := `
-	CREATE TABLE IF NOT EXISTS User (
-		UserID INTEGER PRIMARY KEY AUTOINCREMENT,
-		Username TEXT NOT NULL UNIQUE,
-		Email TEXT NOT NULL UNIQUE,
-		Password TEXT NOT NULL,
-		Confirmed INTEGER DEFAULT 0
-		
-	);
-	
-	CREATE TABLE IF NOT EXISTS Category (
-		CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
-		CategoryName TEXT NOT NULL UNIQUE
-	);
-	
-	CREATE TABLE IF NOT EXISTS Post (
-		PostID INTEGER PRIMARY KEY AUTOINCREMENT,
-		Title TEXT NOT NULL,
-		Content TEXT NOT NULL,
-		UserID INTEGER NOT NULL,
-		CategoryID INTEGER,
-		FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,
-		FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) ON DELETE SET NULL
-	);
-	
-	CREATE TABLE IF NOT EXISTS Comment (
-		CommentID INTEGER PRIMARY KEY AUTOINCREMENT,
-		Content TEXT NOT NULL,
-		PostID INTEGER NOT NULL,
-		UserID INTEGER NOT NULL,
-		FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
-		FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL
-	);
-	
-	CREATE TABLE IF NOT EXISTS Like (
-		LikeID INTEGER PRIMARY KEY AUTOINCREMENT,
-		UserID INTEGER NOT NULL,
-		PostID INTEGER,
-		CommentID INTEGER,
-		IsLike BOOLEAN NOT NULL,
-		FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,
-		FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
-		FOREIGN KEY (CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE
-	);
-	`
-	_, err = DB.Exec(schema)
+	// Open schema.sql file
+	file, err := os.Open("database/schema.sql")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to open schema.sql: %v", err)
+	}
+	defer file.Close()
+
+	// Read file content
+	var schema string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		schema += scanner.Text() + "\n"
 	}
 
-	// Create indexes
-	indexes := `
-	CREATE INDEX IF NOT EXISTS idx_post_user ON Post(UserID);
-	CREATE INDEX IF NOT EXISTS idx_post_category ON Post(CategoryID);
-	CREATE INDEX IF NOT EXISTS idx_comment_post ON Comment(PostID);
-	CREATE INDEX IF NOT EXISTS idx_comment_user ON Comment(UserID);
-	CREATE INDEX IF NOT EXISTS idx_like_user ON Like(UserID);
-	CREATE INDEX IF NOT EXISTS idx_like_post ON Like(PostID);
-	CREATE INDEX IF NOT EXISTS idx_like_comment ON Like(CommentID);
-	`
-	_, err = DB.Exec(indexes)
-	if err != nil {
-		log.Fatal(err)
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("Failed to read schema.sql: %v", err)
 	}
+
+	// Execute schema creation
+	_, err = DB.Exec(schema)
+	if err != nil {
+		log.Fatalf("Failed to execute schema: %v", err)
+	}
+
 	log.Println("Database schema and indexes created or already exist.")
+}
+
+func InsertUser(username, email, password string) error {
+	// Check if the username or email already exists
+	var usernameExists, emailExists bool
+	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE Username = ?)", username).Scan(&usernameExists)
+	if err != nil {
+		return fmt.Errorf("failed to check for existing username: %w", err)
+	}
+	if usernameExists {
+		return fmt.Errorf("username already exists")
+	}
+
+	err = DB.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE Email = ?)", email).Scan(&emailExists)
+	if err != nil {
+		return fmt.Errorf("failed to check for existing email: %w", err)
+	}
+	if emailExists {
+		return fmt.Errorf("email already exists")
+	}
+
+	// Insert new user
+	_, err = DB.Exec("INSERT INTO User (Username, Email, Password) VALUES (?, ?, ?)", username, email, password)
+	if err != nil {
+		return fmt.Errorf("failed to insert user: %w", err)
+	}
+
+	return nil
 }
 
 // GetUserStats retrieves the number of posts and comments for a user

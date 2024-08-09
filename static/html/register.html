@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modal Popup Example</title>
+    <title>Register</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
     <!-- header ----------------------- -->
     <header>
-        <h1>Literary Lions Forum</h1>
+        <h1>Welcome to Literary Lions Forum</h1>
         <nav>
             <a href="/">Home</a>
             <a href="/post">Forum</a>
@@ -22,13 +22,15 @@
     <!-- Register ----------------------- -->
     <div class="container">
         <h1>Register</h1>
-        <form action="/register" method="post">
+        <form action="/register" method="post" class="login-form">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required><br>
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required><br>
+            <div class="password">
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required><br>
+        </div>
             <button type="submit">Register</button>
         </form>
     </div>

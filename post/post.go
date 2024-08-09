@@ -10,12 +10,22 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+// Define your Post struct with appropriate field tags
 type Post struct {
-	ID       int
-	Title    string
-	Content  string
+	ID        int
+	Title     string
+	Content   string
+	Username  string
+	Category  string
+	Likes     int
+	Dislikes  int
+	CategoryID int // Added field
+	UserID    int // Added field
+}
+
+// Define your User struct for session management
+type User struct {
 	Username string
-	Category string
 }
 
 type Reply struct {
@@ -35,50 +45,92 @@ var (
 )
 
 func ViewPost(w http.ResponseWriter, r *http.Request) {
-	postID := r.URL.Query().Get("id")
+    postID := r.URL.Query().Get("id")
 
-	var post Post
-	err := database.DB.QueryRow(`SELECT PostID, Title, Content FROM Post WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content)
-	if err != nil {
-		http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
-		return
-	}
+    var post Post
+    err := database.DB.QueryRow(`
+        SELECT PostID, Title, Content, CategoryID, UserID
+        FROM Post
+        WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID)
+    if err != nil {
+        http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
+        return
+    }
 
-	rows, err := database.DB.Query(`SELECT Content FROM Comment WHERE PostID = ?`, postID)
-	if err != nil {
-		http.Error(w, "Could not retrieve replies", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+    // Retrieve the post's category name
+    var categoryName string
+    err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+    if err != nil {
+        http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+        return
+    }
+    post.Category = categoryName
 
-	var replies []Reply
-	for rows.Next() {
-		var reply Reply
-		if err := rows.Scan(&reply.Content); err != nil {
-			http.Error(w, "Could not scan reply", http.StatusInternalServerError)
-			return
-		}
-		replies = append(replies, reply)
-	}
+    // Retrieve the post's author
+    var username string
+    err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
+    if err != nil {
+        http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+        return
+    }
+    post.Username = username
 
-	session, _ := store.Get(r, "session")
-	authenticated := session.Values["username"] != nil
+    // Retrieve the number of likes and dislikes
+    err = database.DB.QueryRow(`
+        SELECT 
+            (SELECT COUNT(*) FROM LikesDislikes WHERE PostID = ? AND IsLike = 1) AS Likes,
+            (SELECT COUNT(*) FROM LikesDislikes WHERE PostID = ? AND IsLike = 0) AS Dislikes
+        `, postID, postID).Scan(&post.Likes, &post.Dislikes)
+    if err != nil {
+        http.Error(w, "Could not retrieve likes/dislikes", http.StatusInternalServerError)
+        return
+    }
 
-	data := PostViewData{
-		Post:          post,
-		Replies:       replies,
-		Authenticated: authenticated,
-	}
+    // Retrieve comments
+    rows, err := database.DB.Query(`SELECT Content FROM Comment WHERE PostID = ?`, postID)
+    if err != nil {
+        http.Error(w, "Could not retrieve comments", http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	tmpl, err := template.ParseFiles("static/html/view_post.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    var replies []Reply
+    for rows.Next() {
+        var reply Reply
+        if err := rows.Scan(&reply.Content); err != nil {
+            http.Error(w, "Could not scan comment", http.StatusInternalServerError)
+            return
+        }
+        replies = append(replies, reply)
+    }
+
+    // Retrieve session data
+    session, _ := store.Get(r, "session")
+    authenticated := session.Values["username"] != nil
+    username, _ = session.Values["username"].(string)
+
+    // Prepare data for template
+    data := struct {
+        Post          Post
+        Replies       []Reply
+        Authenticated bool
+        Username      string
+    }{
+        Post:          post,
+        Replies:       replies,
+        Authenticated: authenticated,
+        Username:      username,
+    }
+
+    tmpl, err := template.ParseFiles("static/html/view_post.html")
+    if err != nil {
+        http.Error(w, "Template parsing error", http.StatusInternalServerError)
+        return
+    }
+    if err := tmpl.Execute(w, data); err != nil {
+        http.Error(w, "Template execution error", http.StatusInternalServerError)
+        return
+    }
 }
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
@@ -145,62 +197,97 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Printf("Post created successfully for user ID: %d", userID)
-		http.Redirect(w, r, "/posts", http.StatusSeeOther)
+		http.Redirect(w, r, "/post", http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
 }
 
 func ListPosts(w http.ResponseWriter, r *http.Request) {
-	// Retrieve posts from database
-	rows, err := database.DB.Query(`
-		SELECT Post.PostID, Post.Title, Post.Content, User.Username, Category.CategoryName
-		FROM Post
-		JOIN User ON Post.UserID = User.UserID
-		LEFT JOIN Category ON Post.CategoryID = Category.CategoryID
-		ORDER BY Post.PostID DESC
-	`)
-	if err != nil {
-		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+    // Retrieve posts from database
+    rows, err := database.DB.Query(`
+        SELECT p.PostID, p.Title, p.Content, u.Username, c.CategoryName,
+               (SELECT COUNT(*) FROM LikesDislikes l WHERE l.PostID = p.PostID AND l.IsLike = 1) AS Likes,
+               (SELECT COUNT(*) FROM LikesDislikes l WHERE l.PostID = p.PostID AND l.IsLike = 0) AS Dislikes
+        FROM Post p
+        JOIN User u ON p.UserID = u.UserID
+        LEFT JOIN Category c ON p.CategoryID = c.CategoryID
+        ORDER BY p.PostID DESC
+    `)
+    if err != nil {
+        http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	// Scan posts into slice
-	var posts []Post
-	for rows.Next() {
-		var post Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.Username, &post.Category); err != nil {
-			http.Error(w, "Could not scan post", http.StatusInternalServerError)
+    var posts []Post
+    for rows.Next() {
+        var post Post
+        if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.Username, &post.Category, &post.Likes, &post.Dislikes); err != nil {
+            http.Error(w, "Could not scan post", http.StatusInternalServerError)
+            return
+        }
+        posts = append(posts, post)
+    }
+
+    if err = rows.Err(); err != nil {
+        http.Error(w, "Error occurred while processing posts", http.StatusInternalServerError)
+        return
+    }
+
+    session, err := store.Get(r, "session")
+    if err != nil {
+        http.Error(w, "Session error", http.StatusInternalServerError)
+        return
+    }
+    authenticated := session.Values["username"] != nil
+    username, _ := session.Values["username"].(string)
+
+    data := struct {
+        Posts         []Post
+        Authenticated bool
+        Username      string
+    }{
+        Posts:         posts,
+        Authenticated: authenticated,
+        Username:      username,
+    }
+
+    tmpl, err := template.ParseFiles("static/html/post.html")
+    if err != nil {
+        http.Error(w, "Template parsing error", http.StatusInternalServerError)
+        return
+    }
+    if err := tmpl.Execute(w, data); err != nil {
+        http.Error(w, "Template execution error", http.StatusInternalServerError)
+        return
+    }
+}
+
+// AddReply handles adding a reply to a post
+func AddReply(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		// Get form values
+		postID := r.FormValue("post_id")
+		content := r.FormValue("content")
+
+		// Validate input
+		if postID == "" || content == "" {
+			http.Error(w, "Invalid input", http.StatusBadRequest)
 			return
 		}
-		posts = append(posts, post)
-	}
 
-	// Retrieve session data
-	session, _ := store.Get(r, "session")
-	authenticated := session.Values["username"] != nil
-	username, _ := session.Values["username"].(string)
+		// Insert reply into database
+		_, err := database.DB.Exec(`INSERT INTO Comment (PostID, Content) VALUES (?, ?)`, postID, content)
+		if err != nil {
+			http.Error(w, "Could not add reply", http.StatusInternalServerError)
+			return
+		}
 
-	// Prepare data for template
-	data := struct {
-		Posts         []Post
-		Authenticated bool
-		Username      string
-	}{
-		Posts:         posts,
-		Authenticated: authenticated,
-		Username:      username,
-	}
-
-	// Render template
-	tmpl, err := template.ParseFiles("static/html/post.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		// Redirect to the post view page
+		http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
+	} else {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
 }
+

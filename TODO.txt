@@ -12,7 +12,8 @@ The forum detects duplicate email or username during registration. OK!
 The forum displays a warning message for invalid login attempts. OK!
 The forum detects incorrect email or password during login. OK!
 
-
+Postaus:
+Empty posts and comments are not allowed.
 
 
 
@@ -67,7 +68,7 @@ Only registered users can like or dislike posts and comments
 ***********************************
 Postaus:
 ***********************************
-Empty posts and comments are not allowed.
+
 The number of likes and dislikes for comments is visible to all users.
 The number of likes and dislikes is displayed and updated correctly.
 Posts cannot be liked and disliked simultaneously.
