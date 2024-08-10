@@ -1,3 +1,4 @@
+-- Create tables
 CREATE TABLE IF NOT EXISTS Category (
     CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
     CategoryName TEXT NOT NULL UNIQUE
@@ -11,33 +12,33 @@ CREATE TABLE IF NOT EXISTS User (
 );
 
 CREATE TABLE IF NOT EXISTS Post (
-   PostID TEXT PRIMARY KEY,
+    PostID TEXT PRIMARY KEY,  -- Ensure this is TEXT if you're using a string for PostID
     Title TEXT,
     Content TEXT,
     UserID INTEGER,
     CategoryID INTEGER,
-    FOREIGN KEY (UserID) REFERENCES User(UserID),
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL,  -- Adjust to ON DELETE SET NULL if needed
     FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID)
 );
 
 CREATE TABLE IF NOT EXISTS Comment (
     CommentID INTEGER PRIMARY KEY AUTOINCREMENT,
-    PostID INTEGER NOT NULL,
-    UserID INTEGER NOT NULL,
+    PostID TEXT NOT NULL,  -- Ensure this matches the type in Post table
+    UserID INTEGER,  -- Adjust to allow NULL if using ON DELETE SET NULL
     Content TEXT NOT NULL,
-    FOREIGN KEY(PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
-    FOREIGN KEY(UserID) REFERENCES User(UserID) ON DELETE SET NULL
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL  -- Ensure UserID column allows NULL
 );
 
 CREATE TABLE IF NOT EXISTS LikesDislikes (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     UserID INTEGER NOT NULL,
-    PostID INTEGER,
+    PostID TEXT,  -- Ensure this matches the type in Post table
     CommentID INTEGER,
     IsLike BOOLEAN NOT NULL,
-    FOREIGN KEY(UserID) REFERENCES User(UserID) ON DELETE CASCADE,
-    FOREIGN KEY(PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
-    FOREIGN KEY(CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
+    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS PasswordReset (
@@ -46,7 +47,14 @@ CREATE TABLE IF NOT EXISTS PasswordReset (
     Expiry DATETIME NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS Session (
+    SessionID TEXT PRIMARY KEY,
+    UserID INTEGER NOT NULL,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserID) REFERENCES User(UserID)
+);
 
+-- Create indexes
 CREATE INDEX IF NOT EXISTS idx_post_user ON Post(UserID);
 CREATE INDEX IF NOT EXISTS idx_post_category ON Post(CategoryID);
 CREATE INDEX IF NOT EXISTS idx_comment_post ON Comment(PostID);

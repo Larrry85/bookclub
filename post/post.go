@@ -1,8 +1,10 @@
+// post/post.go
 package post
 
 import (
 	"database/sql"
 	"lions/database"
+	"lions/session"
 	"log"
 	"net/http"
 	"text/template"
@@ -19,13 +21,8 @@ type Post struct {
 	Category   string
 	Likes      int
 	Dislikes   int
-	CategoryID int // Added field
-	UserID     int // Added field
-}
-
-// Define your User struct for session management
-type User struct {
-	Username string
+	CategoryID int
+	UserID     int
 }
 
 type Reply struct {
@@ -37,23 +34,6 @@ type PostViewData struct {
 	Replies       []Reply
 	Authenticated bool
 	Username      string
-}
-
-// Utility functions for handling cookies
-func getCookie(r *http.Request, name string) (string, error) {
-	cookie, err := r.Cookie(name)
-	if err != nil {
-		return "", err
-	}
-	return cookie.Value, nil
-}
-
-func setCookie(w http.ResponseWriter, name, value string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:  name,
-		Value: value,
-		Path:  "/",
-	})
 }
 
 func ViewPost(w http.ResponseWriter, r *http.Request) {
@@ -112,27 +92,10 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		replies = append(replies, reply)
 	}
 
-	// Retrieve session data from cookie
-	username, err = getCookie(r, "username")
-	if err != nil {
-		authenticated := false
-		data := PostViewData{
-			Post:          post,
-			Replies:       replies,
-			Authenticated: authenticated,
-		}
-		tmpl, err := template.ParseFiles("static/html/view_post.html")
-		if err != nil {
-			http.Error(w, "Template parsing error", http.StatusInternalServerError)
-			return
-		}
-		if err := tmpl.Execute(w, data); err != nil {
-			http.Error(w, "Template execution error", http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-	authenticated := username != ""
+	// Retrieve session data from context
+	authenticated, _ := r.Context().Value("authenticated").(bool)
+	username, _ = r.Context().Value("username").(string)
+
 	data := PostViewData{
 		Post:          post,
 		Replies:       replies,
@@ -158,17 +121,23 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 		postID := uuid.New().String()
 
-		username, err := getCookie(r, "username")
+		sessionID, err := r.Cookie("session_id")
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
+		sessionData, authenticated := session.GetSession(sessionID.Value)
+		if !authenticated {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
 		var userID int
-		err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
+		err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, sessionData.Username).Scan(&userID)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				log.Printf("No user found with username: %s", username)
+				log.Printf("No user found with username: %s", sessionData.Username)
 				http.Error(w, "Could not find user", http.StatusInternalServerError)
 			} else {
 				log.Printf("Database error retrieving user ID: %v", err)
@@ -209,23 +178,24 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("Post created successfully with ID: %s", postID)
-		http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
+		http.Redirect(w, r, "/post", http.StatusSeeOther)
 	} else {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		tmpl, err := template.ParseFiles("static/html/create_post.html")
+		if err != nil {
+			http.Error(w, "Template parsing error", http.StatusInternalServerError)
+			return
+		}
+		if err := tmpl.Execute(w, nil); err != nil {
+			http.Error(w, "Template execution error", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
 func ListPosts(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
-        SELECT p.PostID, p.Title, p.Content, u.Username, c.CategoryName,
-               (SELECT COUNT(*) FROM LikesDislikes l WHERE l.PostID = p.PostID AND l.IsLike = 1) AS Likes,
-               (SELECT COUNT(*) FROM LikesDislikes l WHERE l.PostID = p.PostID AND l.IsLike = 0) AS Dislikes
-        FROM Post p
-        JOIN User u ON p.UserID = u.UserID
-        LEFT JOIN Category c ON p.CategoryID = c.CategoryID
-        ORDER BY p.PostID DESC
-    `)
+        SELECT PostID, Title, Content, CategoryID, UserID
+        FROM Post`)
 	if err != nil {
 		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
 		return
@@ -235,24 +205,43 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.Username, &post.Category, &post.Likes, &post.Dislikes); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID); err != nil {
 			http.Error(w, "Could not scan post", http.StatusInternalServerError)
 			return
 		}
+
+		var categoryName string
+		err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+		if err != nil {
+			http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+			return
+		}
+		post.Category = categoryName
+
+		var username string
+		err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
+		if err != nil {
+			http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+			return
+		}
+		post.Username = username
+
 		posts = append(posts, post)
 	}
 
-	if err = rows.Err(); err != nil {
-		http.Error(w, "Error occurred while processing posts", http.StatusInternalServerError)
-		return
-	}
-
-	username, err := getCookie(r, "username")
+	sessionCookie, err := r.Cookie("session_id")
 	if err != nil {
+		log.Println("Error retrieving session cookie:", err)
 		http.Error(w, "Session error", http.StatusInternalServerError)
 		return
 	}
-	authenticated := username != ""
+
+	sessionData, exists := session.GetSession(sessionCookie.Value)
+	if !exists {
+		log.Println("Session not found for session_id:", sessionCookie.Value)
+		http.Error(w, "Session error", http.StatusInternalServerError)
+		return
+	}
 
 	data := struct {
 		Posts         []Post
@@ -260,8 +249,8 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 		Username      string
 	}{
 		Posts:         posts,
-		Authenticated: authenticated,
-		Username:      username,
+		Authenticated: sessionData.Authenticated,
+		Username:      sessionData.Username,
 	}
 
 	tmpl, err := template.ParseFiles("static/html/post.html")

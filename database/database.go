@@ -1,11 +1,11 @@
 package database
 
 import (
-	"database/sql"
 	"bufio"
+	"database/sql"
+	"fmt"
 	"log"
 	"os"
-	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 )

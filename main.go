@@ -23,13 +23,14 @@ func main() {
 	http.Handle("/post/create", handle.SessionMiddleware(http.HandlerFunc(post.CreatePost)))
 	http.Handle("/mainpage", handle.SessionMiddleware(http.HandlerFunc(handle.MainPageHandler)))
 	http.Handle("/post/view", handle.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
-	http.Handle("/profile", handle.SessionMiddleware(http.HandlerFunc(handle.ProfileHandler)))
+
 	http.HandleFunc("/confirm", handle.ConfirmEmailHandler)
 	http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
 	http.Handle("/post/reply", handle.SessionMiddleware(http.HandlerFunc(post.AddReply)))
 	http.HandleFunc("/password-reset-request", handle.PasswordResetRequestHandler)
 	http.HandleFunc("/reset-password", handle.ResetPasswordHandler)
-	http.Handle("/delete-account", handle.SessionMiddleware(http.HandlerFunc(handle.DeleteAccountHandler)))
+	http.HandleFunc("/delete-account", handle.DeleteAccountHandler)
+	http.Handle("/profile", handle.SessionMiddleware(http.HandlerFunc(handle.ProfileHandler)))
 
 	log.Println("Server starting on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
