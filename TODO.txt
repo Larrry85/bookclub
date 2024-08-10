@@ -16,6 +16,10 @@ Passwords are secured and encrypted using bcrypt or other strong algorithms. XXX
 Postaus:
 Empty posts and comments are not allowed.
 
+server:
+The server uses correct HTTP methods (GET, POST, PUT...etc).
+Error messages are informative and user-friendly. XXXEXTRAXXXX
+
 
 
 
@@ -88,7 +92,7 @@ The container runs successfully using the created image.
 ***********************************
 Server:
 ***********************************
-The server uses correct HTTP methods (GET, POST, PUT...etc).
+
 Only allowed packages are used
 The server uses appropriate HTTP response codes, 2XX, 4XX.
 All pages function correctly (no unhandled 404 errors).
@@ -96,7 +100,7 @@ The project handles HTTP status 400 and 500 errors gracefully.
 The server behaves as expected (no crashes).
 The interface handles 5XX HTTP response codes gracefully.
 The interface is clear, well set out and navigable. XXXEXTRAXXXX
-Error messages are informative and user-friendly. XXXEXTRAXXXX
+
 
 
 ***********************************

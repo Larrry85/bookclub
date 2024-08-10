@@ -1,16 +1,11 @@
 package main
 
 import (
-	//"html/template"
-	"log"
-	"net/http"
-
 	"lions/database"
 	"lions/handle"
 	"lions/post"
-
-	//"github.com/gorilla/sessions"
-	_ "github.com/mattn/go-sqlite3"
+	"log"
+	"net/http"
 )
 
 func main() {
@@ -25,24 +20,16 @@ func main() {
 	http.Handle("/register", handle.SessionMiddleware(http.HandlerFunc(handle.RegisterHandler)))
 	http.Handle("/login", handle.SessionMiddleware(http.HandlerFunc(handle.LoginHandler)))
 	http.Handle("/logout", handle.SessionMiddleware(http.HandlerFunc(handle.LogoutHandler)))
-	//http.Handle("/posts", handle.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
 	http.Handle("/post/create", handle.SessionMiddleware(http.HandlerFunc(post.CreatePost)))
 	http.Handle("/mainpage", handle.SessionMiddleware(http.HandlerFunc(handle.MainPageHandler)))
 	http.Handle("/post/view", handle.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
 	http.Handle("/profile", handle.SessionMiddleware(http.HandlerFunc(handle.ProfileHandler)))
 	http.HandleFunc("/confirm", handle.ConfirmEmailHandler)
 	http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
-	//http.Handle("/post/view", handle.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
 	http.Handle("/post/reply", handle.SessionMiddleware(http.HandlerFunc(post.AddReply)))
 	http.HandleFunc("/password-reset-request", handle.PasswordResetRequestHandler)
 	http.HandleFunc("/reset-password", handle.ResetPasswordHandler)
 	http.Handle("/delete-account", handle.SessionMiddleware(http.HandlerFunc(handle.DeleteAccountHandler)))
-
-	// Serve static HTML files
-	//http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/post.html"))))
-	//http.Handle("/general", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/general.html"))))
-	//http.Handle("/genres", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/genres.html"))))
-	//http.Handle("/book_specific", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/book_specific.html"))))
 
 	log.Println("Server starting on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))

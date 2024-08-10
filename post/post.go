@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"text/template"
 
-	"github.com/gorilla/sessions"
+	"github.com/google/uuid"
 )
 
 // Define your Post struct with appropriate field tags
@@ -36,13 +36,25 @@ type PostViewData struct {
 	Post          Post
 	Replies       []Reply
 	Authenticated bool
+	Username      string
 }
 
-var (
-	// Replace with your own secret key
-	key   = []byte("super-secret-key")
-	store = sessions.NewCookieStore(key)
-)
+// Utility functions for handling cookies
+func getCookie(r *http.Request, name string) (string, error) {
+	cookie, err := r.Cookie(name)
+	if err != nil {
+		return "", err
+	}
+	return cookie.Value, nil
+}
+
+func setCookie(w http.ResponseWriter, name, value string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:  name,
+		Value: value,
+		Path:  "/",
+	})
+}
 
 func ViewPost(w http.ResponseWriter, r *http.Request) {
 	postID := r.URL.Query().Get("id")
@@ -57,7 +69,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retrieve the post's category name
 	var categoryName string
 	err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
 	if err != nil {
@@ -66,7 +77,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	post.Category = categoryName
 
-	// Retrieve the post's author
 	var username string
 	err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
 	if err != nil {
@@ -75,7 +85,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	post.Username = username
 
-	// Retrieve the number of likes and dislikes
 	err = database.DB.QueryRow(`
         SELECT 
             (SELECT COUNT(*) FROM LikesDislikes WHERE PostID = ? AND IsLike = 1) AS Likes,
@@ -86,7 +95,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retrieve comments
 	rows, err := database.DB.Query(`SELECT Content FROM Comment WHERE PostID = ?`, postID)
 	if err != nil {
 		http.Error(w, "Could not retrieve comments", http.StatusInternalServerError)
@@ -104,24 +112,33 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		replies = append(replies, reply)
 	}
 
-	// Retrieve session data
-	session, _ := store.Get(r, "session")
-	authenticated := session.Values["username"] != nil
-	username, _ = session.Values["username"].(string)
-
-	// Prepare data for template
-	data := struct {
-		Post          Post
-		Replies       []Reply
-		Authenticated bool
-		Username      string
-	}{
+	// Retrieve session data from cookie
+	username, err = getCookie(r, "username")
+	if err != nil {
+		authenticated := false
+		data := PostViewData{
+			Post:          post,
+			Replies:       replies,
+			Authenticated: authenticated,
+		}
+		tmpl, err := template.ParseFiles("static/html/view_post.html")
+		if err != nil {
+			http.Error(w, "Template parsing error", http.StatusInternalServerError)
+			return
+		}
+		if err := tmpl.Execute(w, data); err != nil {
+			http.Error(w, "Template execution error", http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	authenticated := username != ""
+	data := PostViewData{
 		Post:          post,
 		Replies:       replies,
 		Authenticated: authenticated,
 		Username:      username,
 	}
-
 	tmpl, err := template.ParseFiles("static/html/view_post.html")
 	if err != nil {
 		http.Error(w, "Template parsing error", http.StatusInternalServerError)
@@ -135,22 +152,20 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Get form values
 		title := r.FormValue("title")
 		content := r.FormValue("content")
 		category := r.FormValue("category")
 
-		// Get session
-		session, _ := store.Get(r, "session")
-		username, ok := session.Values["username"].(string)
-		if !ok {
+		postID := uuid.New().String()
+
+		username, err := getCookie(r, "username")
+		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
-		// Retrieve user ID
 		var userID int
-		err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
+		err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				log.Printf("No user found with username: %s", username)
@@ -164,7 +179,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("Creating post for user ID: %d", userID)
 
-		// Retrieve or create category ID
 		var categoryID int
 		err = database.DB.QueryRow(`SELECT CategoryID FROM Category WHERE CategoryName = ?`, category).Scan(&categoryID)
 		if err != nil && err != sql.ErrNoRows {
@@ -188,23 +202,21 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("Using category ID: %d for category: %s", categoryID, category)
 
-		// Insert post
-		_, err = database.DB.Exec(`INSERT INTO Post (Title, Content, UserID, CategoryID) VALUES (?, ?, ?, ?)`,
-			title, content, userID, categoryID)
+		_, err = database.DB.Exec(`INSERT INTO Post (PostID, Title, Content, UserID, CategoryID) VALUES (?, ?, ?, ?, ?)`,
+			postID, title, content, userID, categoryID)
 		if err != nil {
 			http.Error(w, "Could not create post", http.StatusInternalServerError)
 			return
 		}
 
-		log.Printf("Post created successfully for user ID: %d", userID)
-		http.Redirect(w, r, "/post", http.StatusSeeOther)
+		log.Printf("Post created successfully with ID: %s", postID)
+		http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
 }
 
 func ListPosts(w http.ResponseWriter, r *http.Request) {
-	// Retrieve posts from database
 	rows, err := database.DB.Query(`
         SELECT p.PostID, p.Title, p.Content, u.Username, c.CategoryName,
                (SELECT COUNT(*) FROM LikesDislikes l WHERE l.PostID = p.PostID AND l.IsLike = 1) AS Likes,
@@ -235,13 +247,12 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := store.Get(r, "session")
+	username, err := getCookie(r, "username")
 	if err != nil {
 		http.Error(w, "Session error", http.StatusInternalServerError)
 		return
 	}
-	authenticated := session.Values["username"] != nil
-	username, _ := session.Values["username"].(string)
+	authenticated := username != ""
 
 	data := struct {
 		Posts         []Post
@@ -259,6 +270,7 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, "Template execution error", http.StatusInternalServerError)
 		return
 	}
 }
@@ -266,24 +278,20 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 // AddReply handles adding a reply to a post
 func AddReply(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Get form values
 		postID := r.FormValue("post_id")
 		content := r.FormValue("content")
 
-		// Validate input
 		if postID == "" || content == "" {
 			http.Error(w, "Invalid input", http.StatusBadRequest)
 			return
 		}
 
-		// Insert reply into database
 		_, err := database.DB.Exec(`INSERT INTO Comment (PostID, Content) VALUES (?, ?)`, postID, content)
 		if err != nil {
 			http.Error(w, "Could not add reply", http.StatusInternalServerError)
 			return
 		}
 
-		// Redirect to the post view page
 		http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)

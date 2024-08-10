@@ -2,7 +2,6 @@ package handle
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -14,19 +13,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/sessions"
+	"github.com/google/uuid"
 	"github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	key   = []byte("super-secret-key")
-	store = sessions.NewCookieStore(key)
+	sessions = make(map[string]SessionData) // SessionID -> SessionData
 )
 
-var (
-	DB *sql.DB
-)
+type SessionData struct {
+	Username      string
+	Authenticated bool
+}
 
 type contextKey string
 
@@ -37,28 +36,38 @@ const (
 
 func SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := store.Get(r, "session")
-
-		username, usernameOk := session.Values["username"].(string)
-		authenticated, authOk := session.Values["authenticated"].(bool)
-
-		if !usernameOk {
-			username = ""
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			if err == http.ErrNoCookie {
+				// If no session cookie, create a new one
+				cookie = &http.Cookie{
+					Name:     "session_id",
+					Value:    uuid.New().String(),
+					HttpOnly: true,
+				}
+				http.SetCookie(w, cookie)
+			} else {
+				http.Error(w, "Bad request", http.StatusBadRequest)
+				return
+			}
 		}
-		if !authOk {
-			authenticated = false
+
+		sessionID := cookie.Value
+		sessionData, ok := sessions[sessionID]
+		if !ok {
+			sessionData = SessionData{}
 		}
 
-		ctx := context.WithValue(r.Context(), "Username", username)
-		ctx = context.WithValue(ctx, "Authenticated", authenticated)
+		ctx := context.WithValue(r.Context(), UsernameKey, sessionData.Username)
+		ctx = context.WithValue(ctx, AuthenticatedKey, sessionData.Authenticated)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func MainPageHandler(w http.ResponseWriter, r *http.Request) {
-	username, _ := r.Context().Value("Username").(string)
-	authenticated, _ := r.Context().Value("Authenticated").(bool)
+	username, _ := r.Context().Value(UsernameKey).(string)
+	authenticated, _ := r.Context().Value(AuthenticatedKey).(bool)
 
 	data := map[string]interface{}{
 		"Username":      username,
@@ -163,12 +172,12 @@ func renderRegister(w http.ResponseWriter, errorMessage string) {
 
 func PostsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodPost:
-		post.CreatePost(w, r)
 	case http.MethodGet:
 		post.ListPosts(w, r)
+	case http.MethodPost:
+		post.CreatePost(w, r)
 	default:
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -201,10 +210,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		session, _ := store.Get(r, "session")
-		session.Values["authenticated"] = true
-		session.Values["username"] = username
-		session.Save(r, w)
+		sessionID := uuid.New().String()
+		sessions[sessionID] = SessionData{Username: username, Authenticated: true}
+		http.SetCookie(w, &http.Cookie{Name: "session_id", Value: sessionID})
 
 		http.Redirect(w, r, "/mainpage", http.StatusSeeOther)
 		return
@@ -229,23 +237,41 @@ func renderLogin(w http.ResponseWriter, errorMessage string) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
-	session.Values["authenticated"] = false
-	session.Values["username"] = nil
-	session.Save(r, w)
+	cookie, err := r.Cookie("session_id")
+	if err == nil {
+		// Clear session data and delete cookie
+		delete(sessions, cookie.Value)
+		http.SetCookie(w, &http.Cookie{
+			Name:   "session_id",
+			Value:  "",
+			MaxAge: -1,
+			Path:   "/",
+		})
+	}
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
-	username, _ := session.Values["username"].(string)
+	sessionID, err := r.Cookie("session_id")
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	sessionData, ok := sessions[sessionID.Value]
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	username := sessionData.Username
 
 	var email, hashedPassword string
 	var userID int
 
 	// Fetch user details
-	err := database.DB.QueryRow(`
+	err = database.DB.QueryRow(`
         SELECT UserID, Email, Password 
         FROM User 
         WHERE Username = ?`, username).Scan(&userID, &email, &hashedPassword)
@@ -267,11 +293,10 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the password should be displayed
 	showPassword := r.URL.Query().Get("show") == "true"
 	var password string
 	if showPassword {
-		password = "ActualPlainTextPassword" // You should replace this with actual password retrieval logic.
+		password = "ActualPlainTextPassword" // Replace with actual password retrieval if needed.
 	}
 
 	data := map[string]interface{}{
@@ -295,192 +320,138 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GenerateResetToken(userID int) (string, error) {
-	token := make([]byte, 32) // Generate a 32-byte token
-	_, err := rand.Read(token)
+func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
+	sessionID, err := r.Cookie("session_id")
 	if err != nil {
-		return "", err
-	}
-	tokenStr := fmt.Sprintf("%x", token)
-
-	expiration := time.Now().Add(1 * time.Hour) // Token valid for 1 hour
-
-	_, err = database.DB.Exec("INSERT INTO PasswordResetToken (UserID, Token, Expiration) VALUES (?, ?, ?)", userID, tokenStr, expiration)
-	if err != nil {
-		return "", fmt.Errorf("failed to store reset token: %w", err)
-	}
-
-	return tokenStr, nil
-}
-
-func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		// Parse the form
-		r.ParseForm()
-		token := r.FormValue("token")
-		newPassword := r.FormValue("password")
-
-		// Validate the token and get the associated user
-		var userID int
-		var expiration time.Time
-		err := database.DB.QueryRow("SELECT UserID, Expiration FROM PasswordResetToken WHERE Token = ?", token).Scan(&userID, &expiration)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				http.Error(w, "Invalid or expired token", http.StatusBadRequest)
-				return
-			}
-			log.Printf("Error fetching token: %v", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		// Check if the token is expired
-		if time.Now().After(expiration) {
-			http.Error(w, "Token expired", http.StatusBadRequest)
-			return
-		}
-
-		// Hash the new password
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-		if err != nil {
-			log.Printf("Error hashing new password: %v", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		// Update the user's password
-		_, err = database.DB.Exec("UPDATE User SET Password = ? WHERE UserID = ?", hashedPassword, userID)
-		if err != nil {
-			log.Printf("Error updating password: %v", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		// Delete the token after successful password reset
-		_, err = database.DB.Exec("DELETE FROM PasswordResetToken WHERE Token = ?", token)
-		if err != nil {
-			log.Printf("Error deleting password reset token: %v", err)
-		}
-
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-	} else {
-		// Render the reset password page if method is GET
-		token := r.URL.Query().Get("token")
-		if token == "" {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
-			return
-		}
-
-		tmpl, err := template.ParseFiles("static/html/reset_password.html")
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		tmpl.Execute(w, map[string]interface{}{
-			"Token": token,
-		})
+		return
 	}
+
+	sessionData, ok := sessions[sessionID.Value]
+	if !ok || !sessionData.Authenticated {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	username := sessionData.Username
+	_, err = database.DB.Exec(`DELETE FROM User WHERE Username = ?`, username)
+	if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	delete(sessions, sessionID.Value)
+	http.SetCookie(w, &http.Cookie{Name: "session_id", Value: "", MaxAge: -1})
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
-
 func PasswordResetRequestHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		sent := r.URL.Query().Get("sent") == "true"
-
-		tmpl, err := template.ParseFiles("static/html/password_reset_request.html")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		tmpl.Execute(w, map[string]interface{}{
-			"Sent": sent,
-		})
-	} else if r.Method == http.MethodPost {
+	if r.Method == http.MethodPost {
 		emailAddr := r.FormValue("email")
 
-		// Verify the email exists in the database
-		var userID int
-		err := database.DB.QueryRow("SELECT UserID FROM User WHERE Email = ?", emailAddr).Scan(&userID)
+		// Check if the email exists in the database
+		var username string
+		err := database.DB.QueryRow(`SELECT Username FROM User WHERE Email = ?`, emailAddr).Scan(&username)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				renderPasswordResetRequest(w, "No user found with that email address", false)
+				http.Error(w, "Email not found", http.StatusNotFound)
 				return
 			}
-			log.Println("Database error:", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		// Generate a reset token
-		token, err := GenerateResetToken(userID)
+		// Generate password reset token
+		token := uuid.New().String()
+		expiry := time.Now().Add(1 * time.Hour)
+
+		_, err = database.DB.Exec(`INSERT INTO PasswordReset (Email, Token, Expiry) VALUES (?, ?, ?)`, emailAddr, token, expiry)
 		if err != nil {
-			http.Error(w, "Failed to generate reset token", http.StatusInternalServerError)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		// Send reset email
-		resetURL := fmt.Sprintf("http://%s/reset-password?token=%s", r.Host, token)
+		resetURL := fmt.Sprintf("http://localhost:8080/reset-password?token=%s", token)
 		subject := "Password Reset Request"
-		body := fmt.Sprintf("Click the following link to reset your password: %s", resetURL)
-
+		body := fmt.Sprintf("Hello %s,\n\nTo reset your password, click the following link: %s\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nThe Literary Lions Team", username, resetURL)
 		err = email.SendEmail(emailAddr, subject, body)
 		if err != nil {
 			http.Error(w, "Failed to send email", http.StatusInternalServerError)
 			return
 		}
 
-		// Redirect to the same page with the "sent" query parameter
-		renderPasswordResetRequest(w, "", true)
-	}
-}
-
-func renderPasswordResetRequest(w http.ResponseWriter, errorMessage string, sent bool) {
-	tmpl, err := template.ParseFiles("static/html/password_reset_request.html")
-	if err != nil {
-		log.Println("Template parsing error:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	data := map[string]interface{}{
-		"ErrorMessage": errorMessage,
-		"Sent":         sent,
-	}
-
-	tmpl.Execute(w, data)
-}
-
-func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
-	// Ensure the request method is POST
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Retrieve the username from the session
-	session, _ := store.Get(r, "session")
-	username, _ := session.Values["username"].(string)
-
-	// Ensure the user is logged in
-	if username == "" {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
+	} else {
+		tmpl, err := template.ParseFiles("static/html/password-reset-request.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		tmpl.Execute(w, nil)
 	}
+}
 
-	// Delete the user from the database
-	_, err := database.DB.Exec(`DELETE FROM User WHERE Username = ?`, username)
-	if err != nil {
-		log.Println("Error deleting user:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		token := r.FormValue("token")
+		newPassword := r.FormValue("password")
+
+		var emailAddr string
+		var expiry time.Time
+
+		err := database.DB.QueryRow(`SELECT Email, Expiry FROM PasswordReset WHERE Token = ?`, token).Scan(&emailAddr, &expiry)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "Invalid or expired token", http.StatusBadRequest)
+				return
+			}
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		if time.Now().After(expiry) {
+			http.Error(w, "Token has expired", http.StatusBadRequest)
+			return
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		_, err = database.DB.Exec(`UPDATE User SET Password = ? WHERE Email = ?`, hashedPassword, emailAddr)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		_, err = database.DB.Exec(`DELETE FROM PasswordReset WHERE Token = ?`, token)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	} else {
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			http.Error(w, "Token is required", http.StatusBadRequest)
+			return
+		}
+
+		tmpl, err := template.ParseFiles("static/html/reset-password.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data := map[string]interface{}{
+			"Token": token,
+		}
+
+		tmpl.Execute(w, data)
 	}
-
-	// Invalidate the session
-	session.Values["authenticated"] = false
-	session.Values["username"] = nil
-	session.Save(r, w)
-
-	// Redirect to the home page or login page
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
