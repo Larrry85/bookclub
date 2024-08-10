@@ -23,7 +23,7 @@
             {{end}}
         </nav>
     </header>
-
+   
     <!-- login ----------------------- -->
     {{if not .Authenticated}} <!-- Show login form only if not authenticated -->
     <div class="login">
@@ -38,8 +38,11 @@
             <button type="submit">Login</button>
         </form>
     </div>
-
-
+    {{if .ErrorMessage}}
+    <div class="error-message" style="color: red;">
+        <p>{{.ErrorMessage}}</p>
+    </div>
+    {{end}}
     <div class="login">
     Forgot your password?
     <a href="/password-reset-request">Reset Password</a>

@@ -176,6 +176,14 @@ footer {
     
 }
 
+/* Align labels and inputs */
+.login-form label {
+    display: inline-block;
+    width: 100px; /* Fixed width for all labels */
+    text-align: right; /* Align text to the right */
+    margin-right: 10px; /* Add some space between label and input */
+}
+
 /* Style the login form */
 .login-form {
     display: inline-block; /* Allow the form to center horizontally */
@@ -196,9 +204,11 @@ footer {
     border-radius: 4px;
 }
 
+/* Remove margin from .password class */
 .password {
-    margin-right: 30px;
+    margin-right: 0; 
 }
+
 .login-form button {
     padding: 10px 20px;
     border: none;
@@ -229,4 +239,8 @@ footer {
     padding: 10px;
     border-radius: 8px;
     
+}
+
+.error-message {
+    text-align: center;
 }
