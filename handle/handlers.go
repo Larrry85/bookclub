@@ -131,7 +131,15 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Send welcome email (omitted for brevity)
+		// Send welcome email
+		subject := "Welcome to Literary Lions Forum!"
+		body := fmt.Sprintf("Hello %s,\n\nThank you for registering at Literary Lions Forum!\n\nBest regards,\nThe Literary Lions Team", name)
+		err = email.SendEmail(emailAddr, subject, body)
+		if err != nil {
+			log.Printf("Failed to send email: %v", err)
+			http.Error(w, "Failed to send email", http.StatusInternalServerError)
+			return
+		}
 
 		log.Printf("User registered: username=%s, email=%s", name, emailAddr)
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -441,4 +449,38 @@ func renderPasswordResetRequest(w http.ResponseWriter, errorMessage string, sent
 	}
 
 	tmpl.Execute(w, data)
+}
+
+func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
+	// Ensure the request method is POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Retrieve the username from the session
+	session, _ := store.Get(r, "session")
+	username, _ := session.Values["username"].(string)
+
+	// Ensure the user is logged in
+	if username == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Delete the user from the database
+	_, err := database.DB.Exec(`DELETE FROM User WHERE Username = ?`, username)
+	if err != nil {
+		log.Println("Error deleting user:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Invalidate the session
+	session.Values["authenticated"] = false
+	session.Values["username"] = nil
+	session.Save(r, w)
+
+	// Redirect to the home page or login page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

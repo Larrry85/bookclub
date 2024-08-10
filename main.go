@@ -36,6 +36,7 @@ func main() {
 	http.Handle("/post/reply", handle.SessionMiddleware(http.HandlerFunc(post.AddReply)))
 	http.HandleFunc("/password-reset-request", handle.PasswordResetRequestHandler)
 	http.HandleFunc("/reset-password", handle.ResetPasswordHandler)
+	http.Handle("/delete-account", handle.SessionMiddleware(http.HandlerFunc(handle.DeleteAccountHandler)))
 
 	// Serve static HTML files
 	//http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(servePage("static/html/post.html"))))
