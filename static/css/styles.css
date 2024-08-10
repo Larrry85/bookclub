@@ -2,6 +2,7 @@
 
 /* body---------------------------- */
 body, h1, h2, h3, p, ul, li {
+    height: 100%;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -243,4 +244,140 @@ footer {
 
 .error-message {
     text-align: center;
+}
+
+    /* Ensure the image is properly positioned and sized */
+    .image-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .image-container img {
+        width: 100%; /* Adjust as necessary */
+        height: auto;
+    }
+
+    /* Position text over the image */
+    .overlay-text {
+        position: absolute;
+        color: white; /* or any other contrasting color */
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 16px; /* Adjust font size as needed */
+    }
+
+    /* Ensure the image is properly positioned and sized */
+.image-container {
+    position: relative;
+    display: inline-block;
+    width: 100%; /* Ensure the container takes full width */
+    max-width: 800px; /* Adjust as needed */
+    margin: auto; /* Center the container */
+}
+
+.image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Position text over the image */
+.overlay-text {
+    position: absolute;
+    color: white; /* Or any other contrasting color */
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px; /* Adjust font size as needed */
+    max-width: 300px; /* Restrict width for better readability */
+    max-height: 18px;
+}
+
+
+/* Profile */
+/* Ensure the image is properly positioned and sized */
+.image-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%; /* Adjust as necessary */
+    height: auto; /* Or specify a fixed height if needed */
+}
+
+/* Ensure the image covers the container */
+.image-container img {
+    width: 100%; /* Adjust as necessary */
+    height: auto;
+}
+
+/* Position text over the image */
+.overlay-text {
+    position: absolute;
+    color: white; /* or any other contrasting color */
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px; /* Adjust font size as needed */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 10px; /* Space between text boxes */
+}
+
+/* Positioning of each text block */
+.username {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.email {
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.likes {
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.dislikes {
+    top: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.posts {
+    top: 180px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.replies {
+    top: 220px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.delete-account {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-height: 25px;
+}
+
+/* Center form text for better visibility */
+.overlay-text form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.overlay-text form button {
+    margin: 10px;
 }

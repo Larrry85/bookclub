@@ -11,6 +11,7 @@ Tietoturva:
 The forum detects duplicate email or username during registration. OK!
 The forum displays a warning message for invalid login attempts. OK!
 The forum detects incorrect email or password during login. OK!
+Passwords are secured and encrypted using bcrypt or other strong algorithms. XXXEXTRAXXXX OK!
 
 Postaus:
 Empty posts and comments are not allowed.
@@ -36,7 +37,7 @@ Multiple browser sessions function correctly.
 Sessions are implemented for user persistence.
 The registration process is user-friendly and secure. XXXEXTRAXXXX  OK! (mitä tarkoitaa secure?)
 UUIDs are used to manage sessions. XXXEXTRAXXXX
-Passwords are secured and encrypted using bcrypt or other strong algorithms. XXXEXTRAXXXX OK!
+
 
 
 

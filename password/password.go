@@ -1,4 +1,3 @@
-// password.go
 package password
 
 import (
@@ -10,18 +9,8 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
-	//"crypto/sha256"
-	// "encoding/base64"
 )
 
-/*
-/ Hashes passwords using SHA256 (consider using a better approach in production)
-
-	func HashPassword(password string) string {
-	    hash := sha256.Sum256([]byte(password))
-	    return base64.URLEncoding.EncodeToString(hash[:])
-	}
-*/
 var (
 	DB *sql.DB
 )
@@ -40,27 +29,7 @@ func CheckPassword(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-/*
-func InsertUser(username, email, password string) error {
-	// Check if the email already exists
-	var exists bool
-	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE Email = ?)", email).Scan(&exists)
-	if err != nil {
-		return fmt.Errorf("failed to check for existing email: %w", err)
-	}
-	if exists {
-		return fmt.Errorf("email already exists")
-	}
-
-	// Insert new user
-	_, err = DB.Exec("INSERT INTO User (Username, Email, Password) VALUES (?, ?, ?)", username, email, password)
-	if err != nil {
-		return fmt.Errorf("failed to insert user: %w", err)
-	}
-
-	return nil
-}*/
-
+// GenerateResetToken generates a random reset token and stores it in the database
 func GenerateResetToken(userID int) (string, error) {
 	token := make([]byte, 32) // Generate a 32-byte token
 	_, err := rand.Read(token)
@@ -79,6 +48,7 @@ func GenerateResetToken(userID int) (string, error) {
 	return tokenStr, nil
 }
 
+// ResetPassword resets a user's password using a token
 func ResetPassword(tokenStr, newPassword string) error {
 	// Validate token
 	var userID int
@@ -104,7 +74,7 @@ func ResetPassword(tokenStr, newPassword string) error {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
 
-	// Optionally, delete the token after use
+	// Delete the token after use
 	_, err = DB.Exec("DELETE FROM PasswordResetToken WHERE Token = ?", tokenStr)
 	if err != nil {
 		return fmt.Errorf("failed to delete reset token: %w", err)
@@ -123,7 +93,7 @@ func generateToken() (string, error) {
 	return hex.EncodeToString(token), nil
 }
 
-// Send a password reset email
+// SendResetEmail sends a password reset email
 func SendResetEmail(email, token string) error {
 	from := "no-reply@yourdomain.com"
 	password := "your-email-password"
@@ -163,7 +133,7 @@ func RequestPasswordReset(email string) error {
 	}
 
 	// Store the token and associated userID
-	_, err = DB.Exec("INSERT INTO PasswordResetTokens (UserID, Token) VALUES (?, ?)", userID, token)
+	_, err = DB.Exec("INSERT INTO PasswordResetToken (UserID, Token, Expiration) VALUES (?, ?, ?)", userID, token, time.Now().Add(1*time.Hour))
 	if err != nil {
 		return fmt.Errorf("failed to store token: %w", err)
 	}

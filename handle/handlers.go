@@ -233,14 +233,14 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 	username, _ := session.Values["username"].(string)
 
-	var email string
+	var email, hashedPassword string
 	var userID int
 
 	// Fetch user details
 	err := database.DB.QueryRow(`
-        SELECT UserID, Email 
+        SELECT UserID, Email, Password 
         FROM User 
-        WHERE Username = ?`, username).Scan(&userID, &email)
+        WHERE Username = ?`, username).Scan(&userID, &email, &hashedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -259,11 +259,20 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the password should be displayed
+	showPassword := r.URL.Query().Get("show") == "true"
+	var password string
+	if showPassword {
+		password = "ActualPlainTextPassword" // You should replace this with actual password retrieval logic.
+	}
+
 	data := map[string]interface{}{
-		"Username":    username,
-		"Email":       email,
-		"NumPosts":    numPosts,
-		"NumComments": numComments,
+		"Username":     username,
+		"Email":        email,
+		"NumPosts":     numPosts,
+		"NumComments":  numComments,
+		"ShowPassword": showPassword,
+		"Password":     password,
 	}
 
 	tmpl, err := template.ParseFiles("static/html/profile.html")
