@@ -20,6 +20,9 @@ server:
 The server uses correct HTTP methods (GET, POST, PUT...etc).
 Error messages are informative and user-friendly. XXXEXTRAXXXX
 
+pari test sähköpostiviestiä
+lionsreviewer1@gmail.com salasana: Reviewer1-
+lionsreviewer2@gmail.com salasana: Reviewer2test
 
 
 
@@ -56,8 +59,6 @@ UUIDs are used to manage sessions. XXXEXTRAXXXX
 *************************************************************************
 TEKEMÄTTÄ
 *************************************************************************
-pari test sähköpostiviestiä
-
 
 ***********************************
 Rekisteröidyt käyttäjät:
