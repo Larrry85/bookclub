@@ -23,6 +23,11 @@ var sessions = make(map[string]session.SessionData) // Change to session.Session
 
 type contextKey string
 
+type PageData struct {
+	Email string
+	Error string
+}
+
 const (
 	Username      = contextKey("Username")
 	Authenticated = contextKey("Authenticated")
@@ -251,13 +256,17 @@ func PasswordResetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		emailAddr := r.FormValue("email")
 
+		log.Printf("Password reset request for email: %s", emailAddr)
+
 		var username string
 		err := database.DB.QueryRow(`SELECT Username FROM User WHERE Email = ?`, emailAddr).Scan(&username)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				http.Error(w, "Email not found", http.StatusNotFound)
+				log.Printf("Email not found: %s", emailAddr)
+				renderPasswordReset(w, emailAddr, "Email not found")
 				return
 			}
+			log.Printf("Database error: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -267,6 +276,7 @@ func PasswordResetRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 		_, err = database.DB.Exec(`INSERT INTO PasswordReset (Email, Token, Expiry) VALUES (?, ?, ?)`, emailAddr, token, expiry)
 		if err != nil {
+			log.Printf("Failed to insert reset token for email %s: %v", emailAddr, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -276,18 +286,34 @@ func PasswordResetRequestHandler(w http.ResponseWriter, r *http.Request) {
 		body := fmt.Sprintf("Hello %s,\n\nTo reset your password, click the following link: %s\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nThe Literary Lions Team", username, resetURL)
 		err = email.SendEmail(emailAddr, subject, body)
 		if err != nil {
-			http.Error(w, "Failed to send email", http.StatusInternalServerError)
+			log.Printf("Failed to send email to %s: %v", emailAddr, err)
+			renderPasswordReset(w, emailAddr, "Failed to send email")
 			return
 		}
 
+		log.Printf("Password reset email sent to %s", emailAddr)
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
 	} else {
-		tmpl, err := template.ParseFiles("static/html/password-reset-request.html")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		tmpl.Execute(w, nil)
+		renderPasswordReset(w, "", "")
+	}
+}
+
+func renderPasswordReset(w http.ResponseWriter, email string, errorMsg string) {
+	tmpl, err := template.ParseFiles("static/html/password-reset-request.html")
+	if err != nil {
+		log.Printf("Template parsing error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, map[string]string{
+		"Email": email,
+		"Error": errorMsg,
+	})
+	if err != nil {
+		log.Printf("Template execution error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 }
 
