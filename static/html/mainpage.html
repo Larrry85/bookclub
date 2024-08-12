@@ -10,7 +10,11 @@
 <body>
     <!-- header ----------------------- -->
     <header>
+        {{if .Authenticated}}
+        <h1>Literary Lions Forum</h1>
+        {{else}}
         <h1>Welcome to Literary Lions Forum</h1>
+        {{end}}
         <nav>
             <a href="/">Home</a>
             <a href="/post">Forum</a>
