@@ -127,7 +127,7 @@
         }
 
         .posts-table {
-            width: 100%;
+            width: 800px;
             border-spacing: 0;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -190,14 +190,19 @@
             margin-bottom: 10px;
         }
         footer {
-    margin-top: 50px;
-    background: #333;
-    color: #fff;
-    text-align: center;
-    padding: 1rem;
-}
+        background: #000; /* Black background */
+        color: #fff; /* White text color */
+        text-align: center;
+        padding: 10px 0;
+        width: 100%;
+        position: relative; /* Adjust this if needed */
+        bottom: 0;
+        left: 0;
+    }
 
-
+    footer p {
+        margin: 0;
+    }
 
         @media (max-width: 768px) {
             .table-head, .table-row {
@@ -315,14 +320,14 @@
             pages: <a href="?page=1">1</a><a href="?page=2">2</a><a href="?page=3">3</a><br><br>
         </div>
 
-        <!-- Post Details -->
+        <!-- Post Details 
         <section class="post-details">
             <h2>{{.Post.Title}}</h2>
             <p>{{.Post.Content}}</p>
             <p>Category: {{.Post.Category}}</p>
             <p>Posted by {{.Post.Username}}</p>
             <p>Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
-        </section>
+        </section>-->
 
         <!-- Comments Section -->
         <section class="comments">
