@@ -140,7 +140,7 @@
             {{end}}
 
             <!-- Add Comment Form -->
-        
+            {{if .Authenticated}}
             <section class="add-comment">
                 <h3>Add a Comment</h3>
                 <form action="/comment/add" method="post">
@@ -150,13 +150,15 @@
                     <button type="submit">Add Comment</button>
                 </form>
             </section>
-      
+        {{else}}
+            <p>You need to <a href="/login">login</a> to add a comment.</p>
+        {{end}}
         
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2024 Literary Lions Forum</p>
+        <p>&copy; 2024 Literary Lions Forum</p><br><br><br><br><br><br><br>
     </footer>
 </body>
 
