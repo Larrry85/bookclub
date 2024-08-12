@@ -8,7 +8,6 @@
     <meta name="keywords" content="forum, posts, comments, discussions, literary">
     <title>Literary Lions Forum</title>
     <link rel="stylesheet" href="/static/css/postStyles.css">
-    
 </head>
 
 <body>
@@ -24,7 +23,7 @@
             {{if .Authenticated}}
                 <a href="/logout">Logout</a>
                 <a href="/profile">My Page</a>
-                <p>Welcome, {{.Username}}!</p>
+                <p>{{.Username}}</p>
             {{else}}
                 <a href="/login">Login</a>
                 <a href="/register">Register</a>
@@ -86,10 +85,10 @@
             <h2>Posts</h2><br>
             <div class="posts-table">
                 <div class="table-head">
-                    <div class="status">Status  </div>
-                    <div class="subjects">Subjects  </div>
-                    <div class="replies">Replies/Views  </div>
-                    <div class="last-reply">Last Reply  </div>
+                    <div class="status">Status</div>
+                    <div class="subjects">Subjects</div>
+                    <div class="replies">Replies/Views</div>
+                    <div class="last-reply">Last Reply</div>
                 </div>
                 {{range .Posts}}
                 <div class="table-row">
@@ -116,49 +115,34 @@
 
         <!-- Pagination -->
         <div class="pagination">
-            pages: <a href="?page=1">1</a><a href="?page=2">2</a><a href="?page=3">3</a><br><br>
+            {{if gt .Pagination.TotalPages 1}}
+                <span>Page {{.Pagination.CurrentPage}} of {{.Pagination.TotalPages}}</span>
+                {{if gt .Pagination.CurrentPage 1}}
+                    <a href="/post?page={{sub .Pagination.CurrentPage 1}}">Previous</a>
+                {{end}}
+                {{if lt .Pagination.CurrentPage .Pagination.TotalPages}}
+                    <a href="/post?page={{add .Pagination.CurrentPage 1}}">Next</a>
+                {{end}}
+            {{end}}
         </div>
 
-        <!-- Post Details 
+        <!-- Post Details -->
+        <!-- Uncomment if you want to display post details on this page -->
+        <!-- 
         <section class="post-details">
             <h2>{{.Post.Title}}</h2>
             <p>{{.Post.Content}}</p>
             <p>Category: {{.Post.Category}}</p>
             <p>Posted by {{.Post.Username}}</p>
             <p>Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
-        </section>-->
+        </section> 
+        -->
 
-        <!-- Comments Section -->
-        <section class="comments">
-            <h2>Comments</h2>
-            {{range .Replies}}
-            <div class="comment">
-                <p>{{.Content}}</p>
-            </div>
-            {{else}}
-            <p>No comments yet.</p>
-            {{end}}
-
-            <!-- Add Comment Form -->
-            {{if .Authenticated}}
-            <section class="add-comment">
-                <h3>Add a Comment</h3>
-                <form action="/comment/add" method="post">
-                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
-                    <label for="comment">Comment:</label>
-                    <textarea id="comment" name="content" required aria-required="true"></textarea>
-                    <button type="submit">Add Comment</button>
-                </form>
-            </section>
-        {{else}}
-            <p>You need to <a href="/login">login</a> to add a comment.</p>
-        {{end}}
-        
-        </section>
+    
     </main>
 
     <footer>
-        <p>&copy; 2024 Literary Lions Forum</p><br><br><br><br><br><br><br>
+        <p>&copy; 2024 Literary Lions Forum</p>
     </footer>
 </body>
 

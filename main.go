@@ -4,11 +4,13 @@ import (
 	"lions/database"
 	"lions/handle"
 	"lions/post"
+	"lions/session"
 	"log"
 	"net/http"
 )
 
 func main() {
+
 	// Initialize the database connection
 	database.Init()
 
@@ -16,21 +18,20 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	// Apply session middleware to all routes
-	http.Handle("/", handle.SessionMiddleware(http.HandlerFunc(handle.MainPageHandler)))
-	http.Handle("/register", handle.SessionMiddleware(http.HandlerFunc(handle.RegisterHandler)))
-	http.Handle("/login", handle.SessionMiddleware(http.HandlerFunc(handle.LoginHandler)))
-	http.Handle("/logout", handle.SessionMiddleware(http.HandlerFunc(handle.LogoutHandler)))
-	http.Handle("/post/create", handle.SessionMiddleware(http.HandlerFunc(post.CreatePost)))
-	http.Handle("/mainpage", handle.SessionMiddleware(http.HandlerFunc(handle.MainPageHandler)))
-	http.Handle("/post/view", handle.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
+	http.Handle("/", session.SessionMiddleware(http.HandlerFunc(handle.MainPageHandler)))
+	http.Handle("/register", session.SessionMiddleware(http.HandlerFunc(handle.RegisterHandler)))
+	http.Handle("/login", session.SessionMiddleware(http.HandlerFunc(handle.LoginHandler)))
+	http.Handle("/logout", session.SessionMiddleware(http.HandlerFunc(handle.LogoutHandler)))
+	http.Handle("/post/create", session.SessionMiddleware(http.HandlerFunc(post.CreatePost)))
+	http.Handle("/post/view", session.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
 
 	http.HandleFunc("/confirm", handle.ConfirmEmailHandler)
-	http.Handle("/post", handle.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
-	http.Handle("/post/reply", handle.SessionMiddleware(http.HandlerFunc(post.AddReply)))
+	http.Handle("/post", session.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
+	http.Handle("/post/reply", session.SessionMiddleware(http.HandlerFunc(post.AddReply)))
 	http.HandleFunc("/password-reset-request", handle.PasswordResetRequestHandler)
 	http.HandleFunc("/reset-password", handle.ResetPasswordHandler)
 	http.HandleFunc("/delete-account", handle.DeleteAccountHandler)
-	http.Handle("/profile", handle.SessionMiddleware(http.HandlerFunc(handle.ProfileHandler)))
+	http.Handle("/profile", session.SessionMiddleware(http.HandlerFunc(handle.ProfileHandler)))
 
 	log.Println("Server starting on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))

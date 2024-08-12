@@ -1,7 +1,6 @@
 package handle
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -19,49 +18,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var sessions = make(map[string]session.SessionData) // Change to session.SessionData
-
-type contextKey string
-
 type PageData struct {
 	Email string
 	Error string
 }
 
-const (
-	Username      = contextKey("Username")
-	Authenticated = contextKey("Authenticated")
-)
-
-func SessionMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var authenticated bool
-		var sessionData session.SessionData
-
-		// Try to retrieve the session cookie
-		sessionID, err := r.Cookie("session_id")
-		if err == nil {
-			// Retrieve session data if cookie is present
-			sessionData, authenticated = session.GetSession(sessionID.Value)
-		} else {
-			// If there's an error retrieving the cookie, set authenticated to false
-			authenticated = false
-		}
-
-		// Add session data and authentication status to the request context
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, Username, sessionData.Username)
-		ctx = context.WithValue(ctx, Authenticated, authenticated)
-		r = r.WithContext(ctx)
-
-		// Call the next handler in the chain
-		next.ServeHTTP(w, r)
-	})
-}
-
 func MainPageHandler(w http.ResponseWriter, r *http.Request) {
-	username, _ := r.Context().Value(Username).(string)
-	authenticated, _ := r.Context().Value(Authenticated).(bool)
+	username, _ := r.Context().Value(session.Username).(string)
+	authenticated, _ := r.Context().Value(session.Authenticated).(bool)
 
 	data := map[string]interface{}{
 		"Username":      username,
@@ -210,10 +174,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		})
 
 		http.SetCookie(w, &http.Cookie{
-			Name:  "session_id",
-			Value: sessionID,
-			Path:  "/",
-			// Domain: "yourdomain.com", // Uncomment if using a specific domain
+			Name:     "session_id",
+			Value:    sessionID,
+			Path:     "/",
+			HttpOnly: true, // Important for security
+			Secure:   true, // Use true in production with HTTPS
 		})
 		http.Redirect(w, r, "/mainpage", http.StatusSeeOther)
 		return
@@ -240,7 +205,10 @@ func renderLogin(w http.ResponseWriter, errorMessage string) {
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err == nil {
-		delete(sessions, cookie.Value)
+		// Invalidate the session
+		session.SetSession(cookie.Value, session.SessionData{})
+
+		// Remove the session cookie
 		http.SetCookie(w, &http.Cookie{
 			Name:   "session_id",
 			Value:  "",
@@ -449,7 +417,9 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Invalidate the user's session
-	delete(sessions, sessionID.Value)
+	session.SetSession(sessionID.Value, session.SessionData{})
+
+	// Remove the session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:   "session_id",
 		Value:  "",
@@ -460,4 +430,3 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// Redirect to the login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
-

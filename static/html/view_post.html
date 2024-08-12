@@ -1,48 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Post.Title}}</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <meta name="description" content="View post details and comments.">
+    <meta name="keywords" content="forum, post, comments, replies">
+    <title>{{.Post.Title}} - Literary Lions Forum</title>
+    <link rel="stylesheet" href="/static/css/postStyles.css">
 </head>
+
 <body>
     <header>
-        <h1>{{.Post.Title}}</h1>
-    </header>
-    <main>
-        <article>
-            <p>{{.Post.Title}}</p>
-            <p>{{.Post.Content}}</p>
-            <p>Posted by {{.Post.Username}} in {{.Post.Category}}</p>
-        </article>
-
-        <section class="replies">
-            <h2>Replies</h2>
-            {{range .Replies}}
-            <div class="reply">
-                <p>{{.Content}}</p>
-            </div>
+        {{if .Authenticated}}
+        <h1>Literary Lions Forum</h1>
+        {{else}}
+        <h1>Literary Lions Forum</h1>
+        {{end}}
+        <nav>
+            <a href="/">Home</a>
+            <a href="/post">Forum</a>
+            {{if .Authenticated}}
+                <a href="/logout">Logout</a>
+                <a href="/profile">My Page</a>
+                <p>{{.Username}}</p>
             {{else}}
-            <p>No replies yet. Be the first to reply!</p>
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {{end}}
+        </nav>
+    </header>
+
+    <main>
+        <!-- Post Details -->
+        <section class="post-details">
+            <h2>{{.Post.Title}}</h2>
+            <p>{{.Post.Content}}</p>
+            <p>Category: {{.Post.Category}}</p>
+            <p>Posted by <b>{{.Post.Username}}</b></p>
+            <p>Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
+        </section>
+
+        <!-- Replies Section -->
+        <section class="replies">
+            <h3>Replies</h3>
+            {{if .Replies}}
+                <ul>
+                    {{range .Replies}}
+                        <li>{{.Content}}</li>
+                    {{else}}
+                        <p>No replies yet.</p>
+                    {{end}}
+                </ul>
+            {{else}}
+                <p>No replies yet.</p>
             {{end}}
         </section>
 
+        <!-- Reply Form -->
+        {{if .Authenticated}}
         <section class="reply-form">
-            {{if .Authenticated}}
+            <h3>Add a Reply</h3>
             <form action="/post/reply" method="post">
                 <input type="hidden" name="post_id" value="{{.Post.ID}}">
-                <label for="content">Your Reply:</label>
-                <textarea id="content" name="content" required></textarea>
-                <button type="submit">Reply</button>
+                <label for="content">Reply:</label>
+                <textarea id="content" name="content" required aria-required="true"></textarea>
+                <button type="submit">Submit Reply</button>
             </form>
-            {{else}}
-            <p>You need to <a href="/login">login</a> to reply.</p>
-            {{end}}
         </section>
+        {{else}}
+        <p>You need to <a href="/login">login</a> to reply.</p>
+        {{end}}
     </main>
+
     <footer>
         <p>&copy; 2024 Literary Lions Forum</p>
     </footer>
 </body>
+
 </html>
