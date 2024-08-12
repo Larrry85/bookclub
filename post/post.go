@@ -23,6 +23,19 @@ type Post struct {
 	Dislikes   int
 	CategoryID int
 	UserID     int
+	RepliesCount  int
+    Views         int
+    LastReplyDate string
+    LastReplyUser string
+    IsPopular     bool
+}
+
+type PageData struct {
+    Authenticated bool
+    Username      string
+    Posts         []Post
+    Post          Post
+    Replies       []Reply
 }
 
 type Reply struct {

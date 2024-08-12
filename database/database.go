@@ -93,3 +93,19 @@ func GetUserStats(userID int) (numPosts, numComments int, err error) {
 
 	return numPosts, numComments, nil
 }
+/*
+func GetUserStats(userID int) (int, int, error) {
+    var numPosts, numComments int
+    query := `
+        SELECT 
+            (SELECT COUNT(*) FROM Post WHERE UserID = ?) AS NumPosts,
+            (SELECT COUNT(*) FROM Comment 
+                JOIN Post ON Comment.PostID = Post.PostID
+                WHERE Post.UserID = ?) AS NumComments
+    `
+    err := DB.QueryRow(query, userID, userID).Scan(&numPosts, &numComments)
+    if err != nil {
+        return 0, 0, err
+    }
+    return numPosts, numComments, nil
+}*/
