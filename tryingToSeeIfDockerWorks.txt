@@ -105,6 +105,76 @@ student@student-ThinkPad-T490s:~/literary-lions$ docker ps
 CONTAINER ID   IMAGE          COMMAND    CREATED         STATUS         PORTS                                       NAMES
 e4ee027c51aa   702a3aae4a94   "./main"   4 minutes ago   Up 3 minutes   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp   literary-lions
 
+student@student-ThinkPad-T490s:~/literary-lions$ docker ps
+CONTAINER ID   IMAGE          COMMAND    CREATED          STATUS          PORTS                                       NAMES
+e4ee027c51aa   702a3aae4a94   "./main"   36 minutes ago   Up 36 minutes   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp   literary-lions
+
 student@student-ThinkPad-T490s:~/literary-lions$ sudo docker logs e4ee027c51aa
 2024/08/12 08:07:31 Database schema and indexes created or already exist.
 2024/08/12 08:07:31 Server starting on port 8080...
+2024/08/12 08:12:01 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:12:01 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:12:01 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:12:01 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:12:03 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:12:03 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:12:03 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:12:03 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:01 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:41:01 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:01 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:41:01 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:02 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:41:02 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:02 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:41:02 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:04 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:41:04 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:04 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:41:04 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:10 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:41:10 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:10 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:41:10 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:10 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:41:10 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:16 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:41:16 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:17 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:41:17 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:30 Session not found for ID: fbeeadd9-935f-4109-83ba-029d9d734df8
+2024/08/12 08:41:30 Session get: fbeeadd9-935f-4109-83ba-029d9d734df8 -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:30 Login attempt with email: lauralionsforum@gmail.com
+2024/08/12 08:41:30 Fetched hashed password for email: lauralionsforum@gmail.com
+2024/08/12 08:41:30 Session set: 123fdf13-413c-49f3-8bbf-e83700b4b18c -> {Username:Laura AL Authenticated:true}
+2024/08/12 08:41:30 Session get: 123fdf13-413c-49f3-8bbf-e83700b4b18c -> {Username:Laura AL Authenticated:true}, exists: true
+2024/08/12 08:41:32 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:41:32 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:32 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:41:32 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:45 Session not found for ID: 17e75c95-5b4b-428a-ab24-022f53d3fa8a
+2024/08/12 08:41:45 Session get: 17e75c95-5b4b-428a-ab24-022f53d3fa8a -> {Username: Authenticated:false}, exists: false
+2024/08/12 08:41:45 Login attempt with email: lauralionssecond@gmail.com
+2024/08/12 08:41:45 Fetched hashed password for email: lauralionssecond@gmail.com
+2024/08/12 08:41:45 Session set: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}
+2024/08/12 08:41:45 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:41:45 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:41:48 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:41:48 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:41:48 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:41:49 Session get: 123fdf13-413c-49f3-8bbf-e83700b4b18c -> {Username:Laura AL Authenticated:true}, exists: true
+2024/08/12 08:41:49 Session get: 123fdf13-413c-49f3-8bbf-e83700b4b18c -> {Username:Laura AL Authenticated:true}, exists: true
+2024/08/12 08:41:49 Session get: 123fdf13-413c-49f3-8bbf-e83700b4b18c -> {Username:Laura AL Authenticated:true}, exists: true
+2024/08/12 08:42:01 Session get: 123fdf13-413c-49f3-8bbf-e83700b4b18c -> {Username:Laura AL Authenticated:true}, exists: true
+2024/08/12 08:42:01 Session get: 123fdf13-413c-49f3-8bbf-e83700b4b18c -> {Username:Laura AL Authenticated:true}, exists: true
+2024/08/12 08:42:03 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:42:03 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:43:03 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:43:03 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:43:09 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:43:09 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:43:09 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+2024/08/12 08:43:09 Session get: 22690941-e517-44c0-abba-13d777e9a800 -> {Username:Laura second Authenticated:true}, exists: true
+
+student@student-ThinkPad-T490s:~/literary-lions$ docker stop e4ee027c51aa
+e4ee027c51aa
