@@ -24,30 +24,37 @@ header {
 
 
 /* nav---------------------------- */
+nav {
+    margin-top: 10px;
+}
+
 nav a {
     color: #fff;
-    margin-right: 1rem;
-    text-decoration: none;
+    margin: 0 1rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
 }
 
-nav ul {
-    list-style: none;
-    padding: 0;
-}
-
-nav ul li {
-    display: inline;
-    margin: 0 10px;
-}
-
-nav ul li a {
-    color: #fff;
+nav a:hover {
+    color: #755e83; /* Light gray on hover */
     text-decoration: none;
 }
 
 /* main---------------------------- */
 main {
     padding: 1rem;
+
+}
+.headerlinks:hover {
+    color: #e4befa; /* Light gray on hover */
+    text-decoration: none;
+}
+
+.bookimage {
+    max-width: 100%; /* The image will never be wider than its container */
+    height: auto; /* The height will adjust to maintain the aspect ratio */
+    display: block; /* Ensures that there’s no extra space at the sides */
+    margin: 0 auto; /* Center the image horizontally */
 }
 
 /* post---------------------------- */
@@ -174,6 +181,17 @@ footer {
     border-radius: 8px;
     
 }
+/* Style for links */
+a {
+    color: #5A2D82; /* Set the desired color */
+    text-decoration: none; /* Remove the underline */
+}
+
+/* Change the color on hover */
+a:hover {
+    color: #9b59b6; /* Change to a lighter purple or any color you prefer */
+    text-decoration: underline; /* Optionally add underline on hover */
+}
 
 /* Align labels and inputs */
 .login-form label {
@@ -212,13 +230,13 @@ footer {
     padding: 10px 20px;
     border: none;
     border-radius: 4px;
-    background-color: #007bff;
+    background-color: #bb93fb;
     color: white;
     cursor: pointer;
 }
 
 .login-form button:hover {
-    background-color: #0056b3;
+    background-color: #bb93fb
 }
 
 /* --------------image---------------- */

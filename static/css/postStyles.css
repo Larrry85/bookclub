@@ -9,6 +9,8 @@
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
+    background-color: #fbfafc;
+
 }
 
 a {
@@ -48,7 +50,19 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
+
 }
+
+.loginlink:hover {
+    color: #e4befa; /* Light gray on hover */
+    text-decoration: none;
+}
+
+.headerlinks:hover {
+    color: #e4befa; /* Light gray on hover */
+    text-decoration: none;
+}
+
 
 h2 {
     font-size: 1.75rem;
@@ -63,10 +77,51 @@ h2 {
     padding: 1.5rem;
     margin-bottom: 2rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0.1, 0.1, 0.1, 0.4);
     width: 100%;
     max-width: 800px;
+
 }
+
+.create-post, .filter-posts {
+    padding: 0.75rem; /* Moderate padding to keep sections compact */
+    margin-bottom: 1rem; /* Reduce bottom margin for less spacing between sections */
+    max-width: 800px;
+}
+
+.create-post h2, .filter-posts h2 {
+    font-size: 1.2rem; /* Slightly smaller font size for the headings */
+    margin-bottom: 0.5rem; /* Reduce space below the headings */
+}
+
+/* Adjust input sizes */
+.create-post input[type="text"] {
+    width: 50%; /* Make the title input smaller */
+    font-size: 0.9rem; /* Reduce the font size of the title input */
+    padding: 0.5rem; /* Adjust padding inside title input */
+}
+
+.create-post textarea {
+    width: 100%; /* Make the content textarea larger */
+    height: 150px; /* Increase the height of the content textarea */
+    font-size: 1rem; /* Larger font size for the content textarea */
+    padding: 0.75rem; /* Adjust padding inside content textarea */
+}
+
+.create-post select {
+    width: 50%; /* Make the option dropdown smaller */
+    font-size: 0.9rem; /* Reduce the font size of the option dropdown */
+    padding: 0.5rem; /* Adjust padding inside option dropdown */
+}
+
+/* Style the form elements inside filter-posts */
+.filter-posts select {
+    width: 50%; /* Make the option dropdown smaller */
+    font-size: 0.9rem; /* Reduce the font size */
+    padding: 0.5rem; /* Adjust padding */
+}
+
+
 
 
 form {
@@ -181,5 +236,12 @@ margin: 0;
 @media (max-width: 768px) {
     .table-head, .table-row {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .create-post, .filter-posts {
+        padding: 0.5rem; /* Further reduce padding on smaller screens */
+        max-width: 100%; /* Ensure sections take full width on small screens */
     }
 }

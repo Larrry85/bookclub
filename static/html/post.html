@@ -18,67 +18,70 @@
         <h1>Welcome to Literary Lions Forum</h1>
         {{end}}
         <nav>
-            <a href="/">Home</a>
-            <a href="/post">Forum</a>
+            <a class ="headerlinks" href="/">Home</a>
+            <a class ="headerlinks" href="/post">Forum</a>
             {{if .Authenticated}}
-                <a href="/logout">Logout</a>
-                <a href="/profile">My Page</a>
-                <p>{{.Username}}</p>
+                <a class ="headerlinks" href="/logout">Logout</a>
+                <a  class ="headerlinks"href="/profile">My Page</a>
+                <br><br><p>{{.Username}} is logged in.</p>
             {{else}}
-                <a href="/login">Login</a>
-                <a href="/register">Register</a>
+                <a class ="headerlinks" href="/login">Login</a>
+                <a class ="headerlinks" href="/register">Register</a>
             {{end}}
         </nav>
     </header>
 
     <main>
-        <!-- Create New Post Section -->
-        {{if .Authenticated}}
-        <section class="create-post">
-            <h2>Create a New Post</h2>
-            <form action="/post/create" method="post">
-                <label for="title">Title:</label>
-                <input type="text" id="title" name="title" required aria-required="true">
-                <label for="content">Content:</label>
-                <textarea id="content" name="content" required aria-required="true"></textarea>
-                <label for="category">Category:</label>
-                <select id="category" name="category" required aria-required="true">
-                    <option value="general">General</option>
-                    <option value="genres">Genres</option>
-                </select>
-                <button type="submit">Post</button>
-            </form>
-        </section>
-        {{else}}
-        <p>You need to <a href="/login">login</a> to post.</p>
-        {{end}}
-
-        <!-- Filter Posts Section -->
-        <section class="filter-posts">
-            <h2>Filter Posts</h2>
-            <form action="/forum/filter" method="get">
-                <label for="category-filter">Category:</label>
-                <select id="category-filter" name="category">
-                    <option value="all">All</option>
-                    <option value="recent">Recent</option>
-                    <option value="general">General</option>
-                    <option value="genres">Genres</option>
-                </select>
-                {{if .Authenticated}}
-                <label for="time-filter">Sort by Time:</label>
-                <select id="time-filter" name="sort">
-                    <option value="asc">Oldest First</option>
-                    <option value="desc">Newest First</option>
-                </select>
-                <label for="likes-filter">Sort by Likes:</label>
-                <select id="likes-filter" name="likes">
-                    <option value="asc">Least Likes</option>
-                    <option value="desc">Most Likes</option>
-                </select>
-                {{end}}
-                <button type="submit">Filter</button>
-            </form>
-        </section>
+        <div class="create-filter-container">
+            <!-- Create New Post Section -->
+            {{if .Authenticated}}
+            <section class="create-post">
+                <h2>Create a New Post</h2>
+                <form action="/post/create" method="post">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required aria-required="true">
+                    <label for="content">Content:</label>
+                    <textarea id="content" name="content" required aria-required="true"></textarea>
+                    <label for="category">Category:</label>
+                    <select id="category" name="category" required aria-required="true">
+                        <option value="general">General</option>
+                        <option value="genres">Genres</option>
+                    </select>
+                    <button type="submit">Post</button>
+                </form>
+            </section>
+            {{else}}
+            <p>You need to <a class="loginlink" href="/login">login</a> to post.</p>
+            {{end}}
+        
+            <!-- Filter Posts Section -->
+            <section class="filter-posts">
+                <h2>Filter Posts</h2>
+                <form action="/forum/filter" method="get">
+                    <label for="category-filter">Category:</label>
+                    <select id="category-filter" name="category">
+                        <option value="all">All</option>
+                        <option value="recent">Recent</option>
+                        <option value="general">General</option>
+                        <option value="genres">Genres</option>
+                    </select>
+                    {{if .Authenticated}}
+                    <label for="time-filter">Sort by Time:</label>
+                    <select id="time-filter" name="sort">
+                        <option value="asc">Oldest First</option>
+                        <option value="desc">Newest First</option>
+                    </select>
+                    <label for="likes-filter">Sort by Likes:</label>
+                    <select id="likes-filter" name="likes">
+                        <option value="asc">Least Likes</option>
+                        <option value="desc">Most Likes</option>
+                    </select>
+                    {{end}}
+                    <button type="submit">Filter</button>
+                </form>
+            </section>
+        </div>
+        
 
         <!-- Posts Section -->
         <section class="posts">
@@ -142,7 +145,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2024 Literary Lions Forum</p>
+        <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>
 </body>
 
