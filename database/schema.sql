@@ -5,11 +5,12 @@ CREATE TABLE IF NOT EXISTS Category (
 );
 
 CREATE TABLE IF NOT EXISTS User (
-    UserID INTEGER PRIMARY KEY AUTOINCREMENT,
+    UserID INTEGER PRIMARY KEY,
     Email TEXT UNIQUE NOT NULL,
     Username TEXT UNIQUE NOT NULL,
     Password TEXT NOT NULL
 );
+
 
 CREATE TABLE IF NOT EXISTS Post (
     PostID TEXT PRIMARY KEY,  -- Ensure this is TEXT if you're using a string for PostID
