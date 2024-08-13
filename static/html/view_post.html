@@ -13,20 +13,20 @@
 <body>
     <header>
         {{if .Authenticated}}
-        <h1>Literary Lions Forum</h1>
+        <h1>LITERARY LIONS FORUM</h1>
         {{else}}
-        <h1>Literary Lions Forum</h1>
+        <h1>WELCOME TO LITERARY LIONS FORUM</h1>
         {{end}}
         <nav>
-            <a href="/">Home</a>
-            <a href="/post">Forum</a>
+            <a class ="headerlinks" href="/">Home</a>
+            <a class ="headerlinks" href="/post">Forum</a>
             {{if .Authenticated}}
-                <a href="/logout">Logout</a>
-                <a href="/profile">My Page</a>
-                <p>{{.Username}}</p>
+                <a class ="headerlinks" href="/logout">Logout</a>
+                <a class ="headerlinks" href="/profile">My Page</a>
+                <br><br><p>{{.Username}} is logged in.</p>
             {{else}}
-                <a href="/login">Login</a>
-                <a href="/register">Register</a>
+                <a class ="headerlinks" href="/login">Login</a>
+                <a class ="headerlinks" href="/register">Register</a>
             {{end}}
         </nav>
     </header>
@@ -69,12 +69,12 @@
             </form>
         </section>
         {{else}}
-        <p>You need to <a href="/login">login</a> to reply.</p>
+        <p>You need to <a  class="loginlink" href="/login">login</a> to reply.</p>
         {{end}}
     </main>
 
     <footer>
-        <p>&copy; 2024 Literary Lions Forum</p>
+        <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>
 </body>
 

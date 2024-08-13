@@ -10,16 +10,16 @@
 <body>
     <!-- header ----------------------- -->
     <header>
-        <h1>Welcome to Literary Lions Forum</h1>
+        <h1>WELCOME TO LITERARY LIONS FORUM</h1>
         <nav>
-            <a href="/">Home</a>
-            <a href="/post">Forum</a>
+            <a class ="headerlinks" href="/">Home</a>
+            <a class ="headerlinks" href="/post">Forum</a>
             {{if .Authenticated}}
-                <a href="/logout">Logout</a>             
-                <a href="/profile">My Page</a>
+                <a class ="headerlinks" href="/logout">Logout</a>             
+                <a class ="headerlinks" href="/profile">My Page</a>
             {{else}}
-                <a href="/login">Login</a>
-                <a href="/register">Register</a>
+                <a class ="headerlinks" href="/login">Login</a>
+                <a class ="headerlinks" href="/register">Register</a>
             {{end}}
         </nav>
     </header>
@@ -53,7 +53,7 @@
 
     <!-- footer ----------------------- -->
     <footer>
-        <p>&copy; 2024 Literary Lions Forum</p>
+        <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>
 
 

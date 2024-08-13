@@ -63,3 +63,25 @@ CREATE INDEX IF NOT EXISTS idx_comment_user ON Comment(UserID);
 CREATE INDEX IF NOT EXISTS idx_like_user ON LikesDislikes(UserID);
 CREATE INDEX IF NOT EXISTS idx_like_post ON LikesDislikes(PostID);
 CREATE INDEX IF NOT EXISTS idx_like_comment ON LikesDislikes(CommentID);
+
+
+CREATE TABLE IF NOT EXISTS PostLikes (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    UserID INTEGER NOT NULL,
+    PostID TEXT,  -- Ensure this matches the type in Post table
+    CommentID INTEGER,
+    IsLike BOOLEAN NOT NULL,
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
+    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE
+);
+
+-- To count likes and dislikes
+SELECT 
+    PostID, 
+    SUM(CASE WHEN IsLike = TRUE THEN 1 ELSE 0 END) AS Likes, 
+    SUM(CASE WHEN IsLike = FALSE THEN 1 ELSE 0 END) AS Dislikes 
+FROM 
+    PostLikes 
+GROUP BY 
+    PostID;

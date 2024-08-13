@@ -22,7 +22,7 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 		postID, _ := strconv.Atoi(r.FormValue("post_id"))
 		isLike := r.FormValue("is_like") == "true"
 
-		_, err := database.DB.Exec(`INSERT INTO Like (UserID, PostID, IsLike) VALUES (?, ?, ?) ON CONFLICT(UserID, PostID) DO UPDATE SET IsLike = ?`, userID, postID, isLike, isLike)
+		_, err := database.DB.Exec(`INSERT INTO LikesDislikes (UserID, PostID, IsLike) VALUES (?, ?, ?) ON CONFLICT(UserID, PostID) DO UPDATE SET IsLike = ?`, userID, postID, isLike, isLike)
 		if err != nil {
 			http.Error(w, "Could not update like", http.StatusInternalServerError)
 			return
