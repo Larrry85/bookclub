@@ -91,10 +91,10 @@
             <h2>Posts</h2><br>
             <div class="posts-table">
                 <div class="table-head">
-                    <div class="status">Status</div>
-                    <div class="subjects">Subjects</div>
-                    <div class="replies">Replies/Views</div>
-                    <div class="last-reply">Last Reply</div>
+                    <div class="status"></div>
+                    <div class="subjects">Title</div>
+                    <div class="replies">Replies</div>
+                    <!--<div class="last-reply">Last Reply</div>-->
                 </div>
                 {{range .Posts}}
                 <div class="table-row">
@@ -107,10 +107,11 @@
                         <span>Started by <b>{{.Username}}</b></span>
                     </div>
                     <div class="replies">
-                        {{.RepliesCount}} replies <br> {{.Views}} views
+                        {{.RepliesCount}} replies
                     </div>
                     <div class="last-reply">
-                        {{.LastReplyDate}} <br>By <b>{{.LastReplyUser}}</b>
+                        <!--{{.LastReplyDate}} <br>By <b>{{.LastReplyUser}}</b>-->
+                        <p>Like <br> Dislike </p>
                     </div>
                 </div>
                 {{else}}
