@@ -62,3 +62,14 @@ CREATE INDEX IF NOT EXISTS idx_comment_user ON Comment(UserID);
 CREATE INDEX IF NOT EXISTS idx_like_user ON LikesDislikes(UserID);
 CREATE INDEX IF NOT EXISTS idx_like_post ON LikesDislikes(PostID);
 CREATE INDEX IF NOT EXISTS idx_like_comment ON LikesDislikes(CommentID);
+
+
+-- To count likes and dislikes
+SELECT 
+    PostID, 
+    SUM(CASE WHEN IsLike = TRUE THEN 1 ELSE 0 END) AS Likes, 
+    SUM(CASE WHEN IsLike = FALSE THEN 1 ELSE 0 END) AS Dislikes 
+FROM 
+    PostLikes 
+GROUP BY 
+    PostID;
