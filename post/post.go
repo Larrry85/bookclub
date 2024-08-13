@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"text/template"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -46,7 +47,8 @@ type PageData struct {
 }
 
 type Reply struct {
-	Content string
+	Content  string
+	Username string
 }
 
 type PostViewData struct {
@@ -63,22 +65,6 @@ func add(a, b int) int {
 
 func sub(a, b int) int {
 	return a - b
-}
-
-func getSessionData(r *http.Request) (authenticated bool, username string, userID int, err error) {
-	sessionID, err := r.Cookie("session_id")
-	if err != nil {
-		return false, "", 0, nil
-	}
-
-	sessionData, authenticated := session.GetSession(sessionID.Value)
-	if !authenticated {
-		return false, "", 0, nil
-	}
-
-	username = sessionData.Username
-	userID = sessionData.UserID
-	return authenticated, username, userID, nil
 }
 
 // ViewPost handles displaying a single post and its replies
@@ -125,7 +111,12 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := database.DB.Query(`SELECT Content FROM Comment WHERE PostID = ?`, postID)
+	// Fetch replies with user information
+	rows, err := database.DB.Query(`
+        SELECT c.Content, u.Username 
+        FROM Comment c
+        JOIN User u ON c.UserID = u.UserID
+        WHERE c.PostID = ?`, postID)
 	if err != nil {
 		http.Error(w, "Could not retrieve comments", http.StatusInternalServerError)
 		return
@@ -135,19 +126,16 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	var replies []Reply
 	for rows.Next() {
 		var reply Reply
-		if err := rows.Scan(&reply.Content); err != nil {
+		if err := rows.Scan(&reply.Content, &reply.Username); err != nil {
 			http.Error(w, "Could not scan comment", http.StatusInternalServerError)
 			return
 		}
 		replies = append(replies, reply)
 	}
 
-	// Use helper function to get session data
-	authenticated, username, _, err := getSessionData(r)
-	if err != nil {
-		http.Error(w, "Could not retrieve session data", http.StatusInternalServerError)
-		return
-	}
+	// Use session data from the request context
+	authenticated := r.Context().Value(session.Authenticated).(bool)
+	username = r.Context().Value(session.Username).(string)
 
 	data := PostViewData{
 		Post:          post,
@@ -183,18 +171,15 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 		postID := uuid.New().String()
 
-		authenticated, username, _, err := getSessionData(r)
-		if err != nil {
-			http.Error(w, "Could not retrieve session data", http.StatusInternalServerError)
-			return
-		}
+		authenticated := r.Context().Value(session.Authenticated).(bool)
+		username := r.Context().Value(session.Username).(string)
 		if !authenticated {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
 		var userID int
-		err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
+		err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
 		if err != nil {
 			http.Error(w, "Could not find user", http.StatusInternalServerError)
 			return
@@ -286,16 +271,14 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		var userID int
-
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &userID); err != nil {
+		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID)
+		if err != nil {
 			http.Error(w, "Could not scan post", http.StatusInternalServerError)
 			log.Printf("Error scanning post: %v", err)
 			return
 		}
 
-		post.UserID = userID
-
+		// Fetch the category name for each post
 		var categoryName string
 		err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
 		if err != nil {
@@ -305,38 +288,37 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 		}
 		post.Category = categoryName
 
+		// Fetch the username for each post
 		var username string
 		err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
 		if err != nil {
-			username = "Unknown"
+			http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+			log.Printf("Error retrieving username: %v", err)
+			return
 		}
 		post.Username = username
 
 		posts = append(posts, post)
 	}
 
-	// Calculate pagination details
-	totalPages := (totalPosts + postsPerPage - 1) / postsPerPage // Ceiling division
+	// Calculate the total number of pages
+	totalPages := (totalPosts + postsPerPage - 1) / postsPerPage
 
-	// Check for session cookie
-	sessionCookie, err := r.Cookie("session_id")
-	authenticated, _ := r.Context().Value("Authenticated").(bool)
-	username, _ := r.Context().Value("Username").(string)
-
-	if err == nil {
-		sessionData, exists := session.GetSession(sessionCookie.Value)
-		if exists {
-			authenticated = sessionData.Authenticated
-			username = sessionData.Username
-		}
+	// Set up the pagination data
+	pagination := Pagination{
+		CurrentPage: currentPage,
+		TotalPages:  totalPages,
 	}
 
-	// Prepare data for template
+	// Use session data from the request context
+	authenticated := r.Context().Value(session.Authenticated).(bool)
+	username := r.Context().Value(session.Username).(string)
+
 	data := PageData{
 		Posts:         posts,
+		Pagination:    pagination,
 		Authenticated: authenticated,
 		Username:      username,
-		Pagination:    Pagination{CurrentPage: currentPage, TotalPages: totalPages},
 	}
 
 	tmpl, err := template.New("post.html").Funcs(template.FuncMap{
@@ -345,66 +327,70 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 	}).ParseFiles("static/html/post.html")
 	if err != nil {
 		http.Error(w, "Template parsing error", http.StatusInternalServerError)
-		log.Printf("Template parsing error: %v", err)
 		return
 	}
 	if err := tmpl.ExecuteTemplate(w, "post.html", data); err != nil {
 		http.Error(w, "Template execution error", http.StatusInternalServerError)
-		log.Printf("Template execution error: %v", err)
 		return
 	}
 }
 
 func AddReply(w http.ResponseWriter, r *http.Request) {
+	// Ensure the request method is POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusInternalServerError)
-		return
-	}
-
-	postID := r.FormValue("post_id")
-	content := r.FormValue("content")
-
-	if postID == "" || content == "" {
-		http.Error(w, "Invalid input: post_id and content are required", http.StatusBadRequest)
-		return
-	}
-
-	authenticated, _, userID, err := getSessionData(r)
-	if err != nil {
-		http.Error(w, "Could not retrieve session data", http.StatusInternalServerError)
-		return
-	}
+	// Check if the user is authenticated using session context
+	authenticated := r.Context().Value(session.Authenticated).(bool)
 	if !authenticated {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	var username string
-	err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, userID).Scan(&username)
-	if err != nil {
-		log.Printf("Error retrieving username for UserID %d: %v", userID, err)
-		if err == sql.ErrNoRows {
-			http.Error(w, "User not found", http.StatusNotFound)
-		} else {
-			http.Error(w, "Could not retrieve username: "+err.Error(), http.StatusInternalServerError)
-		}
+	// Retrieve username from the session
+	username := r.Context().Value(session.Username).(string)
+
+	// Get the post ID and reply content from the form data
+	postID := r.FormValue("postID")
+	content := r.FormValue("content")
+	log.Printf("Received postID: %s, content: %s", postID, content)
+
+	// Validate the input data
+	if postID == "" || content == "" {
+		http.Error(w, "Post ID and content are required", http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Adding reply for postID %s by user %s", postID, username)
-
-	_, err = database.DB.Exec(`INSERT INTO Comment (PostID, UserID, Content) VALUES (?, ?, ?)`, postID, userID, content)
+	// Retrieve the user ID from the database based on the username
+	var userID int
+	err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
 	if err != nil {
-		log.Printf("Error adding reply: %v", err)
+		http.Error(w, "Could not retrieve user ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Insert the reply into the database, including the userID
+	_, err = database.DB.Exec(`INSERT INTO Comment (PostID, UserID, Content) VALUES (?, ?, ?)`,
+		postID, userID, content)
+	if err != nil {
+		log.Printf("Error adding reply: %v", err) // Log the actual error
 		http.Error(w, "Could not add reply: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Update the last reply date and user for the post
+	_, err = database.DB.Exec(`
+        UPDATE Post 
+        SET LastReplyDate = ?, LastReplyUser = ?
+        WHERE PostID = ?`, time.Now(), username, postID)
+	if err != nil {
+		http.Error(w, "Could not update post with last reply info", http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect back to the post view page
 	redirectURL := "/post/view?id=" + url.QueryEscape(postID)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }

@@ -47,7 +47,7 @@
             {{if .Replies}}
                 <ul>
                     {{range .Replies}}
-                        <li>{{.Content}}</li>
+                        <li><b>{{.Username}}:</b> {{.Content}}</li>
                     {{else}}
                         <p>No replies yet.</p>
                     {{end}}
@@ -61,8 +61,8 @@
         {{if .Authenticated}}
         <section class="reply-form">
             <h3>Add a Reply</h3>
-            <form action="/post/reply" method="post">
-                <input type="hidden" name="post_id" value="{{.Post.ID}}">
+            <form action="/post/reply" method="POST">
+                <input type="hidden" name="postID" value="{{.Post.ID}}">
                 <label for="content">Reply:</label>
                 <textarea id="content" name="content" required aria-required="true"></textarea>
                 <button type="submit">Submit Reply</button>

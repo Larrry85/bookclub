@@ -18,13 +18,15 @@ CREATE TABLE IF NOT EXISTS Post (
     Content TEXT,
     UserID INTEGER,
     CategoryID INTEGER,
+    LastReplyUser TEXT,
+    LastReplyDate DATETIME,
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL,  -- Adjust to ON DELETE SET NULL if needed
     FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID)
 );
 
 CREATE TABLE IF NOT EXISTS Comment (
     CommentID INTEGER PRIMARY KEY AUTOINCREMENT,
-    PostID TEXT NOT NULL,  -- Ensure this matches the type in Post table
+    PostID TEXT,  -- Ensure this matches the type in Post table
     UserID INTEGER,  -- Adjust to allow NULL if using ON DELETE SET NULL
     Content TEXT NOT NULL,
     FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
