@@ -1,4 +1,5 @@
 // post.go
+// post.go
 package post
 
 import (
@@ -28,8 +29,9 @@ type Post struct {
 	UserID        int    // ID of the user who created the post
 	RepliesCount  int    // Number of replies to the post
 	Views         int    // Number of views of the post
-	LastReplyDate string // Date of the last reply
-	LastReplyUser string // Username of the user who made the last reply
+	LastReplyDate sql.NullString // Date of the last reply
+	LastReplyUser sql.NullString // Username of the user who made the last reply
+	CreatedAt     sql.NullString // Timestamp when the post was created
 }
 
 // Pagination represents pagination data for listing posts.
@@ -121,14 +123,15 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch replies and associated user information
+	// Retrieve replies for the post
 	rows, err := database.DB.Query(`
-        SELECT c.Content, u.Username 
-        FROM Comment c
-        JOIN User u ON c.UserID = u.UserID
-        WHERE c.PostID = ?`, postID)
+    SELECT c.Content, u.Username
+    FROM Comment c
+    JOIN User u ON c.UserID = u.UserID
+    WHERE c.PostID = ?`, postID)
+
 	if err != nil {
-		http.Error(w, "Could not retrieve comments", http.StatusInternalServerError)
+		http.Error(w, "Could not retrieve replies", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -137,10 +140,14 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var reply Reply
 		if err := rows.Scan(&reply.Content, &reply.Username); err != nil {
-			http.Error(w, "Could not scan comment", http.StatusInternalServerError)
+			http.Error(w, "Could not scan reply", http.StatusInternalServerError)
 			return
 		}
 		replies = append(replies, reply)
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Error retrieving replies", http.StatusInternalServerError)
+		return
 	}
 
 	// Use session data from the request context
@@ -223,8 +230,9 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert the new post into the database
-		_, err = database.DB.Exec(`INSERT INTO Post (PostID, Title, Content, UserID, CategoryID) VALUES (?, ?, ?, ?, ?)`,
-			postID, title, content, userID, categoryID)
+		_, err = database.DB.Exec(`INSERT INTO Post (PostID, Title, Content, UserID, CategoryID, CreatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
+		postID, title, content, userID, categoryID, time.Now().Format(time.RFC3339))
+	
 		if err != nil {
 			http.Error(w, "Could not create post", http.StatusInternalServerError)
 			return
@@ -277,8 +285,9 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch posts for the current page
 	rows, err := database.DB.Query(`
-        SELECT PostID, Title, Content, CategoryID, UserID
+        SELECT PostID, Title, Content, CategoryID, UserID, LastReplyUser, LastReplyDate, CreatedAt
         FROM Post
+        ORDER BY CreatedAt DESC
         LIMIT ? OFFSET ?`, postsPerPage, offset)
 	if err != nil {
 		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
@@ -290,7 +299,7 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID)
+		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID, &post.LastReplyUser, &post.LastReplyDate, &post.CreatedAt)
 		if err != nil {
 			http.Error(w, "Could not scan post", http.StatusInternalServerError)
 			log.Printf("Error scanning post: %v", err)
@@ -354,6 +363,7 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 
 // AddReply handles adding a reply to a post.
 func AddReply(w http.ResponseWriter, r *http.Request) {

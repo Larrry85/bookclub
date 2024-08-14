@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS Post (
     CategoryID INTEGER, -- ID of the category to which the post belongs
     LastReplyUser TEXT, -- User who last replied to the post
     LastReplyDate DATETIME, -- Date and time of the last reply
+    CreatedAt DATETIME,
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL, -- Foreign key to User table
     FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) -- Foreign key to Category table
 );

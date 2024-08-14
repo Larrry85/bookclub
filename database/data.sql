@@ -33,3 +33,20 @@ FROM
     PostLikes 
 GROUP BY 
     PostID; -- Group results by PostID
+
+ALTER TABLE Post ADD COLUMN CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP;
+
+
+CREATE TRIGGER set_created_at
+AFTER INSERT ON Comment
+FOR EACH ROW
+BEGIN
+    UPDATE Comment
+    SET CreatedAt = datetime('now')
+    WHERE rowid = NEW.rowid;
+END;
+
+SELECT c.Content, u.Username
+FROM Comment c
+JOIN User u ON c.UserID = u.UserID
+WHERE c.PostID = ?
