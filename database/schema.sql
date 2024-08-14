@@ -17,38 +17,40 @@ CREATE TABLE IF NOT EXISTS User (
 
 -- Table to store posts
 CREATE TABLE IF NOT EXISTS Post (
-    PostID TEXT PRIMARY KEY, -- Unique identifier for each post (using TEXT if PostID is a string)
+    PostID INTEGER PRIMARY KEY, -- Unique identifier for each post
     Title TEXT, -- Title of the post
     Content TEXT, -- Content of the post
     UserID INTEGER, -- ID of the user who created the post
     CategoryID INTEGER, -- ID of the category to which the post belongs
     LastReplyUser TEXT, -- User who last replied to the post
     LastReplyDate DATETIME, -- Date and time of the last reply
-    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL, -- Foreign key to User table, set UserID to NULL if user is deleted
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL, -- Foreign key to User table
     FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) -- Foreign key to Category table
 );
 
 -- Table to store comments on posts
 CREATE TABLE IF NOT EXISTS Comment (
     CommentID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each comment
-    PostID TEXT, -- ID of the post to which the comment belongs (matching type in Post table)
+    PostID INTEGER, -- ID of the post to which the comment belongs
     UserID INTEGER, -- ID of the user who made the comment
     Content TEXT NOT NULL, -- Content of the comment
-    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table, delete comment if post is deleted
-    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table, set UserID to NULL if user is deleted
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
 );
 
 -- Table to store likes and dislikes on posts and comments
-CREATE TABLE IF NOT EXISTS PostLikes (
+CREATE TABLE  IF NOT EXISTS  PostLikes (
     ID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each like/dislike entry
     UserID INTEGER NOT NULL, -- ID of the user who liked/disliked
-    PostID TEXT, -- ID of the post (matching type in Post table)
+    PostID INTEGER, -- ID of the post (matching type in Post table)
     CommentID INTEGER, -- ID of the comment (can be NULL if the like/dislike is for a post)
     IsLike BOOLEAN NOT NULL, -- TRUE for like, FALSE for dislike
-    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE, -- Foreign key to User table, delete like/dislike if user is deleted
-    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table, delete like/dislike if post is deleted
-    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE -- Foreign key to Comment table, delete like/dislike if comment is deleted
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE, -- Foreign key to User table
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
+    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE, -- Foreign key to Comment table
+    UNIQUE (UserID, PostID, CommentID) -- Unique constraint on combination of UserID, PostID, and CommentID
 );
+
 
 -- Table to store password reset tokens
 CREATE TABLE IF NOT EXISTS PasswordReset (
@@ -66,7 +68,6 @@ CREATE TABLE IF NOT EXISTS Session (
 );
 
 -- Create indexes to improve query performance
-
 CREATE INDEX IF NOT EXISTS idx_post_user ON Post(UserID); -- Index on UserID in Post table
 CREATE INDEX IF NOT EXISTS idx_post_category ON Post(CategoryID); -- Index on CategoryID in Post table
 CREATE INDEX IF NOT EXISTS idx_comment_post ON Comment(PostID); -- Index on PostID in Comment table
@@ -74,13 +75,3 @@ CREATE INDEX IF NOT EXISTS idx_comment_user ON Comment(UserID); -- Index on User
 CREATE INDEX IF NOT EXISTS idx_like_user ON PostLikes(UserID); -- Index on UserID in PostLikes table
 CREATE INDEX IF NOT EXISTS idx_like_post ON PostLikes(PostID); -- Index on PostID in PostLikes table
 CREATE INDEX IF NOT EXISTS idx_like_comment ON PostLikes(CommentID); -- Index on CommentID in PostLikes table
-
--- Query to count likes and dislikes for each post
-SELECT 
-    PostID, 
-    SUM(CASE WHEN IsLike = TRUE THEN 1 ELSE 0 END) AS Likes, -- Count of likes
-    SUM(CASE WHEN IsLike = FALSE THEN 1 ELSE 0 END) AS Dislikes -- Count of dislikes
-FROM 
-    PostLikes 
-GROUP BY 
-    PostID; -- Group results by PostID

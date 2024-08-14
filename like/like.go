@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"github.com/gorilla/sessions"
 	"lions/database"
+	"log"
 )
 
 var (
@@ -31,15 +32,15 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Insert or update the like/dislike status in the database
 		_, err := database.DB.Exec(`
-			INSERT INTO PostLikes (UserID, PostID, IsLike) 
-			VALUES (?, ?, ?) 
-			ON CONFLICT(UserID, PostID) 
-			DO UPDATE SET IsLike = ?`, userID, postID, isLike, isLike)
-		if err != nil {
-			// If there is an error, return an internal server error
-			http.Error(w, "Could not update like", http.StatusInternalServerError)
-			return
-		}
+		INSERT INTO PostLikes (UserID, PostID, IsLike) 
+		VALUES (?, ?, ?) 
+		ON CONFLICT(UserID, PostID) 
+		DO UPDATE SET IsLike = ?`, userID, postID, isLike, isLike)
+	if err != nil {
+		log.Printf("Error updating like/dislike: %v", err) // Log detailed error
+		http.Error(w, "Could not update like: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 		// Redirect the user to the posts page after updating
 		http.Redirect(w, r, "/posts", http.StatusSeeOther)

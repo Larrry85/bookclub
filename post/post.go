@@ -30,7 +30,6 @@ type Post struct {
 	Views         int    // Number of views of the post
 	LastReplyDate string // Date of the last reply
 	LastReplyUser string // Username of the user who made the last reply
-	IsPopular     bool   // Whether the post is considered popular
 }
 
 // Pagination represents pagination data for listing posts.
@@ -114,8 +113,9 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	err = database.DB.QueryRow(`
         SELECT 
             (SELECT COUNT(*) FROM PostLikes WHERE PostID = ? AND IsLike = 1) AS Likes,
-            (SELECT COUNT(*) FROM PostLikes WHERE PostID = ? AND IsLike = 0) AS Dislikes
-        `, postID, postID).Scan(&post.Likes, &post.Dislikes)
+            (SELECT COUNT(*) FROM PostLikes WHERE PostID = ? AND IsLike = 0) AS Dislikes,
+            (SELECT COUNT(*) FROM Comment WHERE PostID = ?) AS RepliesCount
+        `, postID, postID, postID).Scan(&post.Likes, &post.Dislikes, &post.RepliesCount)
 	if err != nil {
 		http.Error(w, "Could not retrieve likes/dislikes", http.StatusInternalServerError)
 		return
