@@ -41,7 +41,7 @@ func main() {
 	http.HandleFunc("/reset-password", handle.ResetPasswordHandler)
 	http.HandleFunc("/delete-account", handle.DeleteAccountHandler)
 	http.HandleFunc("/like", like.LikePostHandler)
-	http.HandleFunc("/filter", handle.FilterPostHandler)
+	http.HandleFunc("/filter", post.FilterPostHandler)
 
 	// Start the HTTP server
 	// This listens for incoming HTTP requests on port 8080 and serves them using the routes defined above.

@@ -425,3 +425,89 @@ func AddReply(w http.ResponseWriter, r *http.Request) {
 	redirectURL := "/post/view?id=" + url.QueryEscape(postID)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
+
+func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
+	// Retrieve filter and sort parameters from query
+	category := r.URL.Query().Get("category")
+	sortOrder := r.URL.Query().Get("sort")
+	likesOrder := r.URL.Query().Get("likes")
+
+	// Default values if parameters are not provided
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+	if likesOrder == "" {
+		likesOrder = "desc"
+	}
+
+	// Construct SQL query with filtering and sorting
+	query := `
+		SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
+		       COALESCE(l.Likes, 0) AS Likes, 
+		       COALESCE(l.Dislikes, 0) AS Dislikes, 
+		       p.CreatedAt
+		FROM Post p
+		LEFT JOIN (
+			SELECT PostID, 
+			       SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+			       SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+			FROM PostLikes
+			GROUP BY PostID
+		) l ON p.PostID = l.PostID
+		WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
+		       OR ? = 'all')
+		ORDER BY p.CreatedAt ` + sortOrder + `, l.Likes ` + likesOrder
+
+	// Prepare to execute the query
+	rows, err := database.DB.Query(query, category, category, category)
+	if err != nil {
+		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
+		log.Printf("Error retrieving posts: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID, &post.CategoryID, &post.Likes, &post.Dislikes, &post.CreatedAt)
+		if err != nil {
+			http.Error(w, "Could not scan post", http.StatusInternalServerError)
+			log.Printf("Error scanning post: %v", err)
+			return
+		}
+		posts = append(posts, post)
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Error iterating through posts", http.StatusInternalServerError)
+		log.Printf("Error iterating posts: %v", err)
+		return
+	}
+
+	// Use session data from the request context
+	authenticated := r.Context().Value(session.Authenticated).(bool)
+	username := r.Context().Value(session.Username).(string)
+
+	// Prepare data for rendering the template
+	data := PageData{
+		Posts:         posts,
+		Authenticated: authenticated,
+		Username:      username,
+	}
+
+	// Render the template
+	tmpl, err := template.New("post.html").Funcs(template.FuncMap{
+		"add": add,
+		"sub": sub,
+	}).ParseFiles("static/html/post.html")
+	if err != nil {
+		http.Error(w, "Template parsing error", http.StatusInternalServerError)
+		log.Printf("Error details: %v", err)
+		return
+	}
+	if err := tmpl.ExecuteTemplate(w, "post.html", data); err != nil {
+		http.Error(w, "Template execution error", http.StatusInternalServerError)
+		log.Printf("Error details: %v", err)
+		return
+	}
+}
