@@ -1,30 +1,38 @@
+<!-- profile.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Character encoding for the document -->
     <meta charset="UTF-8">
+    <!-- Viewport settings for responsive design -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title of the page displayed in the browser tab -->
     <title>My Page</title>
+    <!-- Link to the external CSS stylesheet for this page -->
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
     <!-- header ----------------------- -->
     <header>
+        <!-- Main heading of the page -->
         <h1>LITERARY LIONS FORUM</h1>
         <nav>
-            <a class ="headerlinks" href="/">Home</a>
-            <a  class ="headerlinks"href="/post">Forum</a>
-            <a class ="headerlinks" href="/logout">Logout</a>            
-            <a class ="headerlinks" href="/profile">My Page</a>
+            <!-- Navigation links -->
+            <a class="headerlinks" href="/">Home</a>
+            <a class="headerlinks" href="/post">Forum</a>
+            <a class="headerlinks" href="/logout">Logout</a>
+            <a class="headerlinks" href="/profile">My Page</a>
+            <!-- Display username with a message that the user is logged in -->
             <br><br><p>{{.Username}} is logged in.</p>
         </nav>
     </header>
 
     <!-- main ----------------------- -->
     <main>
-       
-        
         <div class="image-container">
-            <img  class="bookimage"  src="static/image/book.jpeg" alt="book">
+            <!-- User profile image -->
+            <img class="bookimage" src="static/image/book.jpeg" alt="book">
+            <!-- Overlay text displaying user information -->
             <div class="overlay-text username">
                 <strong>Name:</strong> {{.Username}}
             </div>
@@ -43,17 +51,18 @@
             <div class="overlay-text replies">
                 <strong>Number of Comments:</strong> {{.NumComments}}
             </div>
+            <!-- Form to delete the user account with confirmation dialog -->
             <div class="overlay-text delete-account">
                 <form action="/delete-account" method="post" onsubmit="return confirm('Are you sure you want to delete your account?');">
                     <button type="submit" style="color: red;">Delete Account</button>
                 </form>
             </div>
         </div>
-
     </main>
 
     <!-- footer ----------------------- -->
     <footer>
+        <!-- Footer content with copyright information -->
         <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>
 </body>

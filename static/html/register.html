@@ -1,48 +1,67 @@
 <!-- register.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <!-- Character encoding for the document -->
     <meta charset="UTF-8">
+    <!-- Viewport settings for responsive design -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title of the page displayed in the browser tab -->
     <title>Register</title>
+    <!-- Link to the external CSS stylesheet for this page -->
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
+
 <body>
     <!-- header ----------------------- -->
     <header>
+        <!-- Main heading of the page -->
         <h1>WELCOME TO LITERARY LIONS FORUM</h1>
         <nav>
-            <a class ="headerlinks" href="/">Home</a>
-            <a class ="headerlinks" href="/post">Forum</a>
-            <a  class ="headerlinks"href="/login">Login</a>
-            <a  class ="headerlinks"href="/register">Register</a>
+            <!-- Navigation links -->
+            <a class="headerlinks" href="/">Home</a>
+            <a class="headerlinks" href="/post">Forum</a>
+            <a class="headerlinks" href="/login">Login</a>
+            <a class="headerlinks" href="/register">Register</a>
         </nav>
     </header>
 
     <!-- Register ----------------------- -->
     <div class="login">
+        <!-- Heading for the registration form -->
         <h1>Register</h1>
+        <!-- Form for user registration -->
         <form action="/register" method="post" class="login-form">
+            <!-- Username input field -->
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required><br>
+            <!-- Email input field -->
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required><br>
             <div class="password">
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required><br>
-        </div>
+                <!-- Password input field -->
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required><br>
+            </div>
+            <!-- Submit button for the form -->
             <button type="submit">Register</button>
         </form>
     </div>
+
+    <!-- Display error message if there is one -->
     {{if .ErrorMessage}}
     <div class="error-message" style="color: red;">
         <p>{{.ErrorMessage}}</p>
-    {{end}}    
+    </div>
+    {{end}}
+
     <!-- footer ----------------------- -->
     <footer>
+        <!-- Footer content with copyright information -->
         <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>
 
-
 </body>
+
 </html>

@@ -1,4 +1,4 @@
-//like.go
+// like.go
 package like
 
 import (
@@ -9,25 +9,39 @@ import (
 )
 
 var (
-	// Replace with your own secret key
+	// Replace with your own secret key for cookie encryption
 	key   = []byte("super-secret-key")
+	// Create a new session store with the provided secret key
 	store = sessions.NewCookieStore(key)
 )
 
+// LikePostHandler handles the liking and disliking of posts.
+// It processes POST requests to update the like/dislike status of a post for the current user.
 func LikePostHandler(w http.ResponseWriter, r *http.Request) {
+	// Handle only POST requests
 	if r.Method == http.MethodPost {
+		// Retrieve the session for the current request
 		session, _ := store.Get(r, "session")
+		// Get the user ID from the session values
 		userID, _ := session.Values["userID"].(int)
 
+		// Retrieve the post ID and like status from the form data
 		postID, _ := strconv.Atoi(r.FormValue("post_id"))
 		isLike := r.FormValue("is_like") == "true"
 
-		_, err := database.DB.Exec(`INSERT INTO LikesDislikes (UserID, PostID, IsLike) VALUES (?, ?, ?) ON CONFLICT(UserID, PostID) DO UPDATE SET IsLike = ?`, userID, postID, isLike, isLike)
+		// Insert or update the like/dislike status in the database
+		_, err := database.DB.Exec(`
+			INSERT INTO PostLikes (UserID, PostID, IsLike) 
+			VALUES (?, ?, ?) 
+			ON CONFLICT(UserID, PostID) 
+			DO UPDATE SET IsLike = ?`, userID, postID, isLike, isLike)
 		if err != nil {
+			// If there is an error, return an internal server error
 			http.Error(w, "Could not update like", http.StatusInternalServerError)
 			return
 		}
+
+		// Redirect the user to the posts page after updating
 		http.Redirect(w, r, "/posts", http.StatusSeeOther)
 	}
 }
-

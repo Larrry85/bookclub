@@ -1,399 +1,400 @@
 /* styles.css */
 
-/* body---------------------------- */
+/* styles.css */
+
+/* ----------------------------- Global Styles ----------------------------- */
+
+/* Reset default margin, padding, and box-sizing for common elements */
 body, h1, h2, h3, p, ul, li {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    height: 100%; /* Ensure elements take full height */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
+    font-family: Arial, sans-serif; /* Set a clean, readable font for the entire page */
+    line-height: 1.6; /* Increase line height for better readability */
 }
 
-/* header---------------------------- */
+/* ----------------------------- Header ----------------------------- */
+
+/* Style for the header */
 header {
-    background: #bb93fb;
-    color: #000000;
-    padding: 1rem 0;
-    text-align: center;
+    background: #bb93fb; /* Light purple background */
+    color: #000000; /* Black text color */
+    padding: 1rem 0; /* Vertical padding */
+    text-align: center; /* Center align text */
 }
 
+/* ----------------------------- Navigation ----------------------------- */
 
-
-/* nav---------------------------- */
+/* Style for navigation bar */
 nav {
-    margin-top: 10px;
+    margin-top: 10px; /* Space between header and navigation */
 }
 
 nav a {
-    color: #fff;
-    margin: 0 1rem;
-    font-weight: 500;
-    transition: color 0.3s ease;
+    color: #fff; /* White text color for links */
+    margin: 0 1rem; /* Horizontal spacing between links */
+    font-weight: 500; /* Medium font weight */
+    transition: color 0.3s ease; /* Smooth color transition on hover */
 }
 
 nav a:hover {
-    color: #755e83; /* Light gray on hover */
-    text-decoration: none;
+    color: #755e83; /* Slightly different color on hover */
+    text-decoration: none; /* Remove underline on hover */
 }
 
-/* main---------------------------- */
+/* ----------------------------- Main Section ----------------------------- */
+
+/* Style for main content area */
 main {
-    padding: 1rem;
-
+    padding: 1rem; /* Padding inside main content */
 }
+
+/* Style for hover effect on header links */
 .headerlinks:hover {
-    color: #e4befa; /* Light gray on hover */
-    text-decoration: none;
+    color: #e4befa; /* Light purple on hover */
+    text-decoration: none; /* Remove underline on hover */
 }
 
+/* Style for images inside the book section */
 .bookimage {
-    max-width: 100%; /* The image will never be wider than its container */
-    height: auto; /* The height will adjust to maintain the aspect ratio */
-    display: block; /* Ensures that there’s no extra space at the sides */
+    max-width: 100%; /* Ensure the image never exceeds its container's width */
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Remove extra space at the sides */
     margin: 0 auto; /* Center the image horizontally */
 }
 
-/* post---------------------------- */
+/* ----------------------------- Posts Section ----------------------------- */
+
+/* Style for the posts grid layout */
 .posts {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+    display: grid; /* Use grid layout */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive columns */
+    gap: 1rem; /* Space between grid items */
 }
 
+/* Style for each post card */
 .post-card {
-    background: #f4f4f4;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 1rem;
-    text-align: center;
+    background: #f4f4f4; /* Light gray background */
+    border: 1px solid #ddd; /* Light gray border */
+    border-radius: 5px; /* Rounded corners */
+    padding: 1rem; /* Padding inside card */
+    text-align: center; /* Center align text */
 }
 
 .post-card h3 {
-    margin: 0 0 10px;
+    margin: 0 0 10px; /* Remove top margin, space below heading */
 }
 
+/* Style for create post section */
 .create-post {
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 600px; /* Maximum width for the form */
+    margin: 0 auto; /* Center the form horizontally */
 }
 
 .create-post form {
-    display: grid;
-    gap: 1rem;
+    display: grid; /* Use grid layout for form elements */
+    gap: 1rem; /* Space between form elements */
 }
 
 .create-post form label {
-    display: block;
+    display: block; /* Make label block level */
 }
 
 .create-post form input,
 .create-post form textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    width: 100%; /* Full width of container */
+    padding: 0.5rem; /* Padding inside input and textarea */
+    border: 1px solid #ddd; /* Light gray border */
+    border-radius: 5px; /* Rounded corners */
 }
 
 .create-post form button {
-    background: #333;
-    color: #fff;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    background: #333; /* Dark background for button */
+    color: #fff; /* White text color */
+    padding: 0.75rem; /* Padding inside button */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
 }
 
-/* footer---------------------------- */
+/* ----------------------------- Footer ----------------------------- */
+
+/* Style for the footer */
 footer {
-    margin-top: 50px;
-    background: #333;
-    color: #fff;
-    text-align: center;
-    padding: 1rem;
+    margin-top: 50px; /* Space above footer */
+    background: #333; /* Dark background */
+    color: #fff; /* White text color */
+    text-align: center; /* Center align text */
+    padding: 1rem; /* Padding inside footer */
 }
 
-/* modal---------------------------- */
+/* ----------------------------- Modal ----------------------------- */
+
+/* Style for the modal overlay */
 .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #bb93fb;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    display: none; /* Hide modal by default */
+    position: fixed; /* Fixed positioning to cover entire screen */
+    top: 0; /* Align at top */
+    left: 0; /* Align at left */
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background: #bb93fb; /* Light purple background */
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+    z-index: 1000; /* Ensure modal is above other content */
 }
 
 .modal:target {
-    display: flex;
+    display: flex; /* Show modal when targeted by anchor link */
 }
 
+/* Style for modal content box */
 .modal-content {
-    background: #fff;
-    padding: 2rem;
-    border-radius: 5px;
-    text-align: center;
+    background: #fff; /* White background for content */
+    padding: 2rem; /* Padding inside modal */
+    border-radius: 5px; /* Rounded corners */
+    text-align: center; /* Center align text */
 }
 
+/* Style for modal close button */
 .modal .close {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    background: #333;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 5px;
+    display: inline-block; /* Inline-block display */
+    margin-top: 1rem; /* Space above button */
+    padding: 0.5rem 1rem; /* Padding inside button */
+    background: #333; /* Dark background */
+    color: #fff; /* White text color */
+    text-decoration: none; /* Remove underline */
+    border-radius: 5px; /* Rounded corners */
 }
 
 .modal .close:hover {
-    background: #555;
+    background: #555; /* Darker background on hover */
 }
 
+/* Style for modal trigger button */
 .modal-trigger {
-    display: inline-block;
-    margin: 1rem;
-    padding: 0.5rem 1rem;
-    background: #333;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 5px;
+    display: inline-block; /* Inline-block display */
+    margin: 1rem; /* Margin around button */
+    padding: 0.5rem 1rem; /* Padding inside button */
+    background: #333; /* Dark background */
+    color: #fff; /* White text color */
+    text-decoration: none; /* Remove underline */
+    border-radius: 5px; /* Rounded corners */
 }
 
 .modal-trigger:hover {
-    background: #555;
+    background: #555; /* Darker background on hover */
 }
 
-/* --------------LOGIN---------------- */
+/* ----------------------------- Login ----------------------------- */
 
-/* Container for the login and register form */
+/* Container for login and register form */
 .login {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: white;
-    padding: 10px;
-    border-radius: 8px;
-    
+    display: flex; /* Flexbox layout */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+    background-color: white; /* White background */
+    padding: 10px; /* Padding inside container */
+    border-radius: 8px; /* Rounded corners */
 }
+
 /* Style for links */
 a {
-    color: #5A2D82; /* Set the desired color */
-    text-decoration: none; /* Remove the underline */
+    color: #5A2D82; /* Purple color for links */
+    text-decoration: none; /* Remove underline */
 }
 
 /* Change the color on hover */
 a:hover {
-    color: #9b59b6; /* Change to a lighter purple or any color you prefer */
-    text-decoration: underline; /* Optionally add underline on hover */
+    color: #9b59b6; /* Lighter purple on hover */
+    text-decoration: underline; /* Underline on hover */
 }
 
-/* Align labels and inputs */
+/* Align labels and inputs in login form */
 .login-form label {
-    display: inline-block;
-    width: 100px; /* Fixed width for all labels */
+    display: inline-block; /* Inline-block display */
+    width: 100px; /* Fixed width for labels */
     text-align: right; /* Align text to the right */
-    margin-right: 10px; /* Add some space between label and input */
+    margin-right: 10px; /* Space between label and input */
 }
 
 /* Style the login form */
 .login-form {
-    display: inline-block; /* Allow the form to center horizontally */
-    padding: 30px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    text-align: center;
-    
+    display: inline-block; /* Center form horizontally */
+    padding: 30px; /* Padding inside form */
+    border: 1px solid #ccc; /* Light gray border */
+    border-radius: 5px; /* Rounded corners */
+    background-color: #f9f9f9; /* Light background */
+    text-align: center; /* Center align text */
 }
-
 
 .login-form input {
     margin-bottom: 10px; /* Space between form elements */
-    display: inline-block;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    display: inline-block; /* Inline-block display */
+    padding: 8px; /* Padding inside input */
+    border: 1px solid #ddd; /* Light gray border */
+    border-radius: 4px; /* Rounded corners */
 }
 
-/* Remove margin from .password class */
+/* Remove margin from password field */
 .password {
     margin-right: 0; 
 }
 
+/* Style for login form button */
 .login-form button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    background-color: #bb93fb;
-    color: white;
-    cursor: pointer;
+    padding: 10px 20px; /* Padding inside button */
+    border: none; /* Remove default border */
+    border-radius: 4px; /* Rounded corners */
+    background-color: #bb93fb; /* Light purple background */
+    color: white; /* White text color */
+    cursor: pointer; /* Pointer cursor on hover */
 }
 
 .login-form button:hover {
-    background-color: #bb93fb
+    background-color: #bb93fb; /* Maintain background color on hover */
 }
 
-/* --------------image---------------- */
+/* ----------------------------- Image ----------------------------- */
 
+/* Style for centered book image */
 .bookimage {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+    display: block; /* Block display to remove extra space */
+    margin-left: auto; /* Center horizontally */
+    margin-right: auto; /* Center horizontally */
 }
 
-/* --------------reset page---------------- */
+/* ----------------------------- Reset Page ----------------------------- */
+
+/* Container for password reset form */
 .reset {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: white;
-    padding: 10px;
-    border-radius: 8px;
-    
+    display: flex; /* Flexbox layout */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+    background-color: white; /* White background */
+    padding: 10px; /* Padding inside container */
+    border-radius: 8px; /* Rounded corners */
 }
 
+/* Style for error message */
 .error-message {
-    text-align: center;
+    text-align: center; /* Center align text */
 }
 
-    /* Ensure the image is properly positioned and sized */
-    .image-container {
-        position: relative;
-        display: inline-block;
-    }
-
-    .image-container img {
-        width: 100%; /* Adjust as necessary */
-        height: auto;
-    }
-
-    /* Position text over the image */
-    .overlay-text {
-        position: absolute;
-        color: white; /* or any other contrasting color */
-        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 16px; /* Adjust font size as needed */
-    }
-
-    /* Ensure the image is properly positioned and sized */
+/* Style for image container with overlay text */
 .image-container {
-    position: relative;
-    display: inline-block;
-    width: 100%; /* Ensure the container takes full width */
-    max-width: 800px; /* Adjust as needed */
+    position: relative; /* Relative positioning for overlay text */
+    display: inline-block; /* Inline-block display */
+    width: 100%; /* Full width */
+    max-width: 800px; /* Maximum width */
     margin: auto; /* Center the container */
 }
 
 .image-container img {
-    width: 100%;
-    height: auto;
-    display: block;
+    width: 100%; /* Full width of container */
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Remove extra space */
 }
 
-/* Position text over the image */
+/* Style for overlay text */
 .overlay-text {
-    position: absolute;
-    color: white; /* Or any other contrasting color */
+    position: absolute; /* Absolute positioning on top of the image */
+    color: white; /* White text color */
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 16px; /* Adjust font size as needed */
-    max-width: 300px; /* Restrict width for better readability */
-    max-height: 18px;
+    padding: 10px; /* Padding inside overlay */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 16px; /* Font size */
+    max-width: 300px; /* Maximum width */
+    max-height: 18px; /* Maximum height */
 }
 
-
-/* Profile */
-/* Ensure the image is properly positioned and sized */
+/* Profile Image and Text */
+/* Ensure the image covers the container */
 .image-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%; /* Adjust as necessary */
-    height: auto; /* Or specify a fixed height if needed */
+    position: relative; /* Relative positioning for overlay text */
+    display: flex; /* Flexbox layout for centering */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    width: 100%; /* Full width */
+    height: auto; /* Maintain aspect ratio */
 }
 
 /* Ensure the image covers the container */
 .image-container img {
-    width: 100%; /* Adjust as necessary */
-    height: auto;
+    width: 100%; /* Full width of container */
+    height: auto; /* Maintain aspect ratio */
 }
 
-/* Position text over the image */
+/* Style for overlay text */
 .overlay-text {
-    position: absolute;
-    color: white; /* or any other contrasting color */
+    position: absolute; /* Absolute positioning on top of the image */
+    color: white; /* White text color */
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 16px; /* Adjust font size as needed */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+    padding: 10px; /* Padding inside overlay */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 16px; /* Font size */
+    display: flex; /* Flexbox layout for centering text */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    text-align: center; /* Center align text */
     margin-bottom: 10px; /* Space between text boxes */
 }
 
-/* Positioning of each text block */
+/* Positioning for different text blocks */
 .username {
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 20px; /* Position from top */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center text */
 }
 
 .email {
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 60px; /* Position from top */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center text */
 }
 
 .likes {
-    top: 100px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 100px; /* Position from top */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center text */
 }
 
 .dislikes {
-    top: 140px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 140px; /* Position from top */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center text */
 }
 
 .posts {
-    top: 180px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 180px; /* Position from top */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center text */
 }
 
 .replies {
-    top: 220px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 220px; /* Position from top */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center text */
 }
 
 .delete-account {
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    max-height: 25px;
+    bottom: 20px; /* Position from bottom */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center text */
+    max-height: 25px; /* Maximum height for delete account text */
 }
 
-/* Center form text for better visibility */
+/* Style for form inside overlay text */
 .overlay-text form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex; /* Flexbox layout */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
 }
 
 .overlay-text form button {
-    margin: 10px;
+    margin: 10px; /* Space around button */
 }

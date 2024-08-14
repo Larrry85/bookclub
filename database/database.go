@@ -1,3 +1,4 @@
+// database.go
 package database
 
 import (
@@ -11,47 +12,55 @@ import (
 )
 
 var (
-	DB       *sql.DB
-	Sessions = make(map[string]string) // Session ID -> User ID
+	DB       *sql.DB // Global database connection handle
+	Sessions = make(map[string]string) // Session ID to User ID mapping
 )
 
+// Init initializes the database connection and sets up the schema
 func Init() {
 	var err error
+	// Open a connection to the SQLite database file "user.db"
 	DB, err = sql.Open("sqlite3", "./user.db")
 	if err != nil {
+		// Log and terminate the program if the database connection fails
 		log.Fatal(err)
 	}
 
-	// Open schema.sql file
+	// Open the schema.sql file which contains SQL statements to create the schema
 	file, err := os.Open("database/schema.sql")
 	if err != nil {
+		// Log and terminate if opening the file fails
 		log.Fatalf("Failed to open schema.sql: %v", err)
 	}
-	defer file.Close()
+	defer file.Close() // Ensure the file is closed after reading
 
-	// Read file content
+	// Read the content of schema.sql file
 	var schema string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		schema += scanner.Text() + "\n"
 	}
 
+	// Check for errors during file reading
 	if err := scanner.Err(); err != nil {
 		log.Fatalf("Failed to read schema.sql: %v", err)
 	}
 
-	// Execute schema creation
+	// Execute the SQL statements to set up the database schema
 	_, err = DB.Exec(schema)
 	if err != nil {
+		// Log and terminate if executing the schema fails
 		log.Fatalf("Failed to execute schema: %v", err)
 	}
 
+	// Log a message indicating the schema setup was successful or already exists
 	log.Println("Database schema and indexes created or already exist.")
 }
 
+// InsertUser inserts a new user into the database
 func InsertUser(username, email, password string) error {
-	// Check if the username or email already exists
-	var usernameExists, emailExists bool
+	// Check if the username already exists in the database
+	var usernameExists bool
 	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE Username = ?)", username).Scan(&usernameExists)
 	if err != nil {
 		return fmt.Errorf("failed to check for existing username: %w", err)
@@ -60,6 +69,8 @@ func InsertUser(username, email, password string) error {
 		return fmt.Errorf("username already exists")
 	}
 
+	// Check if the email already exists in the database
+	var emailExists bool
 	err = DB.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE Email = ?)", email).Scan(&emailExists)
 	if err != nil {
 		return fmt.Errorf("failed to check for existing email: %w", err)
@@ -68,7 +79,7 @@ func InsertUser(username, email, password string) error {
 		return fmt.Errorf("email already exists")
 	}
 
-	// Insert new user
+	// Insert the new user into the User table
 	_, err = DB.Exec("INSERT INTO User (Username, Email, Password) VALUES (?, ?, ?)", username, email, password)
 	if err != nil {
 		return fmt.Errorf("failed to insert user: %w", err)
@@ -77,15 +88,15 @@ func InsertUser(username, email, password string) error {
 	return nil
 }
 
-// GetUserStats retrieves the number of posts and comments for a user
+// GetUserStats retrieves the number of posts and comments for a given user
 func GetUserStats(userID int) (numPosts, numComments int, err error) {
-	// Count posts
+	// Count the number of posts for the specified user
 	err = DB.QueryRow(`SELECT COUNT(*) FROM Post WHERE UserID = ?`, userID).Scan(&numPosts)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	// Count comments
+	// Count the number of comments for the specified user
 	err = DB.QueryRow(`SELECT COUNT(*) FROM Comment WHERE UserID = ?`, userID).Scan(&numComments)
 	if err != nil {
 		return 0, 0, err
@@ -93,19 +104,3 @@ func GetUserStats(userID int) (numPosts, numComments int, err error) {
 
 	return numPosts, numComments, nil
 }
-/*
-func GetUserStats(userID int) (int, int, error) {
-    var numPosts, numComments int
-    query := `
-        SELECT 
-            (SELECT COUNT(*) FROM Post WHERE UserID = ?) AS NumPosts,
-            (SELECT COUNT(*) FROM Comment 
-                JOIN Post ON Comment.PostID = Post.PostID
-                WHERE Post.UserID = ?) AS NumComments
-    `
-    err := DB.QueryRow(query, userID, userID).Scan(&numPosts, &numComments)
-    if err != nil {
-        return 0, 0, err
-    }
-    return numPosts, numComments, nil
-}*/
