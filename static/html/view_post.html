@@ -35,19 +35,22 @@
         <!-- Post Details -->
         <section class="post-details">
             <h2>{{.Post.Title}}</h2>
-            <p>{{.Post.Content}}</p>
-            <p>Category: {{.Post.Category}}</p>
-            <p>Posted by <b>{{.Post.Username}}</b></p>
-            <p>Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
+            <p class="post-content">{{.Post.Content}}</p>
+            <p class="post-meta">Category: {{.Post.Category}}</p>
+            <p class="post-meta">Posted by <b>{{.Post.Username}}</b></p>
+            <p class="post-meta">Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
         </section>
 
         <!-- Replies Section -->
         <section class="replies">
             <h3>Replies</h3>
             {{if .Replies}}
-                <ul>
+                <ul class="reply-list">
                     {{range .Replies}}
-                        <li><b>{{.Username}}:</b> {{.Content}}</li>
+                    <li class="reply">
+                        <p><b>{{.Username}}:</b></p>
+                        <p class="reply-content">{{.Content}}</p>
+                    </li>
                     {{else}}
                         <p>No replies yet.</p>
                     {{end}}
@@ -69,8 +72,9 @@
             </form>
         </section>
         {{else}}
-        <p>You need to <a  class="loginlink" href="/login">login</a> to reply.</p>
+        <p>You need to <a class="loginlink" href="/login">login</a> to reply.</p>
         {{end}}
+
     </main>
 
     <footer>

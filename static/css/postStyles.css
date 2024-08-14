@@ -221,6 +221,84 @@ button:hover {
     background-color: #fafafa;
     margin-bottom: 10px;
 }
+/* Replies Section */
+.replies {
+    margin-top: 1rem;
+    padding-left: 1rem;
+    max-width: 800px;
+}
+
+/* Reply Section - Where the reply appears after hitting Enter */
+.reply {
+    background-color: #fff; /* White background similar to the post */
+    padding: 1.5rem; /* Padding inside the reply box */
+    margin-bottom: 1rem; /* Space below each reply */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    width: 100%; /* Full width within its container */
+    max-width: 800px; /* Aligns with the post width */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Username in the Reply */
+.reply .username {
+    font-weight: bold; /* Bold text for the username */
+    margin-bottom: 0.5rem; /* Space below the username */
+    color: #333; /* Darker text color */
+}
+
+/* Content of the Reply */
+.reply .reply-content {
+    font-size: 1rem; /* Standard font size */
+    color: #555; /* Slightly lighter text color */
+    margin-top: 0.5rem; /* Space above the content */
+}
+
+/* Reply Form */
+.reply-form {
+    background-color: #fff;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+}
+
+/* Reply Form Textarea */
+.reply-form textarea {
+    width: 100%;
+    height: 100px;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    resize: vertical;
+}
+
+/* Reply Form Button */
+.reply-form button {
+    padding: 0.75rem 1.5rem;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.reply-form button:hover {
+    background-color: #333;
+}
+
+
+
+
 /* footer---------------------------- */
 footer {
     margin-top: 50px;
