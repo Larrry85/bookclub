@@ -32,11 +32,11 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Insert or update the like/dislike status in the database
 		_, err := database.DB.Exec(`
-		INSERT INTO PostLikes (UserID, PostID, IsLike) 
-		VALUES (?, ?, ?) 
-		ON CONFLICT(UserID, PostID) 
-		DO UPDATE SET IsLike = ?`, userID, postID, isLike, isLike)
-	if err != nil {
+			INSERT INTO PostLikes (UserID, PostID, CommentID, IsLike) 
+			VALUES (?, ?, NULL, ?) 
+			ON CONFLICT(UserID, PostID, CommentID) 
+			DO UPDATE SET IsLike = excluded.IsLike`, userID, postID, isLike)
+		if err != nil {
 		log.Printf("Error updating like/dislike: %v", err) // Log detailed error
 		http.Error(w, "Could not update like: "+err.Error(), http.StatusInternalServerError)
 		return

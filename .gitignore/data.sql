@@ -35,7 +35,7 @@ DO UPDATE SET Username = excluded.Username, Password = excluded.Password;
 
 -- Insert initial data into PostLikes table
 INSERT INTO PostLikes (UserID, PostID, CommentID, IsLike) 
-VALUES (1, 123, NULL, TRUE) 
+VALUES (?, ?, ?, ?) 
 ON CONFLICT(UserID, PostID, CommentID) 
 DO UPDATE SET IsLike = excluded.IsLike;
 

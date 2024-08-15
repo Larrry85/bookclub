@@ -44,13 +44,13 @@ CREATE TABLE IF NOT EXISTS Comment (
 CREATE TABLE IF NOT EXISTS PostLikes (
     ID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each like/dislike entry
     UserID INTEGER NOT NULL, -- ID of the user who liked/disliked
-    PostID INTEGER, -- ID of the post (matching type in Post table)
+    PostID INTEGER, -- ID of the post (can be NULL if the like/dislike is for a comment)
     CommentID INTEGER, -- ID of the comment (can be NULL if the like/dislike is for a post)
     IsLike BOOLEAN NOT NULL, -- TRUE for like, FALSE for dislike
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE, -- Foreign key to User table
     FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
     FOREIGN KEY (CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE, -- Foreign key to Comment table
-    UNIQUE (UserID, PostID, CommentID) -- Unique constraint on combination of UserID, PostID, and CommentID
+    UNIQUE (UserID, PostID, CommentID) -- Ensure that a user can only have one entry per post or comment at a time
 );
 
 
