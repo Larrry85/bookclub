@@ -16,6 +16,13 @@ var (
 	store = sessions.NewCookieStore(key)
 )
 
+// PostLikeCounts holds the counts of likes and dislikes for a post
+type PostLikeCounts struct {
+	PostID    int
+	Likes     int
+	Dislikes  int
+}
+
 // LikePostHandler handles the liking and disliking of posts.
 // It processes POST requests to update the like/dislike status of a post for the current user.
 func LikePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,4 +52,40 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 		// Redirect the user to the posts page after updating
 		http.Redirect(w, r, "/posts", http.StatusSeeOther)
 	}
+}
+
+// GetPostLikeCounts retrieves the total number of likes and dislikes for each post
+func GetPostLikeCounts() ([]PostLikeCounts, error) {
+	rows, err := database.DB.Query(`
+		SELECT 
+			PostID, 
+			SUM(CASE WHEN IsLike = TRUE THEN 1 ELSE 0 END) AS Likes, 
+			SUM(CASE WHEN IsLike = FALSE THEN 1 ELSE 0 END) AS Dislikes 
+		FROM 
+			PostLikes 
+		GROUP BY 
+			PostID
+	`)
+	if err != nil {
+		log.Printf("Error executing query: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []PostLikeCounts
+	for rows.Next() {
+		var pc PostLikeCounts
+		if err := rows.Scan(&pc.PostID, &pc.Likes, &pc.Dislikes); err != nil {
+			log.Printf("Error scanning row: %v", err)
+			return nil, err
+		}
+		results = append(results, pc)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("Error iterating rows: %v", err)
+		return nil, err
+	}
+
+	return results, nil
 }
