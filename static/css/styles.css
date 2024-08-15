@@ -290,14 +290,17 @@ a:hover {
     position: relative; /* Relative positioning for overlay text */
     display: inline-block; /* Inline-block display */
     width: 100%; /* Full width */
-    max-width: 800px; /* Maximum width */
+    max-width: 1000px; /* Increased maximum width for a bigger image */
     margin: auto; /* Center the container */
+    overflow: hidden; /* Hide overflow to ensure no content spills out */
 }
 
+/* Ensure the image fills the container properly */
 .image-container img {
     width: 100%; /* Full width of container */
     height: auto; /* Maintain aspect ratio */
     display: block; /* Remove extra space */
+    object-fit: cover; /* Cover the container while maintaining aspect ratio */
 }
 
 /* Style for overlay text */
@@ -308,25 +311,36 @@ a:hover {
     padding: 10px; /* Padding inside overlay */
     border-radius: 5px; /* Rounded corners */
     font-size: 16px; /* Font size */
-    max-width: 300px; /* Maximum width */
+    max-width: 400px; /* Maximum width */
     max-height: 18px; /* Maximum height */
 }
 
 /* Profile Image and Text */
 /* Ensure the image covers the container */
+/* Style for image container with overlay text */
+/* Style for image container with overlay text */
+/* Style for image container with overlay text */
+/* Style for image container with overlay text */
+/* Style for image container with overlay text */
+/* Style for image container with overlay text */
+/* Style for image container with overlay text */
 .image-container {
     position: relative; /* Relative positioning for overlay text */
     display: flex; /* Flexbox layout for centering */
     align-items: center; /* Center vertically */
     justify-content: center; /* Center horizontally */
     width: 100%; /* Full width */
-    height: auto; /* Maintain aspect ratio */
+    max-width: 1000px; /* Increased maximum width for a bigger image */
+    margin: auto; /* Center the container */
+    overflow: hidden; /* Hide overflow to ensure no content spills out */
 }
 
-/* Ensure the image covers the container */
+/* Ensure the image fills the container properly */
 .image-container img {
     width: 100%; /* Full width of container */
     height: auto; /* Maintain aspect ratio */
+    display: block; /* Remove extra space */
+    object-fit: cover; /* Cover the container while maintaining aspect ratio */
 }
 
 /* Style for overlay text */
@@ -334,58 +348,57 @@ a:hover {
     position: absolute; /* Absolute positioning on top of the image */
     color: white; /* White text color */
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    padding: 10px; /* Padding inside overlay */
+    padding: 15px; /* Increased padding inside overlay */
     border-radius: 5px; /* Rounded corners */
-    font-size: 16px; /* Font size */
-    display: flex; /* Flexbox layout for centering text */
-    align-items: center; /* Center vertically */
-    justify-content: center; /* Center horizontally */
+    font-size: 18px; /* Increased font size */
+    width: 50%; /* 50% width of the image */
+    max-width: 500px; /* Maximum width */
     text-align: center; /* Center align text */
-    margin-bottom: 10px; /* Space between text boxes */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 /* Positioning for different text blocks */
-.username {
-    top: 20px; /* Position from top */
+.username,
+.email,
+.likes,
+.dislikes,
+.posts,
+.replies {
     left: 50%; /* Center horizontally */
     transform: translateX(-50%); /* Center text */
+}
+
+/* Adjusted positioning from top to fit within image */
+.username {
+    top: 33%; /* 15% from the top */
 }
 
 .email {
-    top: 60px; /* Position from top */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Center text */
+    top: calc(33% + 40px); /* Positioned closer below the username */
 }
 
 .likes {
-    top: 100px; /* Position from top */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Center text */
+    top: calc(33% + 80px); /* Positioned closer below the email */
 }
 
 .dislikes {
-    top: 140px; /* Position from top */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Center text */
+    top: calc(33% + 120px); /* Positioned closer below the likes */
 }
 
 .posts {
-    top: 180px; /* Position from top */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Center text */
+    top: calc(33% + 160px); /* Positioned closer below the dislikes */
 }
 
 .replies {
-    top: 220px; /* Position from top */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Center text */
+    top: calc(33% + 200px); /* Positioned closer below the posts */
 }
 
 .delete-account {
-    bottom: 20px; /* Position from bottom */
+    top: calc(33% + 300px);
     left: 50%; /* Center horizontally */
     transform: translateX(-50%); /* Center text */
-    max-height: 25px; /* Maximum height for delete account text */
+    width: auto; /* Automatic width for delete account text */
+    font-size: 16px; /* Font size for button */
 }
 
 /* Style for form inside overlay text */
@@ -397,4 +410,13 @@ a:hover {
 
 .overlay-text form button {
     margin: 10px; /* Space around button */
+    width: auto; /* Automatic width for button */
+    max-width: 200px; /* Optional: limit the button width */
+}
+
+/* Media query for responsive design */
+@media (max-width: 768px) {
+    .overlay-text {
+        font-size: 16px; /* Smaller font size on smaller screens */
+    }
 }
