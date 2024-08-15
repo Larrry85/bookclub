@@ -1,5 +1,4 @@
 // post.go
-// post.go
 package post
 
 import (

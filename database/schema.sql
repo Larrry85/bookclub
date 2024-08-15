@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS Post (
     CategoryID INTEGER, -- ID of the category to which the post belongs
     LastReplyUser TEXT, -- User who last replied to the post
     LastReplyDate DATETIME, -- Date and time of the last reply
-    CreatedAt DATETIME,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL, -- Foreign key to User table
     FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) -- Foreign key to Category table
 );
@@ -35,12 +35,13 @@ CREATE TABLE IF NOT EXISTS Comment (
     PostID INTEGER, -- ID of the post to which the comment belongs
     UserID INTEGER, -- ID of the user who made the comment
     Content TEXT NOT NULL, -- Content of the comment
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
 );
 
 -- Table to store likes and dislikes on posts and comments
-CREATE TABLE  IF NOT EXISTS  PostLikes (
+CREATE TABLE IF NOT EXISTS PostLikes (
     ID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each like/dislike entry
     UserID INTEGER NOT NULL, -- ID of the user who liked/disliked
     PostID INTEGER, -- ID of the post (matching type in Post table)
