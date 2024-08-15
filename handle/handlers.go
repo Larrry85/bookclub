@@ -398,12 +398,40 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch user data from the database
 	var userInfo struct {
-		Username string
-		Email    string
+		Username     string
+		Email        string
+		NumPosts     int
+		NumComments  int
+		NumLikes     int
+		NumDislikes  int
 	}
 
+	// Get user ID based on username
+	var userID int
+	err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, sessionData.Username).Scan(&userID)
+	if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch basic user info
 	err = database.DB.QueryRow(`SELECT Username, Email FROM User WHERE Username = ?`, sessionData.Username).
 		Scan(&userInfo.Username, &userInfo.Email)
+	if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch counts of posts, comments, likes, and dislikes
+	err = database.DB.QueryRow(`
+		SELECT 
+			(SELECT COUNT(*) FROM Post WHERE UserID = ?) AS NumPosts,
+			(SELECT COUNT(*) FROM Comment WHERE UserID = ?) AS NumComments,
+			(SELECT COUNT(*) FROM PostLikes WHERE UserID = ? AND IsLike = 1) AS NumLikes,
+			(SELECT COUNT(*) FROM PostLikes WHERE UserID = ? AND IsLike = 0) AS NumDislikes
+	`, userID, userID, userID, userID).Scan(&userInfo.NumPosts, &userInfo.NumComments, &userInfo.NumLikes, &userInfo.NumDislikes)
 	if err != nil {
 		log.Println("Database error:", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -419,8 +447,12 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Username": userInfo.Username,
-		"Email":    userInfo.Email,
+		"Username":    userInfo.Username,
+		"Email":       userInfo.Email,
+		"NumPosts":    userInfo.NumPosts,
+		"NumComments": userInfo.NumComments,
+		"NumLikes":    userInfo.NumLikes,
+		"NumDislikes": userInfo.NumDislikes,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -428,6 +460,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 }
+
 
 // DeleteAccountHandler handles account deletion
 func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
