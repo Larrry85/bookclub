@@ -17,17 +17,17 @@ import (
 
 // Post represents a blog post with various details.
 type Post struct {
-	ID            string // Unique identifier for the post
-	Title         string // Title of the post
-	Content       string // Content of the post
-	Username      string // Username of the post author
-	Category      string // Category of the post
-	Likes         int    // Number of likes on the post
-	Dislikes      int    // Number of dislikes on the post
-	CategoryID    int    // ID of the category
-	UserID        int    // ID of the user who created the post
-	RepliesCount  int    // Number of replies to the post
-	Views         int    // Number of views of the post
+	ID            string         // Unique identifier for the post
+	Title         string         // Title of the post
+	Content       string         // Content of the post
+	Username      string         // Username of the post author
+	Category      string         // Category of the post
+	Likes         int            // Number of likes on the post
+	Dislikes      int            // Number of dislikes on the post
+	CategoryID    int            // ID of the category
+	UserID        int            // ID of the user who created the post
+	RepliesCount  int            // Number of replies to the post
+	Views         int            // Number of views of the post
 	LastReplyDate sql.NullString // Date of the last reply
 	LastReplyUser sql.NullString // Username of the user who made the last reply
 	CreatedAt     sql.NullString // Timestamp when the post was created
@@ -41,11 +41,11 @@ type Pagination struct {
 
 // PageData holds data for rendering post list or details pages.
 type PageData struct {
-	Authenticated bool   // Whether the user is authenticated
-	Username      string // Username of the authenticated user
-	Posts         []Post // List of posts to display
-	Post          Post   // Single post for detailed view
-	Replies       []Reply // List of replies to a post
+	Authenticated bool       // Whether the user is authenticated
+	Username      string     // Username of the authenticated user
+	Posts         []Post     // List of posts to display
+	Post          Post       // Single post for detailed view
+	Replies       []Reply    // List of replies to a post
 	Pagination    Pagination // Pagination data
 }
 
@@ -57,10 +57,10 @@ type Reply struct {
 
 // PostViewData holds data for rendering a single post with its replies.
 type PostViewData struct {
-	Post          Post   // Post details
+	Post          Post    // Post details
 	Replies       []Reply // Replies to the post
-	Authenticated bool   // Whether the user is authenticated
-	Username      string // Username of the authenticated user
+	Authenticated bool    // Whether the user is authenticated
+	Username      string  // Username of the authenticated user
 }
 
 // Define template functions for use in HTML templates.
@@ -71,7 +71,6 @@ func add(a, b int) int {
 func sub(a, b int) int {
 	return a - b
 }
-
 
 ///////////////SessionMiddleware ////////////////////
 
@@ -131,8 +130,8 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 		// Insert the new post into the database
 		_, err = database.DB.Exec(`INSERT INTO Post (PostID, Title, Content, UserID, CategoryID, CreatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
-		postID, title, content, userID, categoryID, time.Now().Format(time.RFC3339))
-	
+			postID, title, content, userID, categoryID, time.Now().Format(time.RFC3339))
+
 		if err != nil {
 			http.Error(w, "Could not create post", http.StatusInternalServerError)
 			return
@@ -261,32 +260,32 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 
 // ListPosts handles displaying a paginated list of posts.
 func ListPosts(w http.ResponseWriter, r *http.Request) {
-    // Extract page number from query parameters
-    pageParam := r.URL.Query().Get("page")
-    currentPage := 1
-    if pageParam != "" {
-        var err error
-        currentPage, err = strconv.Atoi(pageParam)
-        if err != nil || currentPage < 1 {
-            currentPage = 1
-        }
-    }
+	// Extract page number from query parameters
+	pageParam := r.URL.Query().Get("page")
+	currentPage := 1
+	if pageParam != "" {
+		var err error
+		currentPage, err = strconv.Atoi(pageParam)
+		if err != nil || currentPage < 1 {
+			currentPage = 1
+		}
+	}
 
-    // Set up pagination parameters
-    postsPerPage := 10
-    offset := (currentPage - 1) * postsPerPage
+	// Set up pagination parameters
+	postsPerPage := 10
+	offset := (currentPage - 1) * postsPerPage
 
-    // Fetch total number of posts
-    var totalPosts int
-    err := database.DB.QueryRow("SELECT COUNT(*) FROM Post").Scan(&totalPosts)
-    if err != nil {
-        http.Error(w, "Could not retrieve total post count", http.StatusInternalServerError)
-        log.Printf("Error retrieving total post count: %v", err)
-        return
-    }
+	// Fetch total number of posts
+	var totalPosts int
+	err := database.DB.QueryRow("SELECT COUNT(*) FROM Post").Scan(&totalPosts)
+	if err != nil {
+		http.Error(w, "Could not retrieve total post count", http.StatusInternalServerError)
+		log.Printf("Error retrieving total post count: %v", err)
+		return
+	}
 
-    // Fetch posts for the current page along with likes, dislikes, and comments count
-    rows, err := database.DB.Query(`
+	// Fetch posts for the current page along with likes, dislikes, and comments count
+	rows, err := database.DB.Query(`
         SELECT Post.PostID, Post.Title, Post.Content, Post.CategoryID, Post.UserID, Post.LastReplyUser, 
                Post.LastReplyDate, Post.CreatedAt,
                COALESCE(SUM(CASE WHEN PostLikes.IsLike = 1 THEN 1 ELSE 0 END), 0) AS Likes,
@@ -297,46 +296,46 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
         GROUP BY Post.PostID
         ORDER BY Post.CreatedAt DESC
         LIMIT ? OFFSET ?`, postsPerPage, offset)
-    if err != nil {
-        http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
-        log.Printf("Error retrieving posts: %v", err)
-        return
-    }
-    defer rows.Close()
+	if err != nil {
+		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
+		log.Printf("Error retrieving posts: %v", err)
+		return
+	}
+	defer rows.Close()
 
-    var posts []Post
-    for rows.Next() {
-        var post Post
-        err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID, &post.LastReplyUser, 
-                         &post.LastReplyDate, &post.CreatedAt, &post.Likes, &post.Dislikes, &post.RepliesCount)
-        if err != nil {
-            http.Error(w, "Could not scan post", http.StatusInternalServerError)
-            log.Printf("Error scanning post: %v", err)
-            return
-        }
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID, &post.LastReplyUser,
+			&post.LastReplyDate, &post.CreatedAt, &post.Likes, &post.Dislikes, &post.RepliesCount)
+		if err != nil {
+			http.Error(w, "Could not scan post", http.StatusInternalServerError)
+			log.Printf("Error scanning post: %v", err)
+			return
+		}
 
-        // Fetch the category name for each post
-        var categoryName string
-        err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
-        if err != nil {
-            http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
-            log.Printf("Error retrieving category: %v", err)
-            return
-        }
-        post.Category = categoryName
+		// Fetch the category name for each post
+		var categoryName string
+		err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+		if err != nil {
+			http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+			log.Printf("Error retrieving category: %v", err)
+			return
+		}
+		post.Category = categoryName
 
-        // Fetch the username for each post
-        var username string
-        err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
-        if err != nil {
-            http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
-            log.Printf("Error retrieving username: %v", err)
-            return
-        }
-        post.Username = username
+		// Fetch the username for each post
+		var username string
+		err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
+		if err != nil {
+			http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+			log.Printf("Error retrieving username: %v", err)
+			return
+		}
+		post.Username = username
 
-        posts = append(posts, post)
-    }
+		posts = append(posts, post)
+	}
 
 	// Calculate the total number of pages
 	totalPages := (totalPosts + postsPerPage - 1) / postsPerPage
@@ -433,9 +432,8 @@ func AddReply(w http.ResponseWriter, r *http.Request) {
 	redirectURL := "/post/view?id=" + url.QueryEscape(postID)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
+
 ///////////////SessionMiddleware END////////////////////
-
-
 
 ///////////////Filter posts ////////////////////
 
@@ -445,33 +443,59 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	sortOrder := r.URL.Query().Get("sort")
 	likesOrder := r.URL.Query().Get("likes")
 
-	// Default values if parameters are not provided
-	if sortOrder == "" {
-		sortOrder = "desc"
-	}
-	if likesOrder == "" {
-		likesOrder = "desc"
+	// If neither sorting nor likesOrder is provided, randomize the post order
+	randomOrder := false
+	if sortOrder == "" && likesOrder == "" {
+		randomOrder = true
+	} else {
+		// Default values if parameters are provided but empty
+		if sortOrder == "" {
+			sortOrder = "desc"
+		}
+		if likesOrder == "" {
+			likesOrder = "desc"
+		}
 	}
 
-	// Construct SQL query with filtering and sorting
-	query := `
+	// Construct SQL query with filtering and sorting or random order
+	var query string
+	if randomOrder {
+		query = `
 		SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-		       COALESCE(l.Likes, 0) AS Likes, 
-		       COALESCE(l.Dislikes, 0) AS Dislikes, 
-		       p.CreatedAt
+			   COALESCE(l.Likes, 0) AS Likes, 
+			   COALESCE(l.Dislikes, 0) AS Dislikes, 
+			   p.CreatedAt
 		FROM Post p
 		LEFT JOIN (
 			SELECT PostID, 
-			       SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-			       SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+				   SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+				   SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
 			FROM PostLikes
 			GROUP BY PostID
 		) l ON p.PostID = l.PostID
 		WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
-		       OR ? = 'all')
+			   OR ? = 'all')
+		ORDER BY RAND()`
+	} else {
+		query = `
+		SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
+			   COALESCE(l.Likes, 0) AS Likes, 
+			   COALESCE(l.Dislikes, 0) AS Dislikes, 
+			   p.CreatedAt
+		FROM Post p
+		LEFT JOIN (
+			SELECT PostID, 
+				   SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+				   SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+			FROM PostLikes
+			GROUP BY PostID
+		) l ON p.PostID = l.PostID
+		WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
+			   OR ? = 'all')
 		ORDER BY p.CreatedAt ` + sortOrder + `, l.Likes ` + likesOrder
+	}
 
-	// Prepare to execute the query
+	// Execute the query
 	rows, err := database.DB.Query(query, category, category, category)
 	if err != nil {
 		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
@@ -497,9 +521,19 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Use session data from the request context
-	authenticated := r.Context().Value(session.Authenticated).(bool)
-	username := r.Context().Value(session.Username).(string)
+	// Safely get the authenticated value from the context
+	authenticated, ok := r.Context().Value(session.Authenticated).(bool)
+	if !ok {
+		// Handle cases where the value is not present or not a bool
+		authenticated = true // Default to false if not authenticated
+	}
+
+	// Safely get the username value from the context
+	username, ok := r.Context().Value(session.Username).(string)
+	if !ok {
+		// Handle cases where the value is not present or not a string
+		username = "" // Default to empty string if no username is found
+	}
 
 	// Prepare data for rendering the template
 	data := PageData{

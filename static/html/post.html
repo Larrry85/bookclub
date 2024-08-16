@@ -37,7 +37,8 @@
             {{if .Authenticated}}
                 <a class="headerlinks" href="/logout">Logout</a>
                 <a class="headerlinks" href="/profile">My Page</a>
-                <br><br><p>{{.Username}} is logged in.</p>
+                <p>logged in as</p>
+                <strong><h1><p>{{.Username}}</p></h1></strong>
             {{else}}
                 <a class="headerlinks" href="/login">Login</a>
                 <a class="headerlinks" href="/register">Register</a>
@@ -46,26 +47,33 @@
     </header>
 
     <!-- main content area ----------------------- -->
+    
     <main>
+        {{if .Authenticated}}
         <div class="create-filter-container">
             <!-- Create New Post Section -->
-            {{if .Authenticated}}
-            <section class="create-post">
-                <h2>Create a New Post</h2>
-                <!-- Form to create a new post -->
-                <form action="/post/create" method="post">
-                    <label for="title">Title:</label>
-                    <input type="text" id="title" name="title" required aria-required="true">
-                    <label for="content">Content:</label>
-                    <textarea id="content" name="content" required aria-required="true"></textarea>
-                    <label for="category">Category:</label>
-                    <select id="category" name="category" required aria-required="true">
-                        <option value="general">General</option>
-                        <option value="genres">Genres</option>
-                    </select>
-                    <button type="submit">Post</button>
-                </form>
-            </section>
+            
+           <!-- Create New Post Section -->
+<section class="create-post">
+    <h2>Create a New Post</h2>
+    <!-- Form to create a new post -->
+    <form action="/post/create" method="post">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required aria-required="true">
+        
+        <label for="content">Content:</label>
+        <textarea id="content" name="content" required aria-required="true"></textarea>
+        
+        <label for="category">Category:</label>
+        <select id="category" name="category" required aria-required="true">
+            <option value="general">General</option>
+            <option value="genres">Genres</option>
+        </select>
+        
+        <button type="submit">Post</button>
+    </form>
+</section>
+
             {{else}}
             <!-- Message for unauthenticated users -->
             <p>You need to <a class="loginlink" href="/login">login</a> to post.</p>
@@ -73,31 +81,34 @@
         
             <!-- Filter Posts Section -->
             <section class="filter-posts">
-                <h2>Filter Posts</h2>
+                 <h2>Filter Posts</h2>
                 <!-- Form to filter posts based on category and sorting options -->
                 <form action="/filter" method="get">
-                    <label for="category-filter">Category:</label>
-                    <select id="category-filter" name="category">
-                        <option value="all">All</option>
-                        <option value="recent">Recent</option>
-                        <option value="general">General</option>
-                        <option value="genres">Genres</option>
-                    </select>
-                    {{if .Authenticated}}
-                    <label for="time-filter">Sort by Time:</label>
-                    <select id="time-filter" name="sort">
-                        <option value="asc">Oldest First</option>
-                        <option value="desc">Newest First</option>
-                    </select>
-                    <label for="likes-filter">Sort by Likes:</label>
-                    <select id="likes-filter" name="likes">
-                        <option value="asc">Least Likes</option>
-                        <option value="desc">Most Likes</option>
-                    </select>
-                    {{end}}
-                    <button type="submit">Filter</button>
-                </form>
+                {{if .Authenticated}}
+                <!-- Sorting dropdowns should be before other filters -->
+                <label for="time-filter">Sort by Time:</label>
+                <select id="time-filter" name="sort">
+                    <option value="asc">Oldest First</option>
+                    <option value="desc">Newest First</option>
+                </select>
+                <label for="likes-filter">Sort by Likes:</label>
+                <select id="likes-filter" name="likes">
+                    <option value="asc">Least Likes</option>
+                    <option value="desc">Most Likes</option>
+                </select>
+                {{end}}
+                <!-- Other filters -->
+                <label for="category-filter">Category:</label>
+                <select id="category-filter" name="category">
+                    <option value="all">All</option>
+                    <option value="recent">Recent</option>
+                    <option value="general">General</option>
+                    <option value="genres">Genres</option>
+            </select>
+            <button type="submit">Filter</button>
+            </form>
             </section>
+
         </div>
 
 <!-- Posts Section -->

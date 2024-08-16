@@ -88,48 +88,78 @@ h2 {
     max-width: 800px; /* Limits maximum width of sections */
 }
 
-/* Specific styles for create-post and filter-posts sections */
-.create-post, .filter-posts {
-    padding: 0.75rem; /* Moderate padding for compact layout */
-    margin-bottom: 1rem; /* Reduced margin for less spacing */
-    max-width: 800px; /* Aligns with general section width */
-}
 
 .create-post h2, .filter-posts h2 {
     font-size: 1.2rem; /* Slightly smaller font size for section headings */
     margin-bottom: 0.5rem; /* Reduced margin below section headings */
 }
 
+.create-post title {
+    margin-bottom: 50px;
+}
+
+
+
+
+
 /* Adjust styles for input fields */
-.create-post input[type="text"] {
-    width: 50%; /* Smaller width for title input */
-    font-size: 0.9rem; /* Smaller font size */
-    padding: 0.5rem; /* Padding inside the input field */
-}
-
-.create-post textarea {
-    width: 100%; /* Full width for content textarea */
-    height: 150px; /* Increased height for more content space */
-    font-size: 1rem; /* Larger font size for readability */
-    padding: 0.75rem; /* Padding inside textarea */
-}
-
+.create-post input[type="text"], 
+.create-post textarea, 
 .create-post select {
-    width: 50%; /* Smaller width for dropdowns */
-    font-size: 0.9rem; /* Smaller font size for dropdowns */
-    padding: 0.5rem; /* Padding inside dropdowns */
+    width: 100%; /* Makes inputs and textareas full width of their container */
+    padding: 0.75rem; /* Adds padding inside form elements */
+    border: 1px solid #ccc; /* Light gray border */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 1rem; /* Standard font size */
+    line-height: 1.5; /* Increases line height for readability */
+    margin-bottom: 3px; /* Adds space below each input field */
+    max-width: 100%;
 }
 
-/* Style for select elements in filter-posts section */
-.filter-posts select {
-    width: 50%; /* Smaller width for dropdowns */
-    font-size: 0.9rem; /* Smaller font size */
-    padding: 0.5rem; /* Padding inside dropdowns */
+/* Additional styles for textarea */
+.create-post textarea {
+    height: 150px; /* Sets a fixed height for the textarea */
 }
+
+
+/* ---------------------------- Styles for dropdowns ---------------------------- */
+
+/* Add space between dropdowns in filter-posts section */
+.filter-posts select {
+    width: 15%; /* Width for sorting dropdowns */
+    font-size: 16px; /* Font size for category dropdown */
+    padding: 3px; /* Padding inside dropdowns */
+    margin-bottom: 1px; /* Space below each dropdown */
+}
+
+/* Specifically style the sorting dropdowns to distinguish them */
+#time-filter, #likes-filter {
+    width: 15%; /* Width for sorting dropdowns */
+    font-size: 16px; /* Font size for category dropdown */
+    padding: 3px; /* Padding inside dropdowns */
+    margin-bottom: 1rem; /* Space below each dropdown */
+}
+
+/* Style for other dropdowns */
+#category-filter {
+    width: 15%; /* Width for sorting dropdowns */
+    font-size: 16px; /* Font size for category dropdown */
+    padding: 3px; /* Padding inside dropdowns */
+    margin-bottom: 1rem; /* Space below each dropdown */
+}
+
+/* Adjusting form layout if needed */
+.filter-posts form {
+    display: block;
+    flex-direction: column; /* Stack form elements vertically */
+    gap: 1px; /* Space between form elements */
+}
+
+
 
 /* Style for form elements */
 form {
-    display: grid; /* Grid layout for form fields */
+    
     gap: 1rem; /* Space between grid items */
 }
 
@@ -144,6 +174,7 @@ input[type="text"], textarea, select {
     border-radius: 5px; /* Rounded corners */
     font-size: 1rem; /* Standard font size */
     line-height: 1.5; /* Increased line height for readability */
+    margin-bottom: 10px;
 }
 
 button {
