@@ -133,64 +133,6 @@ footer {
     padding: 1rem; /* Padding inside footer */
 }
 
-/* ----------------------------- Modal ----------------------------- */
-
-/* Style for the modal overlay */
-.modal {
-    display: none; /* Hide modal by default */
-    position: fixed; /* Fixed positioning to cover entire screen */
-    top: 0; /* Align at top */
-    left: 0; /* Align at left */
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    background: #bb93fb; /* Light purple background */
-    justify-content: center; /* Center content horizontally */
-    align-items: center; /* Center content vertically */
-    z-index: 1000; /* Ensure modal is above other content */
-}
-
-.modal:target {
-    display: flex; /* Show modal when targeted by anchor link */
-}
-
-/* Style for modal content box */
-.modal-content {
-    background: #fff; /* White background for content */
-    padding: 2rem; /* Padding inside modal */
-    border-radius: 5px; /* Rounded corners */
-    text-align: center; /* Center align text */
-}
-
-/* Style for modal close button */
-.modal .close {
-    display: inline-block; /* Inline-block display */
-    margin-top: 1rem; /* Space above button */
-    padding: 0.5rem 1rem; /* Padding inside button */
-    background: #333; /* Dark background */
-    color: #fff; /* White text color */
-    text-decoration: none; /* Remove underline */
-    border-radius: 5px; /* Rounded corners */
-}
-
-.modal .close:hover {
-    background: #555; /* Darker background on hover */
-}
-
-/* Style for modal trigger button */
-.modal-trigger {
-    display: inline-block; /* Inline-block display */
-    margin: 1rem; /* Margin around button */
-    padding: 0.5rem 1rem; /* Padding inside button */
-    background: #333; /* Dark background */
-    color: #fff; /* White text color */
-    text-decoration: none; /* Remove underline */
-    border-radius: 5px; /* Rounded corners */
-}
-
-.modal-trigger:hover {
-    background: #555; /* Darker background on hover */
-}
-
 /* ----------------------------- Login ----------------------------- */
 
 /* Container for login and register form */

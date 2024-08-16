@@ -52,6 +52,9 @@
             <h2>{{.Post.Title}}</h2>
             <!-- Display the content of the post -->
             <p class="post-content">{{.Post.Content}}</p><br><br>
+            <!-- Link to trigger the modal popup -->
+            <a href="#modal" class="modal-trigger">Open Pic</a>
+            <h2></h2>
             <!-- Display metadata about the post -->
             <p class="post-meta">Category: {{.Post.Category}}</p>
             <p class="post-meta">Posted by <b>{{.Post.Username}}</b></p>
@@ -126,5 +129,25 @@
         <!-- Footer content with copyright information -->
         <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>
+
+
+
+    <!-- modal popup --> 
+
+    <!-- Modal container -->
+    <div id="modal" class="modal">
+        <!-- Content of the modal -->
+        <div class="modal-content">
+            <!-- Header of the modal -->
+            <h2>My pic</h2>
+            <!-- Body of the modal -->
+            <p>This is the content.</p>
+            <!-- Link to close the modal -->
+            <a href="#" class="close">Close</a>
+        </div>
+    </div>
+
+
+
 </body>
 </html>
