@@ -21,11 +21,12 @@ body {
 
 /* Style for the header */
 header {
-    background: #bb93fb; /* Light purple background */
-    color: #000000; /* Black text color */
-    padding: 1rem 0; /* Vertical padding */
-    text-align: center; /* Center align text */
-}
+        background: linear-gradient(135deg, #9775cc, #d0b2ff); /* Light purple gradient */
+        color: #000000; /* Black text color */
+        padding: 1rem 0; /* Vertical padding */
+        text-align: center; /* Center align text */
+        transition: background-color 0.6s ease;
+    }
 
 /* ----------------------------- Navigation ----------------------------- */
 
