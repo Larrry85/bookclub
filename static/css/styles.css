@@ -318,7 +318,7 @@ a:hover {
     position: absolute; /* Absolute positioning on top of the image */
     color: white; /* White text color */
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    padding: 15px; /* Increased padding inside overlay */
+    padding: 5px; /* Increased padding inside overlay */
     border-radius: 5px; /* Rounded corners */
     font-size: 18px; /* Increased font size */
     width: 50%; /* 50% width of the image */
