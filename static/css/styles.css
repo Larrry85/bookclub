@@ -229,17 +229,11 @@ a:hover {
 }
 
 /* Profile Image and Text */
-/* Ensure the image covers the container */
-/* Style for image container with overlay text */
-/* Style for image container with overlay text */
-/* Style for image container with overlay text */
-/* Style for image container with overlay text */
-/* Style for image container with overlay text */
-/* Style for image container with overlay text */
 /* Style for image container with overlay text */
 .image-container {
     position: relative; /* Relative positioning for overlay text */
     display: flex; /* Flexbox layout for centering */
+    flex-direction: column; /* Arrange children in a column */
     align-items: center; /* Center vertically */
     justify-content: center; /* Center horizontally */
     width: 100%; /* Full width */
@@ -275,7 +269,7 @@ a:hover {
 .email,
 .likes,
 .dislikes,
-.posts,
+.post,
 .replies {
     left: 50%; /* Center horizontally */
     transform: translateX(-50%); /* Center text */
@@ -298,7 +292,7 @@ a:hover {
     top: calc(33% + 120px); /* Positioned closer below the likes */
 }
 
-.posts {
+.post {
     top: calc(33% + 200px); /* Positioned closer below the dislikes */
 }
 

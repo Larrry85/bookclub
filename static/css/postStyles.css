@@ -175,6 +175,7 @@ button:hover {
     display: grid; /* Grid layout for table headers */
     grid-template-columns: 50px 3fr 1fr 1fr; /* Defines column widths */
     gap: 20px; /* Space between columns */
+    text-align: left; /* Center text horizontally */
 }
 
 .table-row {
@@ -235,7 +236,7 @@ button:hover {
 }
 /* Replies Section */
 .replies {
-    margin-top: 1rem; /* Space above replies section */
+   /* margin-top: 1rem;  Space above replies section */
     padding-left: 1rem; /* Padding on the left */
     max-width: 800px; /* Aligns with the post width */
 }
