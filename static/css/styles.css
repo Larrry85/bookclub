@@ -356,15 +356,15 @@ a:hover {
 }
 
 .posts {
-    top: calc(33% + 160px); /* Positioned closer below the dislikes */
+    top: calc(33% + 200px); /* Positioned closer below the dislikes */
 }
 
 .replies {
-    top: calc(33% + 200px); /* Positioned closer below the posts */
+    top: calc(33% + 160px); /* Positioned closer below the posts */
 }
 
 .delete-account {
-    top: calc(33% + 300px);
+    top: calc(33% + 320px);
     left: 50%; /* Center horizontally */
     transform: translateX(-50%); /* Center text */
     width: auto; /* Automatic width for delete account text */
