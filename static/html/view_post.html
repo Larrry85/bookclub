@@ -102,13 +102,13 @@
         <!-- Reply Form -->
         {{if .Authenticated}}
         <section class="reply-form">
-            <h3>Add a Reply</h3>
+            <h3>Add a Reply:</h3>
             <!-- Form for adding a reply to the post -->
             <form action="/post/reply" method="POST">
                 <!-- Hidden field to pass the post ID -->
                 <input type="hidden" name="postID" value="{{.Post.ID}}">
                 <!-- Textarea for the reply content -->
-                <label for="content">Reply:</label>
+               <!-- <label for="content">Reply:</label>-->
                 <textarea id="content" name="content" required aria-required="true"></textarea>
                 <!-- Submit button for the reply form -->
                 <button type="submit">Submit Reply</button>
