@@ -98,59 +98,47 @@
             </section>
         </div>
 
-        <!-- Posts Section -->
-        <section class="posts">
-            <h2>Posts</h2><br>
-            <div class="posts-table">
-                <!-- Table header for posts -->
-                <div class="table-head">
-                    <div class="status"></div>
-                    <div class="subjects">Title</div>
-                    <div class="replies">Replies</div>
-                    <div class="actions">Actions</div>
-                </div>
-                <!-- Loop through each post and display it -->
-                {{range .Posts}}
-                <div class="table-row">
-                    <div class="status-icon">
-                        <!-- Icon for the post status -->
-                        <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
-                    </div>
-                    <div class="subjects">
-                        <!-- Post title with a link to view the full post -->
-                        <a href="/post/view?id={{.ID}}">{{.Title}}</a>
-                        <br>
-                        <span>Started by <b>{{.Username}}</b></span>
-                    </div>
-                    <div class="replies">
-                        <!-- Display number of replies -->
-                        {{.RepliesCount}} replies
-                    </div>
-                    <div class="actions">
-                        <!-- Like button -->
-                        <form action="/like" method="post" style="display: inline;">
-                            <input type="hidden" name="post_id" value="{{.ID}}">
-                            <input type="hidden" name="is_like" value="true">
-                            <button type="submit" title="Like">
-                                <i class="fa-solid fa-thumbs-up" style="color: green;"></i>
-                            </button>
-                        </form>
-                        <!-- Dislike button -->
-                        <form action="/like" method="post" style="display: inline;">
-                            <input type="hidden" name="post_id" value="{{.ID}}">
-                            <input type="hidden" name="is_like" value="false">
-                            <button type="submit" title="Dislike">
-                                <i class="fa-solid fa-thumbs-down" style="color: red;"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                {{else}}
-                <!-- Message when no posts are available -->
-                <p>No posts available.</p>
-                {{end}}
+<!-- Posts Section -->
+<section class="posts">
+    <h2>Posts</h2><br>
+    <div class="posts-table">
+        <!-- Table header for posts -->
+        <div class="table-head">
+            <div class="status"></div>
+            <div class="subjects">Title</div>
+            <div class="replies">Replies</div>
+            <div class="actions">Likes</div>
+        </div>
+        <!-- Loop through each post and display it -->
+        {{range .Posts}}
+        <div class="table-row">
+            <div class="status-icon">
+                <!-- Icon for the post status -->
+                <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
             </div>
-        </section>
+            <div class="subjects">
+                <!-- Post title with a link to view the full post -->
+                <a class="titlefont" href="/post/view?id={{.ID}}">{{.Title}}</a>
+                <br>
+                <span>Started by <b>{{.Username}}</b></span>
+            </div>
+            <div class="replies">
+                <!-- Display number of replies -->
+                {{.RepliesCount}} replies
+            </div>
+            <div class="actions">
+                <!-- Display number of likes and dislikes -->
+                Likes: {{.Likes}}<br>
+                Dislikes: {{.Dislikes}}
+            </div>
+        </div>
+        {{else}}
+        <!-- Message when no posts are available -->
+        <p>No posts available.</p>
+        {{end}}
+    </div>
+</section>
+
 
         <!-- Pagination Section -->
         <div class="pagination">

@@ -7,7 +7,8 @@ import (
 	"html/template"
 	"lions/database"
 	"lions/email"
-	"lions/post"
+
+	//"lions/post"
 	"lions/session"
 	"log"
 	"net/http"
@@ -24,6 +25,9 @@ type PageData struct {
 	Email string
 	Error string
 }
+
+///////////////SessionMiddleware ////////////////////
+
 // MainPageHandler serves the main page of the application
 func MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve session data from the context
@@ -47,27 +51,6 @@ func MainPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-// ConfirmEmailHandler confirms the user's email address
-func ConfirmEmailHandler(w http.ResponseWriter, r *http.Request) {
-	// Retrieve the email address from the query parameters
-	emailAddr := r.URL.Query().Get("email")
-	if emailAddr == "" {
-		http.Error(w, "Email not provided", http.StatusBadRequest)
-		return
-	}
-
-	// Update the user's email confirmation status in the database
-	_, err := database.DB.Exec(`UPDATE User SET Confirmed = 1 WHERE Email = ?`, emailAddr)
-	if err != nil {
-		log.Println("Error confirming email:", err)
-		http.Error(w, "Failed to confirm email", http.StatusInternalServerError)
-		return
-	}
-
-	log.Printf("Email confirmed: %s", emailAddr)
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 // RegisterHandler handles user registration
@@ -122,34 +105,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("User registered: username=%s, email=%s", name, emailAddr)
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-	}
-}
-
-// renderRegister renders the registration page with an error message
-func renderRegister(w http.ResponseWriter, errorMessage string) {
-	tmpl, err := template.ParseFiles("static/html/register.html")
-	if err != nil {
-		log.Println("Template parsing error:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	data := map[string]interface{}{
-		"ErrorMessage": errorMessage,
-	}
-
-	tmpl.Execute(w, data)
-}
-
-// PostsHandler handles displaying and creating posts
-func PostsHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		post.ListPosts(w, r)  // List existing posts
-	case http.MethodPost:
-		post.CreatePost(w, r)  // Create a new post
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -208,22 +163,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// renderLogin renders the login page with an error message
-func renderLogin(w http.ResponseWriter, errorMessage string) {
-	tmpl, err := template.ParseFiles("static/html/login.html")
-	if err != nil {
-		log.Println("Template parsing error:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	data := map[string]interface{}{
-		"ErrorMessage": errorMessage,
-	}
-
-	tmpl.Execute(w, data)
-}
-
 // LogoutHandler handles user logout
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
@@ -242,6 +181,145 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
+// ProfileHandler serves the user's profile page
+func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+	// Retrieve session data from the cookie
+	sessionID, err := r.Cookie("session_id")
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	sessionData, ok := session.GetSession(sessionID.Value)
+	if !ok || !sessionData.Authenticated {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Fetch user data from the database
+	var userInfo struct {
+		Username    string
+		Email       string
+		NumPosts    int
+		NumComments int
+		NumLikes    int
+		NumDislikes int
+	}
+
+	// Get user ID based on username
+	var userID int
+	err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, sessionData.Username).Scan(&userID)
+	if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch basic user info
+	err = database.DB.QueryRow(`SELECT Username, Email FROM User WHERE Username = ?`, sessionData.Username).
+		Scan(&userInfo.Username, &userInfo.Email)
+	if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch counts of posts, comments, likes, and dislikes
+	err = database.DB.QueryRow(`
+		SELECT 
+			(SELECT COUNT(*) FROM Post WHERE UserID = ?) AS NumPosts,
+			(SELECT COUNT(*) FROM Comment WHERE UserID = ?) AS NumComments,
+			(SELECT COUNT(*) FROM PostLikes WHERE UserID = ? AND IsLike = 1) AS NumLikes,
+			(SELECT COUNT(*) FROM PostLikes WHERE UserID = ? AND IsLike = 0) AS NumDislikes
+	`, userID, userID, userID, userID).Scan(&userInfo.NumPosts, &userInfo.NumComments, &userInfo.NumLikes, &userInfo.NumDislikes)
+	if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Render the profile page
+	tmpl, err := template.ParseFiles("static/html/profile.html")
+	if err != nil {
+		log.Println("Template parsing error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{
+		"Username":    userInfo.Username,
+		"Email":       userInfo.Email,
+		"NumPosts":    userInfo.NumPosts,
+		"NumComments": userInfo.NumComments,
+		"NumLikes":    userInfo.NumLikes,
+		"NumDislikes": userInfo.NumDislikes,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Println("Template execution error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+///////////////SessionMiddleware END////////////////////
+
+
+// renderRegister renders the registration page with an error message
+func renderRegister(w http.ResponseWriter, errorMessage string) {
+	tmpl, err := template.ParseFiles("static/html/register.html")
+	if err != nil {
+		log.Println("Template parsing error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{
+		"ErrorMessage": errorMessage,
+	}
+
+	tmpl.Execute(w, data)
+}
+
+// renderLogin renders the login page with an error message
+func renderLogin(w http.ResponseWriter, errorMessage string) {
+	tmpl, err := template.ParseFiles("static/html/login.html")
+	if err != nil {
+		log.Println("Template parsing error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{
+		"ErrorMessage": errorMessage,
+	}
+
+	tmpl.Execute(w, data)
+}
+
+///////////////Email ////////////////////
+
+// ConfirmEmailHandler confirms the user's email address
+func ConfirmEmailHandler(w http.ResponseWriter, r *http.Request) {
+	// Retrieve the email address from the query parameters
+	emailAddr := r.URL.Query().Get("email")
+	if emailAddr == "" {
+		http.Error(w, "Email not provided", http.StatusBadRequest)
+		return
+	}
+
+	// Update the user's email confirmation status in the database
+	_, err := database.DB.Exec(`UPDATE User SET Confirmed = 1 WHERE Email = ?`, emailAddr)
+	if err != nil {
+		log.Println("Error confirming email:", err)
+		http.Error(w, "Failed to confirm email", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("Email confirmed: %s", emailAddr)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+///////////////Password ////////////////////
 
 // PasswordResetRequestHandler handles password reset requests
 func PasswordResetRequestHandler(w http.ResponseWriter, r *http.Request) {
@@ -381,86 +459,7 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ProfileHandler serves the user's profile page
-func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-	// Retrieve session data from the cookie
-	sessionID, err := r.Cookie("session_id")
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
-	sessionData, ok := session.GetSession(sessionID.Value)
-	if !ok || !sessionData.Authenticated {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
-	// Fetch user data from the database
-	var userInfo struct {
-		Username     string
-		Email        string
-		NumPosts     int
-		NumComments  int
-		NumLikes     int
-		NumDislikes  int
-	}
-
-	// Get user ID based on username
-	var userID int
-	err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, sessionData.Username).Scan(&userID)
-	if err != nil {
-		log.Println("Database error:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	// Fetch basic user info
-	err = database.DB.QueryRow(`SELECT Username, Email FROM User WHERE Username = ?`, sessionData.Username).
-		Scan(&userInfo.Username, &userInfo.Email)
-	if err != nil {
-		log.Println("Database error:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	// Fetch counts of posts, comments, likes, and dislikes
-	err = database.DB.QueryRow(`
-		SELECT 
-			(SELECT COUNT(*) FROM Post WHERE UserID = ?) AS NumPosts,
-			(SELECT COUNT(*) FROM Comment WHERE UserID = ?) AS NumComments,
-			(SELECT COUNT(*) FROM PostLikes WHERE UserID = ? AND IsLike = 1) AS NumLikes,
-			(SELECT COUNT(*) FROM PostLikes WHERE UserID = ? AND IsLike = 0) AS NumDislikes
-	`, userID, userID, userID, userID).Scan(&userInfo.NumPosts, &userInfo.NumComments, &userInfo.NumLikes, &userInfo.NumDislikes)
-	if err != nil {
-		log.Println("Database error:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	// Render the profile page
-	tmpl, err := template.ParseFiles("static/html/profile.html")
-	if err != nil {
-		log.Println("Template parsing error:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	data := map[string]interface{}{
-		"Username":    userInfo.Username,
-		"Email":       userInfo.Email,
-		"NumPosts":    userInfo.NumPosts,
-		"NumComments": userInfo.NumComments,
-		"NumLikes":    userInfo.NumLikes,
-		"NumDislikes": userInfo.NumDislikes,
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Println("Template execution error:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-	}
-}
-
+///////////////Delete Account ////////////////////
 
 // DeleteAccountHandler handles account deletion
 func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
@@ -500,3 +499,14 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
+/*/ PostsHandler handles displaying and creating posts
+func PostsHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		post.ListPosts(w, r)  // List existing posts
+	case http.MethodPost:
+		post.CreatePost(w, r)  // Create a new post
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}*/

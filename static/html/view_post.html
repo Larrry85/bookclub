@@ -14,6 +14,8 @@
     <title>{{.Post.Title}} - Literary Lions Forum</title>
     <!-- Link to the external CSS stylesheet for post styles -->
     <link rel="stylesheet" href="/static/css/postStyles.css">
+    <!-- Link to Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
@@ -49,13 +51,31 @@
             <!-- Display the title of the post -->
             <h2>{{.Post.Title}}</h2>
             <!-- Display the content of the post -->
-            <p class="post-content">{{.Post.Content}}</p>
+            <p class="post-content">{{.Post.Content}}</p><br><br>
             <!-- Display metadata about the post -->
             <p class="post-meta">Category: {{.Post.Category}}</p>
             <p class="post-meta">Posted by <b>{{.Post.Username}}</b></p>
             <p class="post-meta">Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
+            <div class="actions">
+                <!-- Like button -->
+                <form action="/like" method="post" style="display: inline;">
+                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                    <input type="hidden" name="is_like" value="true">
+                    <button type="submit" title="Like">
+                        <i class="fa-solid fa-thumbs-up" style="color: green;"></i>
+                    </button>
+                </form>
+                <!-- Dislike button -->
+                <form action="/like" method="post" style="display: inline;">
+                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                    <input type="hidden" name="is_like" value="false">
+                    <button type="submit" title="Dislike">
+                        <i class="fa-solid fa-thumbs-down" style="color: red;"></i>
+                    </button>
+                </form>
+            </div>
         </section>
-
+    
         <!-- Replies Section -->
         <section class="replies">
             <h3>Replies</h3>
@@ -78,7 +98,7 @@
                 <p>No replies yet.</p>
             {{end}}
         </section>
-
+    
         <!-- Reply Form -->
         {{if .Authenticated}}
         <section class="reply-form">
@@ -98,8 +118,8 @@
         <!-- Message shown if the user is not authenticated -->
         <p>You need to <a class="loginlink" href="/login">login</a> to reply.</p>
         {{end}}
-
     </main>
+    
 
     <!-- Footer ----------------------- -->
     <footer>

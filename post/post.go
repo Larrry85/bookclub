@@ -72,6 +72,91 @@ func sub(a, b int) int {
 	return a - b
 }
 
+
+///////////////SessionMiddleware ////////////////////
+
+// CreatePost handles the creation of a new post.
+func CreatePost(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		title := r.FormValue("title")
+		content := r.FormValue("content")
+		category := r.FormValue("category")
+
+		// Validate input data
+		if title == "" || content == "" || category == "" {
+			http.Error(w, "All fields are required", http.StatusBadRequest)
+			return
+		}
+
+		postID := uuid.New().String() // Generate a unique ID for the new post
+
+		// Check if the user is authenticated
+		authenticated := r.Context().Value(session.Authenticated).(bool)
+		username := r.Context().Value(session.Username).(string)
+		if !authenticated {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		var userID int
+		// Retrieve userID based on the username
+		err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
+		if err != nil {
+			http.Error(w, "Could not find user", http.StatusInternalServerError)
+			return
+		}
+
+		var categoryID int
+		// Retrieve categoryID or create a new category if it does not exist
+		err = database.DB.QueryRow(`SELECT CategoryID FROM Category WHERE CategoryName = ?`, category).Scan(&categoryID)
+		if err != nil && err != sql.ErrNoRows {
+			http.Error(w, "Could not find category", http.StatusInternalServerError)
+			return
+		}
+
+		if err == sql.ErrNoRows {
+			// Insert a new category if it does not exist
+			result, err := database.DB.Exec(`INSERT INTO Category (CategoryName) VALUES (?)`, category)
+			if err != nil {
+				http.Error(w, "Could not create category", http.StatusInternalServerError)
+				return
+			}
+			categoryID64, err := result.LastInsertId()
+			if err != nil {
+				http.Error(w, "Could not retrieve category ID", http.StatusInternalServerError)
+				return
+			}
+			categoryID = int(categoryID64)
+		}
+
+		// Insert the new post into the database
+		_, err = database.DB.Exec(`INSERT INTO Post (PostID, Title, Content, UserID, CategoryID, CreatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
+		postID, title, content, userID, categoryID, time.Now().Format(time.RFC3339))
+	
+		if err != nil {
+			http.Error(w, "Could not create post", http.StatusInternalServerError)
+			return
+		}
+
+		// Redirect to the list of posts
+		http.Redirect(w, r, "/post", http.StatusSeeOther)
+	} else {
+		// Render the create post template for GET requests
+		tmpl, err := template.New("create_post.html").Funcs(template.FuncMap{
+			"add": add,
+			"sub": sub,
+		}).ParseFiles("static/html/create_post.html")
+		if err != nil {
+			http.Error(w, "Template parsing error", http.StatusInternalServerError)
+			return
+		}
+		if err := tmpl.ExecuteTemplate(w, "create_post.html", nil); err != nil {
+			http.Error(w, "Template execution error", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 // ViewPost handles displaying a single post and its replies.
 func ViewPost(w http.ResponseWriter, r *http.Request) {
 	// Retrieve post ID from query parameters
@@ -174,159 +259,84 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// CreatePost handles the creation of a new post.
-func CreatePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		title := r.FormValue("title")
-		content := r.FormValue("content")
-		category := r.FormValue("category")
-
-		// Validate input data
-		if title == "" || content == "" || category == "" {
-			http.Error(w, "All fields are required", http.StatusBadRequest)
-			return
-		}
-
-		postID := uuid.New().String() // Generate a unique ID for the new post
-
-		// Check if the user is authenticated
-		authenticated := r.Context().Value(session.Authenticated).(bool)
-		username := r.Context().Value(session.Username).(string)
-		if !authenticated {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
-
-		var userID int
-		// Retrieve userID based on the username
-		err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
-		if err != nil {
-			http.Error(w, "Could not find user", http.StatusInternalServerError)
-			return
-		}
-
-		var categoryID int
-		// Retrieve categoryID or create a new category if it does not exist
-		err = database.DB.QueryRow(`SELECT CategoryID FROM Category WHERE CategoryName = ?`, category).Scan(&categoryID)
-		if err != nil && err != sql.ErrNoRows {
-			http.Error(w, "Could not find category", http.StatusInternalServerError)
-			return
-		}
-
-		if err == sql.ErrNoRows {
-			// Insert a new category if it does not exist
-			result, err := database.DB.Exec(`INSERT INTO Category (CategoryName) VALUES (?)`, category)
-			if err != nil {
-				http.Error(w, "Could not create category", http.StatusInternalServerError)
-				return
-			}
-			categoryID64, err := result.LastInsertId()
-			if err != nil {
-				http.Error(w, "Could not retrieve category ID", http.StatusInternalServerError)
-				return
-			}
-			categoryID = int(categoryID64)
-		}
-
-		// Insert the new post into the database
-		_, err = database.DB.Exec(`INSERT INTO Post (PostID, Title, Content, UserID, CategoryID, CreatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
-		postID, title, content, userID, categoryID, time.Now().Format(time.RFC3339))
-	
-		if err != nil {
-			http.Error(w, "Could not create post", http.StatusInternalServerError)
-			return
-		}
-
-		// Redirect to the list of posts
-		http.Redirect(w, r, "/post", http.StatusSeeOther)
-	} else {
-		// Render the create post template for GET requests
-		tmpl, err := template.New("create_post.html").Funcs(template.FuncMap{
-			"add": add,
-			"sub": sub,
-		}).ParseFiles("static/html/create_post.html")
-		if err != nil {
-			http.Error(w, "Template parsing error", http.StatusInternalServerError)
-			return
-		}
-		if err := tmpl.ExecuteTemplate(w, "create_post.html", nil); err != nil {
-			http.Error(w, "Template execution error", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
 // ListPosts handles displaying a paginated list of posts.
 func ListPosts(w http.ResponseWriter, r *http.Request) {
-	// Extract page number from query parameters
-	pageParam := r.URL.Query().Get("page")
-	currentPage := 1
-	if pageParam != "" {
-		var err error
-		currentPage, err = strconv.Atoi(pageParam)
-		if err != nil || currentPage < 1 {
-			currentPage = 1
-		}
-	}
+    // Extract page number from query parameters
+    pageParam := r.URL.Query().Get("page")
+    currentPage := 1
+    if pageParam != "" {
+        var err error
+        currentPage, err = strconv.Atoi(pageParam)
+        if err != nil || currentPage < 1 {
+            currentPage = 1
+        }
+    }
 
-	// Set up pagination parameters
-	postsPerPage := 10
-	offset := (currentPage - 1) * postsPerPage
+    // Set up pagination parameters
+    postsPerPage := 10
+    offset := (currentPage - 1) * postsPerPage
 
-	// Fetch total number of posts
-	var totalPosts int
-	err := database.DB.QueryRow("SELECT COUNT(*) FROM Post").Scan(&totalPosts)
-	if err != nil {
-		http.Error(w, "Could not retrieve total post count", http.StatusInternalServerError)
-		log.Printf("Error retrieving total post count: %v", err)
-		return
-	}
+    // Fetch total number of posts
+    var totalPosts int
+    err := database.DB.QueryRow("SELECT COUNT(*) FROM Post").Scan(&totalPosts)
+    if err != nil {
+        http.Error(w, "Could not retrieve total post count", http.StatusInternalServerError)
+        log.Printf("Error retrieving total post count: %v", err)
+        return
+    }
 
-	// Fetch posts for the current page
-	rows, err := database.DB.Query(`
-        SELECT PostID, Title, Content, CategoryID, UserID, LastReplyUser, LastReplyDate, CreatedAt
+    // Fetch posts for the current page along with likes, dislikes, and comments count
+    rows, err := database.DB.Query(`
+        SELECT Post.PostID, Post.Title, Post.Content, Post.CategoryID, Post.UserID, Post.LastReplyUser, 
+               Post.LastReplyDate, Post.CreatedAt,
+               COALESCE(SUM(CASE WHEN PostLikes.IsLike = 1 THEN 1 ELSE 0 END), 0) AS Likes,
+               COALESCE(SUM(CASE WHEN PostLikes.IsLike = 0 THEN 1 ELSE 0 END), 0) AS Dislikes,
+               COALESCE((SELECT COUNT(*) FROM Comment WHERE Comment.PostID = Post.PostID), 0) AS NumComments
         FROM Post
-        ORDER BY CreatedAt DESC
+        LEFT JOIN PostLikes ON Post.PostID = Postlikes.PostID
+        GROUP BY Post.PostID
+        ORDER BY Post.CreatedAt DESC
         LIMIT ? OFFSET ?`, postsPerPage, offset)
-	if err != nil {
-		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
-		log.Printf("Error retrieving posts: %v", err)
-		return
-	}
-	defer rows.Close()
+    if err != nil {
+        http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
+        log.Printf("Error retrieving posts: %v", err)
+        return
+    }
+    defer rows.Close()
 
-	var posts []Post
-	for rows.Next() {
-		var post Post
-		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID, &post.LastReplyUser, &post.LastReplyDate, &post.CreatedAt)
-		if err != nil {
-			http.Error(w, "Could not scan post", http.StatusInternalServerError)
-			log.Printf("Error scanning post: %v", err)
-			return
-		}
+    var posts []Post
+    for rows.Next() {
+        var post Post
+        err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID, &post.LastReplyUser, 
+                         &post.LastReplyDate, &post.CreatedAt, &post.Likes, &post.Dislikes, &post.RepliesCount)
+        if err != nil {
+            http.Error(w, "Could not scan post", http.StatusInternalServerError)
+            log.Printf("Error scanning post: %v", err)
+            return
+        }
 
-		// Fetch the category name for each post
-		var categoryName string
-		err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
-		if err != nil {
-			http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
-			log.Printf("Error retrieving category: %v", err)
-			return
-		}
-		post.Category = categoryName
+        // Fetch the category name for each post
+        var categoryName string
+        err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+        if err != nil {
+            http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+            log.Printf("Error retrieving category: %v", err)
+            return
+        }
+        post.Category = categoryName
 
-		// Fetch the username for each post
-		var username string
-		err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
-		if err != nil {
-			http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
-			log.Printf("Error retrieving username: %v", err)
-			return
-		}
-		post.Username = username
+        // Fetch the username for each post
+        var username string
+        err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
+        if err != nil {
+            http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+            log.Printf("Error retrieving username: %v", err)
+            return
+        }
+        post.Username = username
 
-		posts = append(posts, post)
-	}
+        posts = append(posts, post)
+    }
 
 	// Calculate the total number of pages
 	totalPages := (totalPosts + postsPerPage - 1) / postsPerPage
@@ -362,7 +372,6 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 
 // AddReply handles adding a reply to a post.
 func AddReply(w http.ResponseWriter, r *http.Request) {
@@ -424,6 +433,11 @@ func AddReply(w http.ResponseWriter, r *http.Request) {
 	redirectURL := "/post/view?id=" + url.QueryEscape(postID)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
+///////////////SessionMiddleware END////////////////////
+
+
+
+///////////////Filter posts ////////////////////
 
 func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve filter and sort parameters from query

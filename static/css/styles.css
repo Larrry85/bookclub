@@ -285,36 +285,6 @@ a:hover {
     text-align: center; /* Center align text */
 }
 
-/* Style for image container with overlay text */
-.image-container {
-    position: relative; /* Relative positioning for overlay text */
-    display: inline-block; /* Inline-block display */
-    width: 100%; /* Full width */
-    max-width: 1000px; /* Increased maximum width for a bigger image */
-    margin: auto; /* Center the container */
-    overflow: hidden; /* Hide overflow to ensure no content spills out */
-}
-
-/* Ensure the image fills the container properly */
-.image-container img {
-    width: 100%; /* Full width of container */
-    height: auto; /* Maintain aspect ratio */
-    display: block; /* Remove extra space */
-    object-fit: cover; /* Cover the container while maintaining aspect ratio */
-}
-
-/* Style for overlay text */
-.overlay-text {
-    position: absolute; /* Absolute positioning on top of the image */
-    color: white; /* White text color */
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    padding: 10px; /* Padding inside overlay */
-    border-radius: 5px; /* Rounded corners */
-    font-size: 16px; /* Font size */
-    max-width: 400px; /* Maximum width */
-    max-height: 18px; /* Maximum height */
-}
-
 /* Profile Image and Text */
 /* Ensure the image covers the container */
 /* Style for image container with overlay text */

@@ -4,9 +4,9 @@ package main
 import (
 	"lions/database"
 	"lions/handle"
+	"lions/like"
 	"lions/post"
 	"lions/session"
-	"lions/like"
 	"log"
 	"net/http"
 )
@@ -28,11 +28,12 @@ func main() {
 	http.Handle("/register", session.SessionMiddleware(http.HandlerFunc(handle.RegisterHandler)))
 	http.Handle("/login", session.SessionMiddleware(http.HandlerFunc(handle.LoginHandler)))
 	http.Handle("/logout", session.SessionMiddleware(http.HandlerFunc(handle.LogoutHandler)))
+	http.Handle("/profile", session.SessionMiddleware(http.HandlerFunc(handle.ProfileHandler)))
+
 	http.Handle("/post/create", session.SessionMiddleware(http.HandlerFunc(post.CreatePost)))
 	http.Handle("/post/view", session.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
 	http.Handle("/post", session.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
 	http.Handle("/post/reply", session.SessionMiddleware(http.HandlerFunc(post.AddReply)))
-	http.Handle("/profile", session.SessionMiddleware(http.HandlerFunc(handle.ProfileHandler)))
 
 	// Define routes that do not use session middleware
 	// These routes handle actions that do not require session management, like password reset or email confirmation.
@@ -40,6 +41,7 @@ func main() {
 	http.HandleFunc("/password-reset-request", handle.PasswordResetRequestHandler)
 	http.HandleFunc("/reset-password", handle.ResetPasswordHandler)
 	http.HandleFunc("/delete-account", handle.DeleteAccountHandler)
+
 	http.HandleFunc("/like", like.LikePostHandler)
 	http.HandleFunc("/filter", post.FilterPostHandler)
 
