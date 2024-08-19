@@ -29,6 +29,16 @@ header {
         font-family: 'Poppins', Arial, sans-serif; /* Set Poppins as the primary font */
         line-height: 1.6; /* Increase line height for better readability */
     }
+ .loggedin {
+     font-size: small;
+     margin-top: 10px;
+ }    
+ .usernamelogged {
+    font-size: 1rem;
+
+}
+
+
 
 /* ----------------------------- Navigation ----------------------------- */
 
@@ -48,6 +58,8 @@ nav a:hover {
     color: #755e83; /* Slightly different color on hover */
     text-decoration: none; /* Remove underline on hover */
 }
+
+
 
 /* ----------------------------- Main Section ----------------------------- */
 

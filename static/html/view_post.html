@@ -38,8 +38,8 @@
                 <a class="headerlinks" href="/logout">Logout</a>
                 <a class="headerlinks" href="/profile">My Page</a>
                 <!-- Display a message indicating the user is logged in -->
-                <p>logged in as</p>
-                <strong><h1><p>{{.Username}}</p></h1></strong>
+                <p class="loggedin">logged in as</p>
+                <strong><h1><p class="usernamelogged">{{.Username}}</p></h1></strong>
             {{else}}
                 <a class="headerlinks" href="/login">Login</a>
                 <a class="headerlinks" href="/register">Register</a>

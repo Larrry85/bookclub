@@ -31,10 +31,21 @@ header {
     transition: background-color 0.6s ease;
     font-family: 'Poppins', Arial, sans-serif; /* Set Poppins as the primary font */
     line-height: 1.6; /* Increase line height for better readability */
+
 }
 
+.loggedin {
+    font-size: small;
+    margin-top: 10px;
+}
+
+.usernamelogged {
+    font-size: 1rem;
+}
+
+/* Style for navigation bar */
 nav {
-    margin-top: 10px; /* Adds margin above the navigation */
+    margin-top: 10px; /* Space between header and navigation */
 }
 
 nav a {
