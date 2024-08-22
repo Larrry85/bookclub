@@ -163,16 +163,18 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	var post Post
 	// Retrieve post details from the database
 	err := database.DB.QueryRow(`
-        SELECT PostID, Title, Content, CategoryID, UserID
+        SELECT PostID, Title, Content, CategoryID, UserID, 
+               LastReplyDate, LastReplyUser, CreatedAt
         FROM Post
-        WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID)
+        WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID,
+		&post.LastReplyDate, &post.LastReplyUser, &post.CreatedAt)
 	if err != nil {
 		http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
 		return
 	}
 
-	var categoryName string
 	// Retrieve category name for the post
+	var categoryName string
 	err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
 	if err != nil {
 		http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
@@ -180,8 +182,8 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	post.Category = categoryName
 
-	var username string
 	// Retrieve username of the post author
+	var username string
 	err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
 	if err != nil {
 		http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
@@ -189,13 +191,14 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	post.Username = username
 
-	// Retrieve likes and dislikes for the post
+	// Retrieve likes, dislikes, and replies count for the post
 	err = database.DB.QueryRow(`
         SELECT 
-            (SELECT COUNT(*) FROM PostLikes WHERE PostID = ? AND IsLike = 1) AS Likes,
-            (SELECT COUNT(*) FROM PostLikes WHERE PostID = ? AND IsLike = 0) AS Dislikes,
-            (SELECT COUNT(*) FROM Comment WHERE PostID = ?) AS RepliesCount
-        `, postID, postID, postID).Scan(&post.Likes, &post.Dislikes, &post.RepliesCount)
+            COALESCE(SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END), 0) AS Likes,
+            COALESCE(SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END), 0) AS Dislikes,
+            COALESCE((SELECT COUNT(*) FROM Comment WHERE PostID = ?), 0) AS RepliesCount
+        FROM PostLikes
+        WHERE PostID = ?`, postID, postID).Scan(&post.Likes, &post.Dislikes, &post.RepliesCount)
 	if err != nil {
 		http.Error(w, "Could not retrieve likes/dislikes", http.StatusInternalServerError)
 		return
@@ -203,11 +206,10 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve replies for the post
 	rows, err := database.DB.Query(`
-    SELECT c.Content, u.Username
-    FROM Comment c
-    JOIN User u ON c.UserID = u.UserID
-    WHERE c.PostID = ?`, postID)
-
+        SELECT c.Content, u.Username
+        FROM Comment c
+        JOIN User u ON c.UserID = u.UserID
+        WHERE c.PostID = ?`, postID)
 	if err != nil {
 		http.Error(w, "Could not retrieve replies", http.StatusInternalServerError)
 		return
@@ -230,15 +232,17 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 
 	// Use session data from the request context
 	authenticated := r.Context().Value(session.Authenticated).(bool)
-	username = r.Context().Value(session.Username).(string)
+	currentUser := r.Context().Value(session.Username).(string)
 
 	// Prepare data for rendering the template
 	data := PostViewData{
 		Post:          post,
 		Replies:       replies,
 		Authenticated: authenticated,
-		Username:      username,
+		Username:      currentUser,
 	}
+
+	// Parse and execute the template
 	tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
 		"add": add,
 		"sub": sub,

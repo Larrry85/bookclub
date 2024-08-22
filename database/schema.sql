@@ -42,21 +42,26 @@ CREATE TABLE IF NOT EXISTS Comment (
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
 );
 
--- Table to store likes and dislikes on posts and comments
--- Modify PostLikes table
+-- Table to store likes and dislikes on posts
 CREATE TABLE IF NOT EXISTS PostLikes (
-    PostID INTEGER,
     UserID INTEGER,
+    PostID INTEGER,
+    CommentID INTEGER, -- This is optional for comments
     IsLike BOOLEAN,
-    CommentID INTEGER, -- Include this if you want to support likes/dislikes on comments
-    PRIMARY KEY (PostID, UserID, CommentID), -- Composite key to allow multiple likes per post/comment per user
-    FOREIGN KEY (PostID) REFERENCES Post(PostID),
+    PRIMARY KEY (UserID, PostID, CommentID), -- Adjust this if you use comments
     FOREIGN KEY (UserID) REFERENCES User(UserID),
-    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID)
+    FOREIGN KEY (PostID) REFERENCES Post(PostID)
 );
 
-
-
+-- Table to store likes and dislikes on comments
+CREATE TABLE IF NOT EXISTS CommentLikes (
+    CommentID INTEGER,
+    UserID INTEGER,
+    IsLike BOOLEAN,
+    PRIMARY KEY (CommentID, UserID),
+    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID),
+    FOREIGN KEY (UserID) REFERENCES User(UserID)
+);
 
 
 -- Table to store password reset tokens
@@ -73,6 +78,7 @@ CREATE TABLE IF NOT EXISTS Session (
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the session was created
     FOREIGN KEY (UserID) REFERENCES User(UserID) -- Foreign key to User table
 );
+
 
 -- Create indexes to improve query performance
 CREATE INDEX IF NOT EXISTS idx_post_user ON Post(UserID); -- Index on UserID in Post table

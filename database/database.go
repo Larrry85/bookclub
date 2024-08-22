@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	DB       *sql.DB // Global database connection handle
+	DB       *sql.DB                   // Global database connection handle
 	Sessions = make(map[string]string) // Session ID to User ID mapping
 )
 
@@ -90,37 +90,42 @@ func InsertUser(username, email, password string) error {
 
 // GetUserStats retrieves the number of posts, comments, likes, and dislikes for a given user
 func GetUserStats(userID int) (numPosts, numComments, likes, dislikes int, err error) {
-    // Count the number of posts for the specified user
-    err = DB.QueryRow(`SELECT COUNT(*) FROM Post WHERE UserID = ?`, userID).Scan(&numPosts)
-    if err != nil {
-        return 0, 0, 0, 0, err
-    }
+	// Count the number of posts for the specified user
+	err = DB.QueryRow(`SELECT COUNT(*) FROM Post WHERE UserID = ?`, userID).Scan(&numPosts)
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
 
-    // Count the number of comments for the specified user
-    err = DB.QueryRow(`SELECT COUNT(*) FROM Comment WHERE UserID = ?`, userID).Scan(&numComments)
-    if err != nil {
-        return 0, 0, 0, 0, err
-    }
+	// Count the number of comments for the specified user
+	err = DB.QueryRow(`SELECT COUNT(*) FROM Comment WHERE UserID = ?`, userID).Scan(&numComments)
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
 
-    // Count the number of likes given by the user
-    err = DB.QueryRow(`
+	// Count the number of likes given by the user
+	err = DB.QueryRow(`
         SELECT COUNT(*) 
         FROM PostLikes 
         WHERE UserID = ? AND IsLike = 1
     `, userID).Scan(&likes)
-    if err != nil {
-        return 0, 0, 0, 0, err
-    }
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
 
-    // Count the number of dislikes given by the user
-    err = DB.QueryRow(`
+	// Count the number of dislikes given by the user
+	err = DB.QueryRow(`
         SELECT COUNT(*) 
         FROM PostLikes 
         WHERE UserID = ? AND IsLike = 0
     `, userID).Scan(&dislikes)
-    if err != nil {
-        return 0, 0, 0, 0, err
-    }
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
 
-    return numPosts, numComments, likes, dislikes, nil
+	return numPosts, numComments, likes, dislikes, nil
+}
+
+// GetDB returns the database connection pool.
+func GetDB() *sql.DB {
+	return DB
 }

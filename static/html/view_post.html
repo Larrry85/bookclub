@@ -36,29 +36,20 @@
     <main>
         <section class="post-details">
             <h2>{{.Post.Title}}</h2>
-            <p class="post-content">{{.Post.Content}}</p>
-            <p class="post-meta">Category: {{.Post.Category}}</p>
-            <p class="post-meta">Posted by <b>{{.Post.Username}}</b></p>
-            <p class="post-meta">Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}}</p>
+            <h1>{{ .Post.Title }}</h1>
+            <p>{{ .Post.Content }}</p>
+            <p>Category: {{ .Post.Category }}</p>
+            <p>Posted by: {{ .Post.Username }}</p>
+            <p>Likes: {{ .Post.Likes }} | Dislikes: {{ .Post.Dislikes }} | Replies: {{ .Post.RepliesCount }}</p>
             {{if .Authenticated}}
             <div class="actions">
-              <!-- Like Button Form -->
-<!-- Like Button Form -->
-<form action="/like" method="post" style="display: inline;">
-    <input type="hidden" name="post_id" value="{{.Post.ID}}">
-    <input type="hidden" name="is_like" value="true">
-    <button type="submit" title="Like">
-        <i class="fa-solid fa-thumbs-up" style="color: green;"></i>
-    </button>
-</form>
-
-<!-- Dislike Button Form -->
-<form action="/like" method="post" style="display: inline;">
-    <input type="hidden" name="post_id" value="{{.Post.ID}}">
-    <input type="hidden" name="is_like" value="false">
-    <button type="submit" title="Dislike">
-        <i class="fa-solid fa-thumbs-down" style="color: red;"></i>
-    </button>
+              
+  <!-- Like/Dislike form -->
+  <form action="/like" method="post">
+    <input type="hidden" name="post_id" value="{{ .Post.ID }}">
+    <input type="hidden" name="comment_id" value=""> <!-- Leave empty for post -->
+    <button type="submit" name="is_like" value="true">Like</button>
+    <button type="submit" name="is_like" value="false">Dislike</button>
 </form>
 
 
