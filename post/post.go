@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"text/template"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Post represents a blog post with various details.
@@ -74,7 +72,6 @@ func sub(a, b int) int {
 
 ///////////////SessionMiddleware ////////////////////
 
-// CreatePost handles the creation of a new post.
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		title := r.FormValue("title")
@@ -86,8 +83,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "All fields are required", http.StatusBadRequest)
 			return
 		}
-
-		postID := uuid.New().String() // Generate a unique ID for the new post
 
 		// Check if the user is authenticated
 		authenticated := r.Context().Value(session.Authenticated).(bool)
@@ -129,10 +124,10 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert the new post into the database
-		_, err = database.DB.Exec(`INSERT INTO Post (PostID, Title, Content, UserID, CategoryID, CreatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
-			postID, title, content, userID, categoryID, time.Now().Format(time.RFC3339))
-
+		_, err = database.DB.Exec(`INSERT INTO Post (Title, Content, UserID, CategoryID, CreatedAt) VALUES (?, ?, ?, ?, ?)`,
+			title, content, userID, categoryID, time.Now().Format(time.RFC3339))
 		if err != nil {
+			log.Printf("Error creating post: %v", err) // Log the actual error
 			http.Error(w, "Could not create post", http.StatusInternalServerError)
 			return
 		}

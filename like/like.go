@@ -62,59 +62,112 @@ func LikeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLikeDislike(userID int, postID string, commentID *int, isLike bool) error {
-	// Check if the user has already liked/disliked this post/comment
+	tx, err := database.DB.Begin()
+	if err != nil {
+		log.Printf("Failed to begin transaction: %v", err)
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
 	existingAction, err := getUserPostCommentAction(userID, postID, commentID)
 	if err != nil && err != sql.ErrNoRows {
+		log.Printf("Error retrieving user action: %v", err)
 		return err
 	}
 
-	// Determine the current action
-	currentAction := "none"
-	if existingAction != "" {
-		if existingAction == "like" {
-			currentAction = "like"
-		} else if existingAction == "dislike" {
-			currentAction = "dislike"
+	var increment, update bool
+	if existingAction == "" {
+		// New action
+		increment = true
+		err = insertLikeDislikeTx(tx, userID, postID, commentID, isLike)
+	} else {
+		// Existing action
+		if (existingAction == "like" && !isLike) || (existingAction == "dislike" && isLike) {
+			update = true
+			err = updateLikeDislikeTx(tx, userID, postID, commentID, isLike)
 		}
 	}
 
-	if currentAction == "none" {
-		// If no previous action, insert a new like/dislike
-		err = insertLikeDislike(userID, postID, commentID, isLike)
-	} else if (currentAction == "like" && !isLike) || (currentAction == "dislike" && isLike) {
-		// If switching between like and dislike, update the record
-		err = updateLikeDislike(userID, postID, commentID, isLike)
-	} else {
-		// If performing the same action again, do nothing
-		return nil
+	if err != nil {
+		log.Printf("Error inserting/updating like/dislike: %v", err)
+		return err
 	}
-	log.Printf("Existing action: %s", existingAction)
 
+	if increment || update {
+		err = updatePostCountersTx(tx, postID, isLike, increment)
+		if err != nil {
+			log.Printf("Error updating post counters: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func insertLikeDislikeTx(tx *sql.Tx, userID int, postID string, commentID *int, isLike bool) error {
+	_, err := tx.Exec("INSERT INTO PostLikes (UserID, PostID, CommentID, IsLike) VALUES (?, ?, ?, ?)", userID, postID, commentID, isLike)
+	return err
+}
+
+func updateLikeDislikeTx(tx *sql.Tx, userID int, postID string, commentID *int, isLike bool) error {
+	var commentIDQuery string
+	if commentID != nil {
+		commentIDQuery = "= ?"
+	} else {
+		commentIDQuery = "IS NULL"
+	}
+
+	_, err := tx.Exec("UPDATE PostLikes SET IsLike = ? WHERE UserID = ? AND PostID = ? AND CommentID "+commentIDQuery, isLike, userID, postID, commentID)
+	return err
+}
+
+func updatePostCountersTx(tx *sql.Tx, postID string, isLike bool, increment bool) error {
+	var operation string
+	if increment {
+		if isLike {
+			operation = "LikesCount = LikesCount + 1"
+		} else {
+			operation = "DislikesCount = DislikesCount + 1"
+		}
+	} else {
+		if isLike {
+			operation = "LikesCount = LikesCount - 1"
+		} else {
+			operation = "DislikesCount = DislikesCount - 1"
+		}
+	}
+
+	_, err := tx.Exec("UPDATE Post SET "+operation+" WHERE PostID = ?", postID)
 	return err
 }
 
 func getUserPostCommentAction(userID int, postID string, commentID *int) (string, error) {
 	var action bool
-	query := "SELECT IsLike FROM PostLikes WHERE UserID = ? AND PostID = ? AND CommentID IS ?"
+	var commentIDQuery string
+	if commentID != nil {
+		commentIDQuery = "= ?"
+	} else {
+		commentIDQuery = "IS NULL"
+	}
+
+	query := "SELECT IsLike FROM PostLikes WHERE UserID = ? AND PostID = ? AND CommentID " + commentIDQuery
 	err := database.DB.QueryRow(query, userID, postID, commentID).Scan(&action)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return "", err
 	}
 
-	// Return "like" or "dislike" based on the IsLike value
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
 	if action {
 		return "like", nil
 	} else {
 		return "dislike", nil
 	}
-}
-
-func insertLikeDislike(userID int, postID string, commentID *int, isLike bool) error {
-	_, err := database.DB.Exec("INSERT INTO PostLikes (UserID, PostID, CommentID, IsLike) VALUES (?, ?, ?, ?)", userID, postID, commentID, isLike)
-	return err
-}
-
-func updateLikeDislike(userID int, postID string, commentID *int, isLike bool) error {
-	_, err := database.DB.Exec("UPDATE PostLikes SET IsLike = ? WHERE UserID = ? AND PostID = ? AND CommentID IS ?", isLike, userID, postID, commentID)
-	return err
 }

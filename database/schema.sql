@@ -15,18 +15,20 @@ CREATE TABLE IF NOT EXISTS User (
     Password TEXT NOT NULL -- User's hashed password
 );
 
--- Table to store posts
 CREATE TABLE IF NOT EXISTS Post (
-    PostID INTEGER PRIMARY KEY, -- Unique identifier for each post
-    Title TEXT, -- Title of the post
-    Content TEXT, -- Content of the post
+    PostID INTEGER PRIMARY KEY AUTOINCREMENT, -- Auto-increment unique identifier for each post
+    Title TEXT NOT NULL, -- Title of the post
+    Content TEXT NOT NULL, -- Content of the post
     UserID INTEGER, -- ID of the user who created the post
     CategoryID INTEGER, -- ID of the category to which the post belongs
-    LastReplyUser TEXT, -- User who last replied to the post
+    LastReplyUser INTEGER, -- ID of the user who last replied to the post (use UserID for relational integrity)
     LastReplyDate DATETIME, -- Date and time of the last reply
-    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the post was created
+    LikesCount INTEGER DEFAULT 0,
+    DislikesCount INTEGER DEFAULT 0,
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL, -- Foreign key to User table
-    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) -- Foreign key to Category table
+    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID), -- Foreign key to Category table
+    FOREIGN KEY (LastReplyUser) REFERENCES User(UserID) -- Foreign key to User table for LastReplyUser
 );
 
 -- Table to store comments on posts
@@ -41,17 +43,20 @@ CREATE TABLE IF NOT EXISTS Comment (
 );
 
 -- Table to store likes and dislikes on posts and comments
+-- Modify PostLikes table
 CREATE TABLE IF NOT EXISTS PostLikes (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each like/dislike entry
-    UserID INTEGER NOT NULL, -- ID of the user who liked/disliked
-    PostID INTEGER, -- ID of the post (can be NULL if the like/dislike is for a comment)
-    CommentID INTEGER, -- ID of the comment (can be NULL if the like/dislike is for a post)
-    IsLike BOOLEAN NOT NULL, -- TRUE for like, FALSE for dislike
-    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE, -- Foreign key to User table
-    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
-    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID) ON DELETE CASCADE, -- Foreign key to Comment table
-    UNIQUE (UserID, PostID, CommentID) -- Ensure that a user can only have one entry per post or comment at a time
+    PostID INTEGER,
+    UserID INTEGER,
+    IsLike BOOLEAN,
+    CommentID INTEGER, -- Include this if you want to support likes/dislikes on comments
+    PRIMARY KEY (PostID, UserID, CommentID), -- Composite key to allow multiple likes per post/comment per user
+    FOREIGN KEY (PostID) REFERENCES Post(PostID),
+    FOREIGN KEY (UserID) REFERENCES User(UserID),
+    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID)
 );
+
+
+
 
 
 -- Table to store password reset tokens
@@ -77,3 +82,4 @@ CREATE INDEX IF NOT EXISTS idx_comment_user ON Comment(UserID); -- Index on User
 CREATE INDEX IF NOT EXISTS idx_like_user ON PostLikes(UserID); -- Index on UserID in PostLikes table
 CREATE INDEX IF NOT EXISTS idx_like_post ON PostLikes(PostID); -- Index on PostID in PostLikes table
 CREATE INDEX IF NOT EXISTS idx_like_comment ON PostLikes(CommentID); -- Index on CommentID in PostLikes table
+CREATE INDEX IF NOT EXISTS idx_post_last_reply ON Post(LastReplyDate);
