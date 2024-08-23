@@ -18,11 +18,9 @@
     <header>
         <!-- Conditional rendering based on authentication status -->
         {{if .Authenticated}}
-            <!-- Displayed if user is authenticated -->
-            <h1>LITERARY LIONS FORUM</h1>
+        <p>WELCOME TO</p><br><h1>LITERARY LIONS FORUM</h1>
         {{else}}
-            <!-- Displayed if user is not authenticated -->
-            <h1>WELCOME TO LITERARY LIONS FORUM</h1>
+        <h1>LITERARY LIONS FORUM</h1>
         {{end}}
         <!-- Navigation links -->
         <nav>

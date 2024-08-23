@@ -26,9 +26,9 @@
     <header>
         <!-- Conditional heading based on authentication status -->
         {{if .Authenticated}}
-        <h1>LITERARY LIONS FORUM</h1>
+        <p>WELCOME TO</p><br><h1>LITERARY LIONS FORUM</h1>
         {{else}}
-        <h1>WELCOME TO LITERARY LIONS FORUM</h1>
+        <h1>LITERARY LIONS FORUM</h1>
         {{end}}
         <nav>
             <!-- Navigation links -->
@@ -53,26 +53,29 @@
         <div class="create-filter-container">
             <!-- Create New Post Section -->
             
-           <!-- Create New Post Section -->
-<section class="create-post">
-    <h2>Create a New Post</h2>
-    <!-- Form to create a new post -->
-    <form action="/post/create" method="post">
-        <label for="title">Title:</label>
-        <input type="text" id="title" name="title" required aria-required="true">
+            <section class="create-post">
+                <h2>Create a New Post</h2>
+                <!-- Form to create a new post -->
+                <form action="/post/create" method="post" enctype="multipart/form-data">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required aria-required="true">
+                    
+                    <label for="content">Content:</label>
+                    <textarea id="content" name="content" required aria-required="true"></textarea>
+                    
+                    <label for="category">Category:</label>
+                    <select id="category" name="category" required aria-required="true">
+                        <option value="general">General</option>
+                        <option value="genres">Genres</option>
+                    </select>
         
-        <label for="content">Content:</label>
-        <textarea id="content" name="content" required aria-required="true"></textarea>
-        
-        <label for="category">Category:</label>
-        <select id="category" name="category" required aria-required="true">
-            <option value="general">General</option>
-            <option value="genres">Genres</option>
-        </select>
-        
-        <button type="submit">Post</button>
-    </form>
-</section>
+                    <!-- Add file input for image upload -->
+                    <label for="image">Image:</label>
+                    <input type="file" id="image" name="image" accept="image/*">
+                    
+                    <button type="submit">Post</button>
+                </form>
+            </section>
 
             {{else}}
             <!-- Message for unauthenticated users -->

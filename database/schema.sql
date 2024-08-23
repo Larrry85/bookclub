@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS User (
     Password TEXT NOT NULL -- User's hashed password
 );
 
+-- Post Table
 CREATE TABLE IF NOT EXISTS Post (
     PostID INTEGER PRIMARY KEY AUTOINCREMENT, -- Auto-increment unique identifier for each post
     Title TEXT NOT NULL, -- Title of the post
@@ -27,9 +28,22 @@ CREATE TABLE IF NOT EXISTS Post (
     LikesCount INTEGER DEFAULT 0,
     DislikesCount INTEGER DEFAULT 0,
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL, -- Foreign key to User table
-    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID), -- Foreign key to Category table
-    FOREIGN KEY (LastReplyUser) REFERENCES User(UserID) -- Foreign key to User table for LastReplyUser
+    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) -- Foreign key to Category table
+        FOREIGN KEY (LastReplyUser) REFERENCES User(UserID) -- Foreign key to User table for LastReplyUser
 );
+
+CREATE TABLE IF NOT EXISTS PostImage (
+    ID TEXT PRIMARY KEY,      -- Unique identifier for each image (use TEXT for UUIDs)
+    PostID TEXT,                   -- Foreign key referencing the Post table
+    UserID INTEGER, -- ID of the user who made the comment
+    ImagePath TEXT,                -- Path or URL to the image file
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the image was uploaded
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
+);
+
+
+
 
 -- Table to store comments on posts
 CREATE TABLE IF NOT EXISTS Comment (
