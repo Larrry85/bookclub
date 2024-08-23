@@ -12,7 +12,6 @@ import (
 	"text/template"
 	"time"
 
-
 	"github.com/google/uuid"
 
 	"io"
@@ -234,127 +233,127 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func ViewPost(w http.ResponseWriter, r *http.Request) {
-    // Retrieve post ID from query parameters
-    postID := r.URL.Query().Get("id")
-    if postID == "" {
-        http.Error(w, "Post ID is required", http.StatusBadRequest)
-        return
-    }
+	// Retrieve post ID from query parameters
+	postID := r.URL.Query().Get("id")
+	if postID == "" {
+		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		return
+	}
 
-    var post Post
-    // Retrieve post details from the database
-    err := database.DB.QueryRow(`
+	var post Post
+	// Retrieve post details from the database
+	err := database.DB.QueryRow(`
         SELECT PostID, Title, Content, CategoryID, UserID, 
                LastReplyDate, LastReplyUser, CreatedAt
         FROM Post
         WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID,
-        &post.LastReplyDate, &post.LastReplyUser, &post.CreatedAt)
-    if err != nil {
-        http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
-        return
-    }
+		&post.LastReplyDate, &post.LastReplyUser, &post.CreatedAt)
+	if err != nil {
+		http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
+		return
+	}
 
-    // Retrieve images for the post
-    rows, err := database.DB.Query(`SELECT ID, PostID, ImagePath FROM PostImage WHERE PostID = ?`, postID)
-    if err != nil {
-        http.Error(w, "Could not retrieve images", http.StatusInternalServerError)
-        return
-    }
-    defer rows.Close()
+	// Retrieve images for the post
+	rows, err := database.DB.Query(`SELECT ID, PostID, ImagePath FROM PostImage WHERE PostID = ?`, postID)
+	if err != nil {
+		http.Error(w, "Could not retrieve images", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-    var postImage PostImage
-    var postImages []PostImage
+	var postImage PostImage
+	var postImages []PostImage
 
-    for rows.Next() {
-        if err := rows.Scan(&postImage.ID, &postImage.PostID, &postImage.ImagePath); err != nil {
-            http.Error(w, "Could not scan image", http.StatusInternalServerError)
-            return
-        }
-        postImages = append(postImages, postImage)
-    }
-    post.Images = postImages
+	for rows.Next() {
+		if err := rows.Scan(&postImage.ID, &postImage.PostID, &postImage.ImagePath); err != nil {
+			http.Error(w, "Could not scan image", http.StatusInternalServerError)
+			return
+		}
+		postImages = append(postImages, postImage)
+	}
+	post.Images = postImages
 
-    // Retrieve category name for the post
-    var categoryName string
-    err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
-    if err != nil {
-        http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
-        return
-    }
-    post.Category = categoryName
+	// Retrieve category name for the post
+	var categoryName string
+	err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+	if err != nil {
+		http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+		return
+	}
+	post.Category = categoryName
 
-    // Retrieve username of the post author
-    var username string
-    err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
-    if err != nil {
-        http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
-        return
-    }
-    post.Username = username
+	// Retrieve username of the post author
+	var username string
+	err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
+	if err != nil {
+		http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+		return
+	}
+	post.Username = username
 
-    // Retrieve likes, dislikes, and replies count for the post
-    err = database.DB.QueryRow(`
+	// Retrieve likes, dislikes, and replies count for the post
+	err = database.DB.QueryRow(`
         SELECT 
             COALESCE(SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END), 0) AS Likes,
             COALESCE(SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END), 0) AS Dislikes,
             COALESCE((SELECT COUNT(*) FROM Comment WHERE PostID = ?), 0) AS RepliesCount
         FROM PostLikes
         WHERE PostID = ?`, postID, postID).Scan(&post.Likes, &post.Dislikes, &post.RepliesCount)
-    if err != nil {
-        http.Error(w, "Could not retrieve post stats", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(w, "Could not retrieve post stats", http.StatusInternalServerError)
+		return
+	}
 
-    // Retrieve replies for the post
-    rows, err = database.DB.Query(`
+	// Retrieve replies for the post
+	rows, err = database.DB.Query(`
         SELECT c.Content, u.Username
         FROM Comment c
         JOIN User u ON c.UserID = u.UserID
         WHERE c.PostID = ?`, postID)
-    if err != nil {
-        http.Error(w, "Could not retrieve replies", http.StatusInternalServerError)
-        return
-    }
-    defer rows.Close()
+	if err != nil {
+		http.Error(w, "Could not retrieve replies", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-    var replies []Reply
-    for rows.Next() {
-        var reply Reply
-        if err := rows.Scan(&reply.Content, &reply.Username); err != nil {
-            http.Error(w, "Could not scan reply", http.StatusInternalServerError)
-            return
-        }
-        replies = append(replies, reply)
-    }
+	var replies []Reply
+	for rows.Next() {
+		var reply Reply
+		if err := rows.Scan(&reply.Content, &reply.Username); err != nil {
+			http.Error(w, "Could not scan reply", http.StatusInternalServerError)
+			return
+		}
+		replies = append(replies, reply)
+	}
 
-    // Use session data from the request context
-    authenticated := r.Context().Value(session.Authenticated).(bool)
-    currentUser := r.Context().Value(session.Username).(string)
+	// Use session data from the request context
+	authenticated := r.Context().Value(session.Authenticated).(bool)
+	currentUser := r.Context().Value(session.Username).(string)
 
-    // Prepare data for rendering the template
-    data := PostViewData{
-        Post:          post,
-        Replies:       replies,
-        Authenticated: authenticated,
-        Username:      currentUser,
-    }
+	// Prepare data for rendering the template
+	data := PostViewData{
+		Post:          post,
+		Replies:       replies,
+		Authenticated: authenticated,
+		Username:      currentUser,
+	}
 
-    // Log the data being passed to the template
-    log.Println("Post View Data:", data)
+	// Log the data being passed to the template
+	log.Println("Post View Data:", data)
 
-    // Parse and execute the template
-    tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
-        "add": add,
-        "sub": sub,
-    }).ParseFiles("static/html/view_post.html")
-    if err != nil {
-        http.Error(w, "Could not parse template", http.StatusInternalServerError)
-        return
-    }
+	// Parse and execute the template
+	tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
+		"add": add,
+		"sub": sub,
+	}).ParseFiles("static/html/view_post.html")
+	if err != nil {
+		http.Error(w, "Could not parse template", http.StatusInternalServerError)
+		return
+	}
 
-    if err := tmpl.Execute(w, data); err != nil {
-        http.Error(w, "Template execution error", http.StatusInternalServerError)
-    }
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, "Template execution error", http.StatusInternalServerError)
+	}
 }
 
 // ListPosts handles displaying a paginated list of posts.
