@@ -439,3 +439,11 @@ footer p {
 .modal-trigger:hover {
     background: #555; /* Darker background on hover */
 }
+
+/* Image styling */
+.post-image-thumbnail {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+}
