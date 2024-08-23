@@ -11,6 +11,12 @@ import (
 	"strconv"
 	"text/template"
 	"time"
+
+
+	"github.com/google/uuid"
+
+	"io"
+	"os"
 )
 
 // Post represents a blog post with various details.
@@ -29,6 +35,7 @@ type Post struct {
 	LastReplyDate sql.NullString // Date of the last reply
 	LastReplyUser sql.NullString // Username of the user who made the last reply
 	CreatedAt     sql.NullTime   // Timestamp when the post was created
+	Images        []PostImage    // List of images associated with the post
 }
 
 // Pagination represents pagination data for listing posts.
@@ -61,6 +68,21 @@ type PostViewData struct {
 	Username      string  // Username of the authenticated user
 }
 
+// PostImage represents an image associated with a blog post.
+type PostImage struct {
+	ID        string       // Unique identifier for the post image
+	PostID    string       // ID of the associated post
+	UserID    int          // ID of the user who uploaded the image
+	ImagePath string       // Path to the image file
+	CreatedAt sql.NullTime // Timestamp when the image was uploaded
+}
+
+// ImageData holds data for rendering the image upload page.
+type ImageData struct {
+	Authenticated bool   // Whether the user is authenticated
+	Username      string // Username of the authenticated user
+}
+
 // Define template functions for use in HTML templates.
 func add(a, b int) int {
 	return a + b
@@ -74,9 +96,21 @@ func sub(a, b int) int {
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
+		// Parse the form data including file uploads
+		err := r.ParseMultipartForm(10 << 20) // 10 MB
+		if err != nil {
+			http.Error(w, "Unable to parse form", http.StatusBadRequest)
+			return
+		}
+
 		title := r.FormValue("title")
 		content := r.FormValue("content")
 		category := r.FormValue("category")
+		file, handler, err := r.FormFile("image")
+		if err != nil && err != http.ErrMissingFile {
+			http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+			return
+		}
 
 		// Validate input data
 		if title == "" || content == "" || category == "" {
@@ -94,7 +128,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 		var userID int
 		// Retrieve userID based on the username
-		err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
+		err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
 		if err != nil {
 			http.Error(w, "Could not find user", http.StatusInternalServerError)
 			return
@@ -124,6 +158,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert the new post into the database
+
 		_, err = database.DB.Exec(`INSERT INTO Post (Title, Content, UserID, CategoryID, CreatedAt) VALUES (?, ?, ?, ?, ?)`,
 			title, content, userID, categoryID, time.Now().Format(time.RFC3339))
 		if err != nil {
@@ -132,129 +167,212 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Handle image upload if there is an image
+		if file != nil {
+			fileName := uuid.New().String() + "_" + handler.Filename
+			filePath := "uploads/" + fileName
+
+			// Ensure the uploads directory exists
+			if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
+				http.Error(w, "Unable to create uploads directory", http.StatusInternalServerError)
+				return
+			}
+
+			dst, err := os.Create(filePath)
+			if err != nil {
+				log.Println("Error creating file:", err)
+				http.Error(w, "Unable to create the file", http.StatusInternalServerError)
+				return
+			}
+			defer dst.Close()
+
+			_, err = io.Copy(dst, file)
+			if err != nil {
+				log.Println("Error saving file:", err)
+				http.Error(w, "Unable to save the file", http.StatusInternalServerError)
+				return
+			}
+
+			userID, _ := r.Context().Value(session.UserID).(int)
+			postID := r.FormValue("post_id")
+
+			// Save the image information to the database
+			postImage := PostImage{
+				ID:        uuid.New().String(),
+				PostID:    postID,
+				UserID:    userID,
+				ImagePath: filePath,
+				CreatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+			}
+
+			err = savePostImageToDB(postImage)
+			if err != nil {
+				log.Println("Error saving image to database:", err)
+				http.Error(w, "Unable to save image information", http.StatusInternalServerError)
+				return
+			}
+			log.Println("Image saved to database:", postImage)
+		}
+
 		// Redirect to the list of posts
 		http.Redirect(w, r, "/post", http.StatusSeeOther)
 	} else {
 		// Render the create post template for GET requests
-		tmpl, err := template.New("create_post.html").Funcs(template.FuncMap{
+		tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
 			"add": add,
 			"sub": sub,
-		}).ParseFiles("static/html/create_post.html")
+		}).ParseFiles("static/html/view_post.html")
 		if err != nil {
 			http.Error(w, "Template parsing error", http.StatusInternalServerError)
 			return
 		}
-		if err := tmpl.ExecuteTemplate(w, "create_post.html", nil); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "view_post.html", nil); err != nil {
 			http.Error(w, "Template execution error", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-// ViewPost handles displaying a single post and its replies.
 func ViewPost(w http.ResponseWriter, r *http.Request) {
-	// Retrieve post ID from query parameters
-	postID := r.URL.Query().Get("id")
-	if postID == "" {
-		http.Error(w, "Post ID is required", http.StatusBadRequest)
-		return
-	}
+    // Retrieve post ID from query parameters
+    postID := r.URL.Query().Get("id")
+    if postID == "" {
+        http.Error(w, "Post ID is required", http.StatusBadRequest)
+        return
+    }
 
 	var post Post
 	// Retrieve post details from the database
 	err := database.DB.QueryRow(`
-        SELECT PostID, Title, Content, CategoryID, UserID, 
-               LastReplyDate, LastReplyUser, CreatedAt
-        FROM Post
-        WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID,
+		SELECT PostID, Title, Content, CategoryID, UserID, 
+			   LastReplyDate, LastReplyUser, CreatedAt
+		FROM Post
+		WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID,
 		&post.LastReplyDate, &post.LastReplyUser, &post.CreatedAt)
 	if err != nil {
 		http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
 		return
 	}
-
-	// Retrieve category name for the post
-	var categoryName string
-	err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+	
+	// Retrieve images for the post
+	rows, err := database.DB.Query(`SELECT ID, PostID, ImagePath FROM PostImage WHERE PostID = ?`, postID)
 	if err != nil {
-		http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+		http.Error(w, "Could not retrieve images", http.StatusInternalServerError)
 		return
 	}
-	post.Category = categoryName
+	defer rows.Close()
 
-	// Retrieve username of the post author
-	var username string
-	err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
-	if err != nil {
-		http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
-		return
-	}
-	post.Username = username
+    var postImage PostImage
+    var postImages []PostImage
 
-	// Retrieve likes, dislikes, and replies count for the post
-	err = database.DB.QueryRow(`
+    for rows.Next() {
+        if err := rows.Scan(&postImage.ID, &postImage.PostID, &postImage.ImagePath); err != nil {
+            http.Error(w, "Could not scan image", http.StatusInternalServerError)
+            return
+        }
+        postImages = append(postImages, postImage)
+    }
+    post.Images = postImages
+
+    // Retrieve category name for the post
+    var categoryName string
+    err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+    if err != nil {
+        http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+        return
+    }
+    post.Category = categoryName
+
+    // Retrieve username of the post author
+    var username string
+    err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
+    if err != nil {
+        http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+        return
+    }
+    post.Username = username
+
+    // Retrieve likes, dislikes, and replies count for the post
+    err = database.DB.QueryRow(`
         SELECT 
             COALESCE(SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END), 0) AS Likes,
             COALESCE(SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END), 0) AS Dislikes,
             COALESCE((SELECT COUNT(*) FROM Comment WHERE PostID = ?), 0) AS RepliesCount
         FROM PostLikes
         WHERE PostID = ?`, postID, postID).Scan(&post.Likes, &post.Dislikes, &post.RepliesCount)
-	if err != nil {
-		http.Error(w, "Could not retrieve likes/dislikes", http.StatusInternalServerError)
-		return
-	}
+    if err != nil {
+        http.Error(w, "Could not retrieve post stats", http.StatusInternalServerError)
+        return
+    }
 
-	// Retrieve replies for the post
-	rows, err := database.DB.Query(`
+    // Retrieve replies for the post
+    rows, err = database.DB.Query(`
         SELECT c.Content, u.Username
         FROM Comment c
         JOIN User u ON c.UserID = u.UserID
         WHERE c.PostID = ?`, postID)
-	if err != nil {
-		http.Error(w, "Could not retrieve replies", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+    if err != nil {
+        http.Error(w, "Could not retrieve replies", http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	var replies []Reply
-	for rows.Next() {
-		var reply Reply
-		if err := rows.Scan(&reply.Content, &reply.Username); err != nil {
-			http.Error(w, "Could not scan reply", http.StatusInternalServerError)
-			return
-		}
-		replies = append(replies, reply)
-	}
-	if err := rows.Err(); err != nil {
-		http.Error(w, "Error retrieving replies", http.StatusInternalServerError)
-		return
-	}
+    var replies []Reply
+    for rows.Next() {
+        var reply Reply
+        if err := rows.Scan(&reply.Content, &reply.Username); err != nil {
+            http.Error(w, "Could not scan reply", http.StatusInternalServerError)
+            return
+        }
+        replies = append(replies, reply)
+    }
 
-	// Use session data from the request context
-	authenticated := r.Context().Value(session.Authenticated).(bool)
-	currentUser := r.Context().Value(session.Username).(string)
+    // Use session data from the request context
+    authenticated := r.Context().Value(session.Authenticated).(bool)
+    currentUser := r.Context().Value(session.Username).(string)
 
-	// Prepare data for rendering the template
-	data := PostViewData{
-		Post:          post,
-		Replies:       replies,
-		Authenticated: authenticated,
-		Username:      currentUser,
-	}
+    // Retrieve images for the post
+    imgRows, err := database.DB.Query(`SELECT ID, PostID, ImagePath FROM PostImage WHERE PostID = ?`, postID)
+    if err != nil {
+        http.Error(w, "Could not retrieve images", http.StatusInternalServerError)
+        return
+    }
+    defer imgRows.Close()
 
-	// Parse and execute the template
-	tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
-		"add": add,
-		"sub": sub,
-	}).ParseFiles("static/html/view_post.html")
-	if err != nil {
-		http.Error(w, "Template parsing error", http.StatusInternalServerError)
-		return
-	}
-	if err := tmpl.ExecuteTemplate(w, "view_post.html", data); err != nil {
-		http.Error(w, "Template execution error", http.StatusInternalServerError)
-		return
-	}
+    for imgRows.Next() {
+        var postImage PostImage
+        if err := imgRows.Scan(&postImage.ID, &postImage.PostID, &postImage.ImagePath); err != nil {
+            http.Error(w, "Could not scan image", http.StatusInternalServerError)
+            return
+        }
+        postImages = append(postImages, postImage)
+    }
+    post.Images = postImages
+
+    // Prepare data for rendering the template
+    data := PostViewData{
+        Post:          post,
+        Replies:       replies,
+        Authenticated: authenticated,
+        Username:      currentUser,
+    }
+
+    // Log the data being passed to the template
+    log.Println("Post View Data:", data)
+
+    // Parse and execute the template
+    tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
+        "add": add,
+        "sub": sub,
+    }).ParseFiles("static/html/view_post.html")
+    if err != nil {
+        http.Error(w, "Could not parse template", http.StatusInternalServerError)
+        return
+    }
+
+    if err := tmpl.Execute(w, data); err != nil {
+        http.Error(w, "Template execution error", http.StatusInternalServerError)
+    }
 }
 
 // ListPosts handles displaying a paginated list of posts.
@@ -557,3 +675,84 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func savePostImageToDB(postImage PostImage) error {
+	_, err := database.DB.Exec(`
+        INSERT INTO PostImage (ID, PostID, UserID, ImagePath, CreatedAt)
+        VALUES (?, ?, ?, ?, ?)`,
+		postImage.ID, postImage.PostID, postImage.UserID, postImage.ImagePath, postImage.CreatedAt)
+	return err
+}
+
+////////////////////////////////////////////////7
+
+/*
+func UploadImage(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
+
+    err := r.ParseMultipartForm(10 << 20) // 10 MB
+    if err != nil {
+        http.Error(w, "Unable to parse form", http.StatusBadRequest)
+        return
+    }
+
+    file, handler, err := r.FormFile("image")
+    if err != nil {
+        http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+        return
+    }
+    defer file.Close()
+
+    // Ensure the uploads directory exists
+    uploadsDir := "uploads/"
+    if err := os.MkdirAll(uploadsDir, os.ModePerm); err != nil {
+        log.Println("Error creating uploads directory:", err)
+        http.Error(w, "Unable to create directory", http.StatusInternalServerError)
+        return
+    }
+
+    fileName := uuid.New().String() + "_" + handler.Filename
+    filePath := uploadsDir + fileName
+
+    dst, err := os.Create(filePath)
+    if err != nil {
+		log.Println("Error creating file:", err)
+        http.Error(w, "Unable to create the file", http.StatusInternalServerError)
+        return
+    }
+    defer dst.Close()
+
+    _, err = io.Copy(dst, file)
+    if err != nil {
+		log.Println("Error saving file:", err)
+        http.Error(w, "Unable to save the file", http.StatusInternalServerError)
+        return
+    }
+
+    log.Println("File saved successfully:", filePath)
+
+    userID, _ := r.Context().Value(session.UserID).(int)
+    postID := r.FormValue("post_id")
+    postImage := PostImage{
+        ID:        uuid.New().String(),
+        PostID:    postID,
+        UserID:    userID,
+        ImagePath: filePath,
+        CreatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+    }
+
+    err = savePostImageToDB(postImage)
+    if err != nil {
+		log.Println("Error saving image to database:", err)
+        http.Error(w, "Unable to save image information", http.StatusInternalServerError)
+        return
+    }
+
+    log.Println("Image saved to database:", postImage)
+
+    http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
+}
+*/
