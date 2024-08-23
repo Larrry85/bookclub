@@ -43,20 +43,28 @@
     <!-- Link to trigger the modal popup -->
     <a href="#modal" class="modal-trigger">Open Pic</a>
 
-<!-- Display uploaded images -->
-{{if .Post.Images}}
-    <div class="post-images">
-        {{range .Post.Images}}
-            <div class="post-image">
-                <!-- Display the image with a link to open in a modal or larger view -->
-                <a href="/uploads/{{.ImagePath}}" target="_blank">
-                    <img src="/uploads/{{.ImagePath}}" alt="Post Image" class="post-image-thumbnail">
-                </a>
-            </div>
-        {{end}}
-    </div>
+   <!-- Display uploaded images -->
+   {{if .Post.Images}}
+   <div class="post-images">
+       {{range .Post.Images}}
+           <div class="post-image">
+               <!-- Display the image with a link to open in a modal -->
+               <a href="#modal-{{.ID}}">
+                   <img src="/uploads/{{.ImagePath}}" alt="Post Image" class="post-image-thumbnail">
+               </a>
+           </div>
+
+           <!-- Modal Structure -->
+           <div id="modal-{{.ID}}" class="modal">
+               <div class="modal-content">
+                   <a href="#" class="close">&times;</a>
+                   <img src="/uploads/{{.ImagePath}}" alt="Post Image" style="width: 100%;">
+               </div>
+           </div>
+       {{end}}
+   </div>
 {{else}}
-    <p>No images available for this post.</p>
+   <p>No images available for this post.</p>
 {{end}}
 
 
@@ -139,17 +147,17 @@
     </footer>
 
 
-    <!-- modal popup --> 
+    <!-- modal popup-->
 
-    <!-- Modal container -->
+
     <div id="modal" class="modal">
-        <!-- Content of the modal -->
+
         <div class="modal-content">
-            <!-- Header of the modal -->
+
             <h2>My pic</h2>
-            <!-- Body of the modal -->
+
             <p>This is the content.</p>
-            <!-- Link to close the modal -->
+
             <a href="#" class="close">Close</a>
         </div>
     </div>

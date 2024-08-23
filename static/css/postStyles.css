@@ -382,62 +382,50 @@ footer p {
 
 
 /* ----------------------------- Modal ----------------------------- */
-
-/* Style for the modal overlay */
+/* Modal container */
 .modal {
-    display: none; /* Hide modal by default */
-    position: fixed; /* Fixed positioning to cover entire screen */
-    top: 0; /* Align at top */
-    left: 0; /* Align at left */
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    background: rgba(128, 0, 128, 0.5); /* Purple background with 50% transparency */
-    justify-content: center; /* Center content horizontally */
-    align-items: center; /* Center content vertically */
-    z-index: 1000; /* Ensure modal is above other content */
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
-.modal:target {
-    display: flex; /* Show modal when targeted by anchor link */
-}
-
-
-/* Style for modal content box */
+/* Modal content */
 .modal-content {
-    background: #fff; /* White background for content */
-    padding: 2rem; /* Padding inside modal */
-    border-radius: 5px; /* Rounded corners */
-    text-align: center; /* Center align text */
+    margin: 15% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    background-color: white;
+    border-radius: 10px;
 }
 
-/* Style for modal close button */
+/* Close button */
 .modal .close {
-    display: inline-block; /* Inline-block display */
-    margin-top: 1rem; /* Space above button */
-    padding: 0.5rem 1rem; /* Padding inside button */
-    background: #333; /* Dark background */
-    color: #fff; /* White text color */
-    text-decoration: none; /* Remove underline */
-    border-radius: 5px; /* Rounded corners */
+    position: absolute;
+    top: 10px;
+    right: 25px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    text-decoration: none;
 }
 
-.modal .close:hover {
-    background: #555; /* Darker background on hover */
+.modal .close:hover,
+.modal .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
 
-/* Style for modal trigger button */
-.modal-trigger {
-    display: inline-block; /* Inline-block display */
-    margin: 1rem; /* Margin around button */
-    padding: 0.5rem 1rem; /* Padding inside button */
-    background: #333; /* Dark background */
-    color: #fff; /* White text color */
-    text-decoration: none; /* Remove underline */
-    border-radius: 5px; /* Rounded corners */
-}
-
-.modal-trigger:hover {
-    background: #555; /* Darker background on hover */
+/* Show modal when target is active */
+.modal:target {
+    display: block;
 }
 
 /* Image styling */
