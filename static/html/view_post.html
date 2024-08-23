@@ -14,7 +14,7 @@
 <body>
     <header>
         {{if .Authenticated}}
-        <hp>WELCOME TO</p><br><h1>LITERARY LIONS FORUM</h1>
+        <p>WELCOME TO</p><br><h1>LITERARY LIONS FORUM</h1>
         {{else}}
         <h1>LITERARY LIONS FORUM</h1>
         {{end}}
@@ -24,7 +24,7 @@
             {{if .Authenticated}}
                 <a class="headerlinks" href="/logout">Logout</a>
                 <a class="headerlinks" href="/profile">My Page</a>
-                <p class="loggedin">Logged in as</p>
+                <p class="loggedin">logged in as</p>
                 <strong><p class="usernamelogged">{{.Username}}</p></strong>
             {{else}}
                 <a class="headerlinks" href="/login">Login</a>

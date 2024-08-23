@@ -37,7 +37,14 @@ header {
     font-size: 1rem;
 
 }
-
+.welcome {
+   /* margin-top: -10px;  Alemmas?? */
+    margin-bottom: 0; /* Ensure no extra space below */
+}
+header h1 {
+    margin-top: 0; /* Ylemmäs?? */
+   /* margin-bottom: 0.5rem;  Adjust bottom margin as needed */
+}
 
 
 /* ----------------------------- Navigation ----------------------------- */
