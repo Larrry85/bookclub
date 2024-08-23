@@ -755,7 +755,7 @@ func checkPostOwnership(tx *sql.Tx, userID int, postID string) error {
 
 	if ownerID != userID {
 		log.Printf("User %d is not authorized to delete post %s owned by %d", userID, postID, ownerID)
-		return fmt.Errorf("Unauthorized: User does not own the post")
+		return fmt.Errorf("unauthorized: User does not own the post")
 	}
 
 	return nil
@@ -766,12 +766,14 @@ func deletePostLikesAndCommentsTx(tx *sql.Tx, postID string) error {
 	// Delete post likes
 	_, err := tx.Exec("DELETE FROM PostLikes WHERE PostID = ?", postID)
 	if err != nil {
+		log.Printf("Error deleting post likes for post ID: %s", postID)
 		return err
 	}
 
-	// Delete post comments
-	_, err = tx.Exec("DELETE FROM Comments WHERE PostID = ?", postID)
+	// Delete post comments (corrected table name)
+	_, err = tx.Exec("DELETE FROM Comment WHERE PostID = ?", postID)
 	if err != nil {
+		log.Printf("Error deleting post comments for post ID: %s", postID)
 		return err
 	}
 
