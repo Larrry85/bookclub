@@ -3,6 +3,7 @@ package post
 
 import (
 	"database/sql"
+	"fmt"
 	"lions/database"
 	"lions/session"
 	"log"
@@ -233,7 +234,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func ViewPost(w http.ResponseWriter, r *http.Request) {
-	// Retrieve post ID from query parameters
 	postID := r.URL.Query().Get("id")
 	if postID == "" {
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
@@ -241,7 +241,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var post Post
-	// Retrieve post details from the database
 	err := database.DB.QueryRow(`
         SELECT PostID, Title, Content, CategoryID, UserID, 
                LastReplyDate, LastReplyUser, CreatedAt
@@ -326,11 +325,9 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		replies = append(replies, reply)
 	}
 
-	// Use session data from the request context
 	authenticated := r.Context().Value(session.Authenticated).(bool)
 	currentUser := r.Context().Value(session.Username).(string)
 
-	// Prepare data for rendering the template
 	data := PostViewData{
 		Post:          post,
 		Replies:       replies,
@@ -338,10 +335,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		Username:      currentUser,
 	}
 
-	// Log the data being passed to the template
-	log.Println("Post View Data:", data)
-
-	// Parse and execute the template
 	tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
 		"add": add,
 		"sub": sub,
@@ -353,6 +346,7 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, "Template execution error", http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -663,6 +657,125 @@ func savePostImageToDB(postImage PostImage) error {
         VALUES (?, ?, ?, ?, ?)`,
 		postImage.ID, postImage.PostID, postImage.UserID, postImage.ImagePath, postImage.CreatedAt)
 	return err
+}
+
+// DeletePostHandler handles requests to delete a post
+func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if the user is authenticated from the context
+	ctx := r.Context()
+	authenticated, ok := ctx.Value(session.Authenticated).(bool)
+	if !ok || !authenticated {
+		http.Error(w, "Unauthorized: User not logged in", http.StatusUnauthorized)
+		return
+	}
+
+	// Parse form data
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+		return
+	}
+
+	// Extract post ID
+	postIDStr := r.FormValue("post_id")
+	if postIDStr == "" {
+		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		return
+	}
+
+	postID := postIDStr // Use postIDStr directly if it's a UUID
+
+	userID, ok := ctx.Value(session.UserID).(int)
+	if !ok {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Call function to handle the post deletion
+	err = deletePost(userID, postID)
+	if err != nil {
+		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect back to the posts list or home page
+	http.Redirect(w, r, "/post", http.StatusSeeOther)
+}
+
+// deletePost deletes a post from the database
+func deletePost(userID int, postID string) error {
+	tx, err := database.DB.Begin()
+	if err != nil {
+		log.Printf("Failed to begin transaction: %v", err)
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	// Check if the user is the owner of the post or has permissions to delete it
+	err = checkPostOwnership(tx, userID, postID)
+	if err != nil {
+		return err
+	}
+
+	// Delete likes and comments related to the post
+	err = deletePostLikesAndCommentsTx(tx, postID)
+	if err != nil {
+		log.Printf("Error deleting post likes and comments: %v", err)
+		return err
+	}
+
+	// Delete the post
+	_, err = tx.Exec("DELETE FROM Post WHERE PostID = ?", postID)
+	if err != nil {
+		log.Printf("Error deleting post: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// checkPostOwnership checks if the user owns the post or has permissions to delete it
+func checkPostOwnership(tx *sql.Tx, userID int, postID string) error {
+	var ownerID int
+	err := tx.QueryRow("SELECT UserID FROM Post WHERE PostID = ?", postID).Scan(&ownerID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Post not found with ID: %s", postID)
+			return fmt.Errorf("Post not found")
+		}
+		log.Printf("Error querying post ownership: %v", err)
+		return err
+	}
+
+	if ownerID != userID {
+		log.Printf("User %d is not authorized to delete post %s owned by %d", userID, postID, ownerID)
+		return fmt.Errorf("Unauthorized: User does not own the post")
+	}
+
+	return nil
+}
+
+// deletePostLikesAndCommentsTx deletes likes and comments associated with the post
+func deletePostLikesAndCommentsTx(tx *sql.Tx, postID string) error {
+	// Delete post likes
+	_, err := tx.Exec("DELETE FROM PostLikes WHERE PostID = ?", postID)
+	if err != nil {
+		return err
+	}
+
+	// Delete post comments
+	_, err = tx.Exec("DELETE FROM Comments WHERE PostID = ?", postID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 ////////////////////////////////////////////////7

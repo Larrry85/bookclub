@@ -95,8 +95,8 @@ h2 {
     margin-bottom: 2rem; /* Space below sections */
     border-radius: 8px; /* Rounded corners for a soft appearance */
     box-shadow: 0 4px 8px rgba(0.1, 0.1, 0.1, 0.4); /* Subtle shadow for depth */
-    width: 100%; /* Full width of the container */
-    max-width: 800px; /* Limits maximum width of sections */
+    width: 100%; 
+    max-width: 800px; 
 }
 
 
@@ -191,8 +191,8 @@ input[type="text"], textarea, select {
 button {
     padding: 0.75rem; /* Padding inside buttons */
     border: none; /* Removes default border */
-    background-color: #000; /* Black background color */
     color: #fff; /* White text color */
+    background-color: #2401e9;
     font-size: 1rem; /* Standard font size */
     font-weight: bold; /* Bold text for emphasis */
     border-radius: 5px; /* Rounded corners */
@@ -200,17 +200,83 @@ button {
     transition: background-color 0.3s ease; /* Smooth transition for background color */
 }
 
+/* Like Button */
+button[name="is_like"][value="true"] {
+    background-color: #28a745; /* Green background for like button */
+}
+
+button[name="is_like"][value="true"]:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+/* Dislike Button */
+button[name="is_like"][value="false"] {
+    background-color: #dc3545; /* Red background for dislike button */
+}
+
+button[name="is_like"][value="false"]:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
 button:hover {
     background-color: #333; /* Darker black on hover */
 }
 
+.back-button button {
+    margin-left: 107px; /* Adjust the value as needed */
+}
+
+/* Container for action buttons */
+.action-buttons {
+    margin-left: 120px;
+    display: flex; /* Use flexbox for alignment */
+    gap: 10px;     /* Space between buttons */
+}
+
+/* Style for individual action forms */
+.action-form {
+    margin: 0;  /* Remove default margin */
+}
+
+/* Common style for buttons */
+.action-button {
+    padding: 10px 20px; /* Adjust padding as needed */
+    font-size: 16px;    /* Adjust font size as needed */
+    border: none;       /* Remove default border */
+    border-radius: 5px; /* Round corners */
+    cursor: pointer;    /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth background color transition */
+}
+
+/* Specific styles for delete button */
+.delete-button {
+    background-color: #e74c3c; /* Red background for delete */
+    color: white;             /* White text color */
+}
+
+.delete-button:hover {
+    background-color: #c0392b; /* Darker red on hover */
+}
+
+/* Specific styles for back button */
+.action-button {
+    background-color: #3498db; /* Blue background for back */
+    color: white;             /* White text color */
+}
+
+.action-button:hover {
+    background-color: #2980b9; /* Darker blue on hover */
+}
+
+
 /* ----------------------------Styles for the posts table---------------------------- */
 .posts-table {
-    width: 800px; /* Fixed width for the table */
+    width: 100%; 
+    max-width: 800px; 
     border-spacing: 0; /* Removes space between table cells */
     border: 1px solid #ddd; /* Light gray border around the table */
     border-radius: 8px; /* Rounded corners for the table */
     overflow: hidden; /* Hides overflow content */
+    
 }
 
 .table-head {
@@ -279,25 +345,27 @@ button:hover {
     background-color: #fafafa; /* Very light gray background */
     margin-bottom: 10px; /* Space below each comment */
 }
-/* Replies Section */
+/* Centering the replies container */
 .replies {
-   /* margin-top: 1rem;  Space above replies section */
     padding-left: 1rem; /* Padding on the left */
-    max-width: 800px; /* Aligns with the post width */
+    margin: 0 auto; /* Centers the replies container horizontally */
+    width: 100%; 
+    max-width: 800px; 
+   
 }
 
-/* Reply Section - Where the reply appears after hitting Enter */
+/* Styling individual replies */
 .reply {
     background-color: #fff; /* White background for replies */
     padding: 1.5rem; /* Padding inside the reply box */
     margin-bottom: 1rem; /* Space below each reply */
     border-radius: 8px; /* Rounded corners */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    width: 100%; /* Full width within its container */
-    max-width: 800px; /* Aligns with the post width */
     display: flex; /* Flexbox layout */
     flex-direction: column; /* Stacks children vertically */
+    
 }
+
 
 /* Username in the Reply */
 .reply .username {
@@ -335,7 +403,7 @@ button:hover {
 /* Reply Form Button */
 .reply-form button {
     padding: 0.75rem 1.5rem; /* Padding inside the button */
-    background-color: #000; /* Black background color */
+    background-color: #2401e9; /* Black background color */
     color: #fff; /* White text color */
     border: none; /* Removes default border */
     border-radius: 5px; /* Rounded corners */
@@ -346,7 +414,7 @@ button:hover {
 }
 
 .reply-form button:hover {
-    background-color: #333; /* Darker black on hover */
+    background-color: #a90ad1; /* Darker black on hover */
 }
 
 /* ----------------------------footer---------------------------- */
@@ -457,4 +525,8 @@ footer p {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.back-button{
+    align-items: center;
 }

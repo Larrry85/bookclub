@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS Category (
 
 -- Table to store user information
 CREATE TABLE IF NOT EXISTS User (
-    UserID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each user
+    UserID INTEGER PRIMARY KEY, -- Unique identifier for each user
     Email TEXT UNIQUE NOT NULL, -- User's email address, must be unique
     Username TEXT UNIQUE NOT NULL, -- User's username, must be unique
     Password TEXT NOT NULL -- User's hashed password
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS PostImage (
 
 -- Table to store comments on posts
 CREATE TABLE IF NOT EXISTS Comment (
-    CommentID INTEGER PRIMARY KEY, -- Unique identifier for each comment
+    CommentID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each comment
     PostID INTEGER, -- ID of the post to which the comment belongs
     UserID INTEGER, -- ID of the user who made the comment
     Content TEXT NOT NULL, -- Content of the comment
@@ -56,26 +56,25 @@ CREATE TABLE IF NOT EXISTS Comment (
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
 );
 
--- Table to store likes and dislikes on posts
 CREATE TABLE IF NOT EXISTS PostLikes (
-    UserID INTEGER,
-    PostID INTEGER,
-    CommentID INTEGER, -- This is optional for comments
-    IsLike BOOLEAN,
-    PRIMARY KEY (UserID, PostID, CommentID), -- Adjust this if you use comments
+    UserID INTEGER,       -- ID of the user who liked/disliked
+    PostID INTEGER,       -- ID of the post being liked/disliked
+    IsLike BOOLEAN,       -- True for like, False for dislike
+    PRIMARY KEY (UserID, PostID), -- Composite primary key: each user can like/dislike a post only once
     FOREIGN KEY (UserID) REFERENCES User(UserID),
     FOREIGN KEY (PostID) REFERENCES Post(PostID)
 );
 
--- Table to store likes and dislikes on comments
+
 CREATE TABLE IF NOT EXISTS CommentLikes (
-    CommentID INTEGER,
-    UserID INTEGER,
-    IsLike BOOLEAN,
-    PRIMARY KEY (CommentID, UserID),
-    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID),
-    FOREIGN KEY (UserID) REFERENCES User(UserID)
+    UserID INTEGER,       -- ID of the user who liked/disliked
+    CommentID INTEGER,    -- ID of the comment being liked/disliked
+    IsLike BOOLEAN,       -- True for like, False for dislike
+    PRIMARY KEY (UserID, CommentID), -- Composite primary key: each user can like/dislike a comment only once
+    FOREIGN KEY (UserID) REFERENCES User(UserID),
+    FOREIGN KEY (CommentID) REFERENCES Comment(CommentID)
 );
+
 
 
 -- Table to store password reset tokens
