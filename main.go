@@ -20,6 +20,8 @@ func main() {
 	// This handles requests for static files (like CSS, JavaScript, or images) by serving them from the "static" directory.
 	// The StripPrefix removes the "/static/" prefix from the URL path when accessing static files.
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir("./images"))))
+
 
 	// Apply session middleware to the uploads route
 	http.Handle("/uploads/", session.SessionMiddleware(http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads")))))

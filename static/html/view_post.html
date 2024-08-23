@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="/static/css/postStyles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    
 </head>
 <body>
     <header>
@@ -34,79 +33,85 @@
     </header>
 
     <main>
- <!-- Post Details Section -->
- <section class="post-details">
-    <!-- Display the title of the post -->
-    <h2>{{.Post.Title}}</h2>
-    <!-- Display the content of the post -->
-    <p class="post-content">{{.Post.Content}}</p><br><br>
-    <!-- Link to trigger the modal popup -->
-    <a href="#modal" class="modal-trigger">Open Pic</a>
+        <!-- Post Details Section -->
+        <section class="post-details">
+            <!-- Display the title of the post -->
+            <h2>{{.Post.Title}}</h2>
+            <!-- Display the content of the post -->
+            <p class="post-content">{{.Post.Content}}</p><br><br>
 
+            <!-- Trigger link to open the modal -->
+            <a href="#openModal">
+                <img src="/images/book.jpeg" alt="Post Image" class="post-image-thumbnail">
+            </a>
 
+            <!-- Modal structure -->
+            <div id="openModal" class="modal">
+                <div class="modal-content">
+                    <!-- Close button -->
+                    <a href="#" class="close">&times;</a>
+                    <!-- Image inside modal -->
+                    <img src="/images/book.jpeg" alt="Post Image" class="modal-image">
+                </div>
+            </div>
 
-   <!-- Display uploaded images -->
-   {{if .Post.Images}}
-   <div class="post-images">
-       {{range .Post.Images}}
-           <div class="post-image">
-               <!-- Display the image with a link to open in a modal -->
-               <a href="#modal-{{.ID}}">
-                   <img src="/uploads/{{.ImagePath}}" alt="Post Image" class="post-image-thumbnail">
-               </a>
-           </div>
+            <!-- Display uploaded images -->
+            {{if .Post.Images}}
+            <div class="post-images">
+                {{range .Post.Images}}
+                <div class="post-image">
+                    <!-- Display the image with a link to open in a modal -->
+                    <a href="#modal-{{.ID}}">
+                        <img src="{{.ImagePath}}" alt="Post Image" class="post-image-thumbnail">
+                    </a>
+                    <!-- Modal structure for each image -->
+                    <div id="modal-{{.ID}}" class="modal">
+                        <div class="modal-content">
+                            <a href="#" class="close">&times;</a> <!-- Close button -->
+                            <img src="{{.ImagePath}}" alt="Post Image" class="modal-image">
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <p>No images available for this post.</p>
+            {{end}}
 
-           <!-- Modal Structure -->
-           <div id="modal-{{.ID}}" class="modal">
-               <div class="modal-content">
-                   <a href="#" class="close">&times;</a>
-                   <img src="/uploads/{{.ImagePath}}" alt="Post Image" style="width: 100%;">
-               </div>
-           </div>
-       {{end}}
-   </div>
-{{else}}
-   <p>No images available for this post.</p>
-{{end}}
+            <h2></h2>
+            <!-- Display metadata about the post -->
+            <p class="post-meta">Category: {{.Post.Category}}</p>
+            <p class="post-meta">Posted by <b>{{.Post.Username}}</b></p>
+            <p>Likes: {{ .Post.Likes }} | Dislikes: {{ .Post.Dislikes }} | Replies: {{ .Post.RepliesCount }}</p>
+            <p class="post-meta">PostID: {{.Post.ID}}</p>
+            <!-- Like and Dislike Buttons -->
+            {{if .Authenticated}}
+            <div class="actions">
+                <!-- Like button -->
+                <form action="/like" method="post" style="display: inline;">
+                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                    <input type="hidden" name="is_like" value="true">
+                    <button type="submit" title="Like">
+                        <i class="fa-solid fa-thumbs-up" style="color: green;"></i>
+                    </button>
+                </form>
 
+                <!-- Dislike button -->
+                <form action="/like" method="post" style="display: inline;">
+                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                    <input type="hidden" name="is_like" value="false">
+                    <button type="submit" title="Dislike">
+                        <i class="fa-solid fa-thumbs-down" style="color: red;"></i>
+                    </button>
+                </form>
 
-
-    <h2></h2>
-    <!-- Display metadata about the post -->
-    <p class="post-meta">Category: {{.Post.Category}}</p>
-    <p class="post-meta">Posted by <b>{{.Post.Username}}</b></p>
-    <p>Likes: {{ .Post.Likes }} | Dislikes: {{ .Post.Dislikes }} | Replies: {{ .Post.RepliesCount }}</p>
-    <p class="post-meta">PostID: {{.Post.ID}}</p>
-   <!-- Like and Dislike Buttons -->
-   {{if .Authenticated}}
-<div class="actions">
-<!-- Like button -->
-<form action="/like" method="post" style="display: inline;">
-    <input type="hidden" name="post_id" value="{{.Post.ID}}">
-    <input type="hidden" name="is_like" value="true">
-    <button type="submit" title="Like">
-    <i class="fa-solid fa-thumbs-up" style="color: green;"></i>
-    </button>
-    </form>
-    
-    <!-- Dislike button -->
-    <form action="/like" method="post" style="display: inline;">
-    <input type="hidden" name="post_id" value="{{.Post.ID}}">
-    <input type="hidden" name="is_like" value="false">
-    <button type="submit" title="Dislike">
-    <i class="fa-solid fa-thumbs-down" style="color: red;"></i>
-    </button>
-    </form>
-
-
-  <!-- Like/Dislike form -->
-  <form action="/like" method="post">
-    <input type="hidden" name="post_id" value="{{ .Post.ID }}">
-    <input type="hidden" name="comment_id" value=""> <!-- Leave empty for post -->
-    <button type="submit" name="is_like" value="true">Like</button>
-    <button type="submit" name="is_like" value="false">Dislike</button>
-</form>
-
+                <!-- Like/Dislike form -->
+                <form action="/like" method="post">
+                    <input type="hidden" name="post_id" value="{{ .Post.ID }}">
+                    <input type="hidden" name="comment_id" value=""> <!-- Leave empty for post -->
+                    <button type="submit" name="is_like" value="true">Like</button>
+                    <button type="submit" name="is_like" value="false">Dislike</button>
+                </form>
             </div>
             {{end}}
         </section>
@@ -114,18 +119,18 @@
         <section class="replies">
             <h3>Replies</h3>
             {{if .Replies}}
-                <ul class="reply-list">
-                    {{range .Replies}}
-                    <li class="reply">
-                        <p><b>{{.Username}}:</b></p>
-                        <p class="reply-content">{{.Content}}</p>
-                    </li>
-                    {{else}}
-                        <p>No replies yet.</p>
-                    {{end}}
-                </ul>
-            {{else}}
+            <ul class="reply-list">
+                {{range .Replies}}
+                <li class="reply">
+                    <p><b>{{.Username}}:</b></p>
+                    <p class="reply-content">{{.Content}}</p>
+                </li>
+                {{else}}
                 <p>No replies yet.</p>
+                {{end}}
+            </ul>
+            {{else}}
+            <p>No replies yet.</p>
             {{end}}
         </section>
 
@@ -147,22 +152,5 @@
     <footer>
         <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>
-
-
-    <!-- modal popup-->
-
-
-    <div id="modal" class="modal">
-
-        <div class="modal-content">
-
-            <h2>My pic</h2>
-
-            <p>This is the content.</p>
-
-            <a href="#" class="close">Close</a>
-        </div>
-    </div>
-
 </body>
 </html>

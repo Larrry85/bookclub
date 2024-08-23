@@ -241,26 +241,26 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-	var post Post
-	// Retrieve post details from the database
-	err := database.DB.QueryRow(`
-		SELECT PostID, Title, Content, CategoryID, UserID, 
-			   LastReplyDate, LastReplyUser, CreatedAt
-		FROM Post
-		WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID,
-		&post.LastReplyDate, &post.LastReplyUser, &post.CreatedAt)
-	if err != nil {
-		http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
-		return
-	}
-	
-	// Retrieve images for the post
-	rows, err := database.DB.Query(`SELECT ID, PostID, ImagePath FROM PostImage WHERE PostID = ?`, postID)
-	if err != nil {
-		http.Error(w, "Could not retrieve images", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+    var post Post
+    // Retrieve post details from the database
+    err := database.DB.QueryRow(`
+        SELECT PostID, Title, Content, CategoryID, UserID, 
+               LastReplyDate, LastReplyUser, CreatedAt
+        FROM Post
+        WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID,
+        &post.LastReplyDate, &post.LastReplyUser, &post.CreatedAt)
+    if err != nil {
+        http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
+        return
+    }
+
+    // Retrieve images for the post
+    rows, err := database.DB.Query(`SELECT ID, PostID, ImagePath FROM PostImage WHERE PostID = ?`, postID)
+    if err != nil {
+        http.Error(w, "Could not retrieve images", http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
     var postImage PostImage
     var postImages []PostImage
@@ -330,24 +330,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
     // Use session data from the request context
     authenticated := r.Context().Value(session.Authenticated).(bool)
     currentUser := r.Context().Value(session.Username).(string)
-
-    // Retrieve images for the post
-    imgRows, err := database.DB.Query(`SELECT ID, PostID, ImagePath FROM PostImage WHERE PostID = ?`, postID)
-    if err != nil {
-        http.Error(w, "Could not retrieve images", http.StatusInternalServerError)
-        return
-    }
-    defer imgRows.Close()
-
-    for imgRows.Next() {
-        var postImage PostImage
-        if err := imgRows.Scan(&postImage.ID, &postImage.PostID, &postImage.ImagePath); err != nil {
-            http.Error(w, "Could not scan image", http.StatusInternalServerError)
-            return
-        }
-        postImages = append(postImages, postImage)
-    }
-    post.Images = postImages
 
     // Prepare data for rendering the template
     data := PostViewData{
