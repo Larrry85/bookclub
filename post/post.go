@@ -241,7 +241,8 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	err := database.DB.QueryRow(`
         SELECT p.PostID, p.Title, p.Content, p.CreatedAt, p.LastReplyDate, p.LastReplyUser, 
                u.Username, c.CategoryName, 
-               (SELECT COUNT(*) FROM Comment WHERE PostID = p.PostID) AS RepliesCount
+               (SELECT COUNT(*) FROM Comment WHERE PostID = p.PostID) AS RepliesCount,
+			    p.LikesCount, p.DislikesCount  -- Fetching Likes and Dislikes counts
         FROM Post p
         JOIN User u ON p.UserID = u.UserID
         JOIN Category c ON p.CategoryID = c.CategoryID
@@ -255,6 +256,8 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		&post.Username,
 		&post.Category,
 		&post.RepliesCount,
+		&post.Likes,
+		&post.Dislikes,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -536,38 +539,38 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	var query string
 	if randomOrder {
 		query = `
-		SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-			   COALESCE(l.Likes, 0) AS Likes, 
-			   COALESCE(l.Dislikes, 0) AS Dislikes, 
-			   p.CreatedAt
-		FROM Post p
-		LEFT JOIN (
-			SELECT PostID, 
-				   SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-				   SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
-			FROM PostLikes
-			GROUP BY PostID
-		) l ON p.PostID = l.PostID
-		WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
-			   OR ? = 'all')
-		ORDER BY RAND()`
+    SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
+           COALESCE(l.Likes, 0) AS Likes, 
+           COALESCE(l.Dislikes, 0) AS Dislikes, 
+           p.CreatedAt
+    FROM Post p
+    LEFT JOIN (
+        SELECT PostID, 
+               SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+               SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+        FROM PostLikes
+        GROUP BY PostID
+    ) l ON p.PostID = l.PostID
+    WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
+           OR ? = 'all')
+    ORDER BY RAND()`
 	} else {
 		query = `
-		SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-			   COALESCE(l.Likes, 0) AS Likes, 
-			   COALESCE(l.Dislikes, 0) AS Dislikes, 
-			   p.CreatedAt
-		FROM Post p
-		LEFT JOIN (
-			SELECT PostID, 
-				   SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-				   SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
-			FROM PostLikes
-			GROUP BY PostID
-		) l ON p.PostID = l.PostID
-		WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
-			   OR ? = 'all')
-		ORDER BY p.CreatedAt ` + sortOrder + `, l.Likes ` + likesOrder
+    SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
+           COALESCE(l.Likes, 0) AS Likes, 
+           COALESCE(l.Dislikes, 0) AS Dislikes, 
+           p.CreatedAt
+    FROM Post p
+    LEFT JOIN (
+        SELECT PostID, 
+               SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+               SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+        FROM PostLikes
+        GROUP BY PostID
+    ) l ON p.PostID = l.PostID
+    WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
+           OR ? = 'all')
+    ORDER BY p.CreatedAt ` + sortOrder + `, l.Likes ` + likesOrder
 	}
 
 	// Execute the query
