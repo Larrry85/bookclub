@@ -35,7 +35,7 @@
             <p>{{.Post.Content}}</p>
             <p>Category: {{.Post.Category}}</p>
             <p>Posted by: {{.Post.Username}}</p>
-            <p>Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}} | Replies: {{.Post.RepliesCount}} | Time: {{.Post.CreatedAt}}</p>
+            <p>Likes: {{.Post.Likes}} | Dislikes: {{.Post.Dislikes}} | Replies: {{.Post.RepliesCount}} | Posted on: {{.FormattedCreatedAt}}</p>
             {{if .Authenticated}}
             <div class="actions">
                 <form action="/like" method="post">
@@ -57,7 +57,7 @@
                 <ul class="reply-list">
                     {{range .Replies}}
                     <li class="reply">
-                        <p><strong>{{.Username}}:</strong></p>
+                        <p><strong>{{.Username}}:</strong>replied on: {{.FormattedCreatedAt}} </p>
                         <p class="reply-content">{{.Content}}</p>
                     </li>
                     {{else}}

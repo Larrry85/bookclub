@@ -1,4 +1,3 @@
--- schema.sql
 -- Create tables
 
 -- Table to store categories of posts
@@ -9,7 +8,7 @@ CREATE TABLE IF NOT EXISTS Category (
 
 -- Table to store user information
 CREATE TABLE IF NOT EXISTS User (
-    UserID INTEGER PRIMARY KEY, -- Unique identifier for each user
+    UserID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each user
     Email TEXT UNIQUE NOT NULL, -- User's email address, must be unique
     Username TEXT UNIQUE NOT NULL, -- User's username, must be unique
     Password TEXT NOT NULL -- User's hashed password
@@ -28,22 +27,19 @@ CREATE TABLE IF NOT EXISTS Post (
     LikesCount INTEGER DEFAULT 0,
     DislikesCount INTEGER DEFAULT 0,
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL, -- Foreign key to User table
-    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) -- Foreign key to Category table
-        FOREIGN KEY (LastReplyUser) REFERENCES User(UserID) -- Foreign key to User table for LastReplyUser
+    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID), -- Foreign key to Category table
+    FOREIGN KEY (LastReplyUser) REFERENCES User(UserID) -- Foreign key to User table for LastReplyUser
 );
 
 CREATE TABLE IF NOT EXISTS PostImage (
-    ID TEXT PRIMARY KEY,      -- Unique identifier for each image (use TEXT for UUIDs)
-    PostID TEXT,                   -- Foreign key referencing the Post table
-    UserID INTEGER, -- ID of the user who made the comment
-    ImagePath TEXT,                -- Path or URL to the image file
+    ID TEXT PRIMARY KEY, -- Unique identifier for each image (use TEXT for UUIDs)
+    PostID INTEGER, -- Foreign key referencing the Post table
+    UserID INTEGER, -- ID of the user who uploaded the image
+    ImagePath TEXT, -- Path or URL to the image file
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the image was uploaded
     FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
 );
-
-
-
 
 -- Table to store comments on posts
 CREATE TABLE IF NOT EXISTS Comment (
@@ -51,31 +47,28 @@ CREATE TABLE IF NOT EXISTS Comment (
     PostID INTEGER, -- ID of the post to which the comment belongs
     UserID INTEGER, -- ID of the user who made the comment
     Content TEXT NOT NULL, -- Content of the comment
-    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the comment was created
     FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
 );
 
 CREATE TABLE IF NOT EXISTS PostLikes (
-    UserID INTEGER,       -- ID of the user who liked/disliked
-    PostID INTEGER,       -- ID of the post being liked/disliked
-    IsLike BOOLEAN,       -- True for like, False for dislike
+    UserID INTEGER, -- ID of the user who liked/disliked
+    PostID INTEGER, -- ID of the post being liked/disliked
+    IsLike BOOLEAN, -- True for like, False for dislike
     PRIMARY KEY (UserID, PostID), -- Composite primary key: each user can like/dislike a post only once
     FOREIGN KEY (UserID) REFERENCES User(UserID),
     FOREIGN KEY (PostID) REFERENCES Post(PostID)
 );
 
-
 CREATE TABLE IF NOT EXISTS CommentLikes (
-    UserID INTEGER,       -- ID of the user who liked/disliked
-    CommentID INTEGER,    -- ID of the comment being liked/disliked
-    IsLike BOOLEAN,       -- True for like, False for dislike
+    UserID INTEGER, -- ID of the user who liked/disliked
+    CommentID INTEGER, -- ID of the comment being liked/disliked
+    IsLike BOOLEAN, -- True for like, False for dislike
     PRIMARY KEY (UserID, CommentID), -- Composite primary key: each user can like/dislike a comment only once
     FOREIGN KEY (UserID) REFERENCES User(UserID),
     FOREIGN KEY (CommentID) REFERENCES Comment(CommentID)
 );
-
-
 
 -- Table to store password reset tokens
 CREATE TABLE IF NOT EXISTS PasswordReset (
@@ -92,7 +85,6 @@ CREATE TABLE IF NOT EXISTS Session (
     FOREIGN KEY (UserID) REFERENCES User(UserID) -- Foreign key to User table
 );
 
-
 -- Create indexes to improve query performance
 CREATE INDEX IF NOT EXISTS idx_post_user ON Post(UserID); -- Index on UserID in Post table
 CREATE INDEX IF NOT EXISTS idx_post_category ON Post(CategoryID); -- Index on CategoryID in Post table
@@ -100,5 +92,5 @@ CREATE INDEX IF NOT EXISTS idx_comment_post ON Comment(PostID); -- Index on Post
 CREATE INDEX IF NOT EXISTS idx_comment_user ON Comment(UserID); -- Index on UserID in Comment table
 CREATE INDEX IF NOT EXISTS idx_like_user ON PostLikes(UserID); -- Index on UserID in PostLikes table
 CREATE INDEX IF NOT EXISTS idx_like_post ON PostLikes(PostID); -- Index on PostID in PostLikes table
-CREATE INDEX IF NOT EXISTS idx_like_comment ON PostLikes(CommentID); -- Index on CommentID in PostLikes table
-CREATE INDEX IF NOT EXISTS idx_post_last_reply ON Post(LastReplyDate);
+CREATE INDEX IF NOT EXISTS idx_like_comment ON CommentLikes(CommentID); -- Index on CommentID in CommentLikes table
+CREATE INDEX IF NOT EXISTS idx_post_last_reply ON Post(LastReplyDate); -- Index on LastReplyDate in Post table
