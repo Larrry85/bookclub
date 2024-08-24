@@ -46,8 +46,14 @@
                     
                     <label for="category">Category:</label>
                     <select id="category" name="category" required>
-                        <option value="general">General</option>
-                        <option value="genres">Genres</option>
+                    <option value="General">General</option>
+                    <option value="Thriller">Thriller</option>
+                    <option value="Fantasy">Fantasy</option>
+                    <option value="Science fiction">Science Fiction</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Mystery">Mystery</option>
+                    <option value="Adventure">Adventure</option>
+                    <option value="Historical">Historical</option>
                     </select>
         
                     <label for="image">Image:</label>
@@ -66,21 +72,28 @@
                 {{if .Authenticated}}
                     <label for="time-filter">Sort by Time:</label>
                     <select id="time-filter" name="sort">
+                        <option value="">All</option>
                         <option value="asc">Oldest First</option>
                         <option value="desc">Newest First</option>
                     </select>
                     <label for="likes-filter">Sort by Likes:</label>
                     <select id="likes-filter" name="likes">
-                        <option value="asc">Least Likes</option>
-                        <option value="desc">Most Likes</option>
+                    <option value="">All</option>
+                    <option value="asc">Least Likes</option>
+                    <option value="desc">Most Likes</option>
                     </select>
                 {{end}}
                 <label for="category-filter">Category:</label>
                 <select id="category-filter" name="category">
                     <option value="all">All</option>
-                    <option value="recent">Recent</option>
-                    <option value="general">General</option>
-                    <option value="genres">Genres</option>
+                    <option value="General">General</option>
+                    <option value="Thriller">Thriller</option>
+                    <option value="Fantasy">Fantasy</option>
+                    <option value="Science fiction">Science Fiction</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Mystery">Mystery</option>
+                    <option value="Adventure">Adventure</option>
+                    <option value="Historical">Historical</option>
                 </select>
                 <button type="submit">Filter</button>
                 </form>
@@ -106,7 +119,6 @@
                         <br>
                         Started by <b>{{.Username}}</b>
                         <p>Category: {{.Category}}</p>
-                        
                         <p>Last Reply: {{.LastReplyUser.String}}</p>
                     </div>
                     <div class="replies">

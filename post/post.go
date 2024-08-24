@@ -521,60 +521,46 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	sortOrder := r.URL.Query().Get("sort")
 	likesOrder := r.URL.Query().Get("likes")
 
-	// If neither sorting nor likesOrder is provided, randomize the post order
-	randomOrder := false
-	if sortOrder == "" && likesOrder == "" {
-		randomOrder = true
-	} else {
-		// Default values if parameters are provided but empty
-		if sortOrder == "" {
-			sortOrder = "desc"
-		}
-		if likesOrder == "" {
-			likesOrder = "desc"
-		}
+	// Default values for sorting if not provided
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+	if likesOrder == "" {
+		likesOrder = "desc"
 	}
 
-	// Construct SQL query with filtering and sorting or random order
-	var query string
-	if randomOrder {
-		query = `
-    SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-           COALESCE(l.Likes, 0) AS Likes, 
-           COALESCE(l.Dislikes, 0) AS Dislikes, 
-           p.CreatedAt
-    FROM Post p
-    LEFT JOIN (
-        SELECT PostID, 
-               SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-               SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
-        FROM PostLikes
-        GROUP BY PostID
-    ) l ON p.PostID = l.PostID
-    WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
-           OR ? = 'all')
-    ORDER BY RAND()`
+	// Prepare category condition
+	var categoryCondition string
+	var args []interface{}
+
+	if category == "all" || category == "" {
+		categoryCondition = "1=1" // No filter
 	} else {
-		query = `
-    SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-           COALESCE(l.Likes, 0) AS Likes, 
-           COALESCE(l.Dislikes, 0) AS Dislikes, 
-           p.CreatedAt
-    FROM Post p
-    LEFT JOIN (
-        SELECT PostID, 
-               SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-               SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
-        FROM PostLikes
-        GROUP BY PostID
-    ) l ON p.PostID = l.PostID
-    WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
-           OR ? = 'all')
-    ORDER BY p.CreatedAt ` + sortOrder + `, l.Likes ` + likesOrder
+		categoryCondition = "p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ?)"
+		args = append(args, category)
 	}
+
+	// Construct SQL query with filtering and sorting
+	query := `
+	SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
+	       COALESCE(l.Likes, 0) AS Likes, 
+	       COALESCE(l.Dislikes, 0) AS Dislikes, 
+	       p.CreatedAt
+	FROM Post p
+	LEFT JOIN (
+		SELECT PostID, 
+		       SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+		       SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+		FROM PostLikes
+		GROUP BY PostID
+	) l ON p.PostID = l.PostID
+	WHERE ` + categoryCondition + `
+	ORDER BY 
+		p.CreatedAt ` + sortOrder + `,
+		l.Likes ` + likesOrder
 
 	// Execute the query
-	rows, err := database.DB.Query(query, category, category, category)
+	rows, err := database.DB.Query(query, args...)
 	if err != nil {
 		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
 		log.Printf("Error retrieving posts: %v", err)
@@ -602,14 +588,12 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	// Safely get the authenticated value from the context
 	authenticated, ok := r.Context().Value(session.Authenticated).(bool)
 	if !ok {
-		// Handle cases where the value is not present or not a bool
-		authenticated = true // Default to false if not authenticated
+		authenticated = false // Default to false if not authenticated
 	}
 
 	// Safely get the username value from the context
 	username, ok := r.Context().Value(session.Username).(string)
 	if !ok {
-		// Handle cases where the value is not present or not a string
 		username = "" // Default to empty string if no username is found
 	}
 

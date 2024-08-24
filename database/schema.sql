@@ -1,10 +1,23 @@
 -- Create tables
 
--- Table to store categories of posts
+-- Create the Category table if it doesn't exist
 CREATE TABLE IF NOT EXISTS Category (
-    CategoryID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each category
-    CategoryName TEXT NOT NULL UNIQUE -- Name of the category, must be unique
+    CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CategoryName TEXT NOT NULL UNIQUE
 );
+
+-- Insert categories if they do not already exist
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('Adventure');
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('Historical');
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('Sci-Fi');
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('General');
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('Thriller');
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('Fantasy');
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('Science Fiction');
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('Romance');
+INSERT OR IGNORE INTO Category (CategoryName) VALUES ('Mystery');
+
+
 
 -- Table to store user information
 CREATE TABLE IF NOT EXISTS User (

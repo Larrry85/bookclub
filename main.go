@@ -32,7 +32,7 @@ func main() {
 	http.Handle("/post/view", session.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
 	http.Handle("/post", session.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
 	http.Handle("/post/reply", session.SessionMiddleware(http.HandlerFunc(post.AddReply)))
-	http.Handle("/post/delete", session.SessionMiddleware(http.HandlerFunc(post.DeletePostHandler))) // New route for deleting posts
+	http.Handle("/post/delete", session.SessionMiddleware(http.HandlerFunc(post.DeletePostHandler)))
 	http.Handle("/like", session.SessionMiddleware(http.HandlerFunc(like.LikeHandler)))
 
 	// Define routes that do not use session middleware
@@ -41,7 +41,7 @@ func main() {
 	http.HandleFunc("/reset-password", handle.ResetPasswordHandler)
 	http.HandleFunc("/delete-account", handle.DeleteAccountHandler)
 
-	http.HandleFunc("/filter", post.FilterPostHandler)
+	http.Handle("/filter", session.SessionMiddleware(http.HandlerFunc(post.FilterPostHandler)))
 
 	// Start the HTTP server
 	log.Println("Server starting on port 8080...")
