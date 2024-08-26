@@ -30,6 +30,9 @@ func main() {
 
 	http.Handle("/post/create", session.SessionMiddleware(http.HandlerFunc(post.CreatePost)))
 	http.Handle("/post/view", session.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
+
+    http.HandleFunc("/post/confirm_delete", handle.ConfirmDeleteHandler)
+
 	http.Handle("/post", session.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
 	http.Handle("/post/reply", session.SessionMiddleware(http.HandlerFunc(post.AddReply)))
 	http.Handle("/post/delete", session.SessionMiddleware(http.HandlerFunc(post.DeletePostHandler)))

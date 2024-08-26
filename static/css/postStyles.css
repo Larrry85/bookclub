@@ -230,23 +230,7 @@ button:hover {
     background-color: #333; /* Darker black on hover */
 }
 
-.back-button button {
-    margin-left: 107px; /* Adjust the value as needed */
-}
-
-/* Container for action buttons */
-.action-buttons {
-    margin-left: 120px;
-    display: flex; /* Use flexbox for alignment */
-    gap: 10px;     /* Space between buttons */
-}
-
-/* Style for individual action forms */
-.action-form {
-    margin: 0;  /* Remove default margin */
-}
-
-/* Common style for buttons */
+/* Action button styling */
 .action-button {
     padding: 10px 20px; /* Adjust padding as needed */
     font-size: 16px;    /* Adjust font size as needed */
@@ -256,26 +240,39 @@ button:hover {
     transition: background-color 0.3s ease; /* Smooth background color transition */
 }
 
-/* Specific styles for delete button */
-.delete-button {
-    background-color: #e74c3c; /* Red background for delete */
-    color: white;             /* White text color */
-}
-
-.delete-button:hover {
-    background-color: #c0392b; /* Darker red on hover */
-}
-
-/* Specific styles for back button */
-.action-button {
-    background-color: #5A2D82; /* Blue background for back */
-    color: white;             /* White text color */
-}
-
 .action-button:hover {
-    background-color: #e4befa /* Darker blue on hover */
+    background-color: #333;
+    color: #fff;
 }
 
+/* Cancel button styling */
+.cancel-button {
+    padding: 10px 20px; /* Adjust padding as needed */
+    font-size: 16px;    /* Adjust font size as needed */
+    border: none;       /* Remove default border */
+    border-radius: 5px; /* Round corners */
+    cursor: pointer;    /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth background color transition */
+}
+
+.cancel-button:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+/* Container for action buttons */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.left-buttons,
+.right-buttons {
+    display: flex;
+    gap: 10px;
+}
 
 /* ----------------------------Styles for the posts table---------------------------- */
 .posts-table {
@@ -455,6 +452,8 @@ footer p {
     }
 }
 
+
+/* ----------------------------Modal Styles---------------------------- */
 /* Modal container */
 .modal {
     display: none;
@@ -505,23 +504,49 @@ footer p {
     display: flex;
 }
 
-/* Image styling */
-.post-image-thumbnail {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    cursor: pointer;
-    transition: transform 0.2s ease; /* Smooth hover effect */
+/* Button styling */
+.open-modal-btn {
+    padding: 0.75rem; /* Padding inside buttons */
+    border: none; /* Removes default border */
+    color: #fff; /* White text color */
+    background-color: #5A2D82;
+    font-size: 1rem; /* Standard font size */
+    font-weight: bold; /* Bold text for emphasis */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth transition for background color */
 }
 
-.post-image-thumbnail:hover {
-    transform: scale(1.1); /* Slight zoom on hover */
+.open-modal-btn:hover {
+    background-color: #333;
+    color: #fff;
+    text-decoration: none;
 }
 
-/* Modal image styling */
-.modal-image {
-    width: 100%;
-    height: auto;
+/* Specific styles for delete button */
+.delete-button {
+    background-color: #e74c3c; /* Red background for delete */
+    color: white;             /* White text color */
+}
+
+.delete-button:hover {
+    background-color: #c0392b; /* Darker red on hover */
+}
+
+/* Specific styles for back button */
+.action-button {
+    padding: 0.75rem; /* Padding inside buttons */
+    border: none; /* Removes default border */
+    color: #fff; /* White text color */
+    background-color: #5A2D82;
+    font-size: 1rem; /* Standard font size */
+    font-weight: bold; /* Bold text for emphasis */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth transition for background color */
+}
+.action-button:hover {
+    background-color: #333;
 }
 
 /* Fade-in animation */
@@ -534,8 +559,4 @@ footer p {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-.back-button{
-    align-items: center;
 }
