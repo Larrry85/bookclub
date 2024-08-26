@@ -42,6 +42,7 @@ type Post struct {
 type Pagination struct {
 	CurrentPage int // Current page number
 	TotalPages  int // Total number of pages
+	PageSize int
 }
 
 // PageData holds data for rendering post list or details pages.
@@ -52,8 +53,15 @@ type PageData struct {
 	Post          Post       // Single post for detailed view
 	Replies       []Reply    // List of replies to a post
 	Pagination    Pagination // Pagination data
+	CurrentPage int
+	TotalPages int
+    Filter        FilterParams
+}
 
-
+type FilterParams struct {
+    Category  string
+    SortOrder string
+    LikesOrder string
 }
 
 // Reply represents a reply to a post with user information.
@@ -77,6 +85,7 @@ type PostViewData struct {
 	FormattedCreatedAt     string
 	LastReplyDateFormatted string
 	SameUser	  bool
+
 }
 
 // PostImage represents an image associated with a blog post.
@@ -525,109 +534,162 @@ func AddReply(w http.ResponseWriter, r *http.Request) {
 ///////////////Filter posts ////////////////////
 
 func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
-	// Retrieve filter and sort parameters from query
-	category := r.URL.Query().Get("category")
-	sortOrder := r.URL.Query().Get("sort")
-	likesOrder := r.URL.Query().Get("likes")
+    // Retrieve filter, sort, and pagination parameters from query
+    category := r.URL.Query().Get("category")
+    sortOrder := r.URL.Query().Get("sort")
+    likesOrder := r.URL.Query().Get("likes")
+    pageParam := r.URL.Query().Get("page")
+    pageSizeParam := r.URL.Query().Get("pageSize")
 
-	// Default values for sorting if not provided
-	if sortOrder == "" {
-		sortOrder = "desc"
-	}
-	if likesOrder == "" {
-		likesOrder = "desc"
-	}
+    // Default values for sorting if not provided
+    if sortOrder == "" {
+        sortOrder = "desc"
+    }
+    if likesOrder == "" {
+        likesOrder = "desc"
+    }
 
-	// Prepare category condition
-	var categoryCondition string
-	var args []interface{}
+    // Default values for pagination if not provided
+    currentPage := 1
+    if pageParam != "" {
+        var err error
+        currentPage, err = strconv.Atoi(pageParam)
+        if err != nil || currentPage < 1 {
+            currentPage = 1
+        }
+    }
+    pageSize := 10
+    if pageSizeParam != "" {
+        pageSize, _ = strconv.Atoi(pageSizeParam)
+    }
+    offset := (currentPage - 1) * pageSize
 
-	if category == "all" || category == "" {
-		categoryCondition = "1=1" // No filter
-	} else {
-		categoryCondition = "p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ?)"
-		args = append(args, category)
-	}
+    // Prepare category condition
+    var categoryCondition string
+    var args []interface{}
 
-	// Construct SQL query with filtering and sorting
-	query := `
-	SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-	       COALESCE(l.Likes, 0) AS Likes, 
-	       COALESCE(l.Dislikes, 0) AS Dislikes, 
-	       p.CreatedAt
-	FROM Post p
-	LEFT JOIN (
-		SELECT PostID, 
-		       SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-		       SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
-		FROM PostLikes
-		GROUP BY PostID
-	) l ON p.PostID = l.PostID
-	WHERE ` + categoryCondition + `
-	ORDER BY 
-		p.CreatedAt ` + sortOrder + `,
-		l.Likes ` + likesOrder
+    if category == "all" || category == "" {
+        categoryCondition = "1=1" // No filter
+    } else {
+        categoryCondition = "p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ?)"
+        args = append(args, category)
+    }
 
-	// Execute the query
-	rows, err := database.DB.Query(query, args...)
-	if err != nil {
-		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
-		log.Printf("Error retrieving posts: %v", err)
-		return
-	}
-	defer rows.Close()
+    // Fetch total number of posts matching the filter criteria
+    var totalPosts int
+    err := database.DB.QueryRow("SELECT COUNT(*) FROM Post p WHERE " + categoryCondition, args...).Scan(&totalPosts)
+    if err != nil {
+        http.Error(w, "Could not retrieve total post count", http.StatusInternalServerError)
+        log.Printf("Error retrieving total post count: %v", err)
+        return
+    }
 
-	var posts []Post
-	for rows.Next() {
-		var post Post
-		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID, &post.CategoryID, &post.Likes, &post.Dislikes, &post.CreatedAt)
-		if err != nil {
-			http.Error(w, "Could not scan post", http.StatusInternalServerError)
-			log.Printf("Error scanning post: %v", err)
-			return
-		}
-		posts = append(posts, post)
-	}
-	if err := rows.Err(); err != nil {
-		http.Error(w, "Error iterating through posts", http.StatusInternalServerError)
-		log.Printf("Error iterating posts: %v", err)
-		return
-	}
+    // Construct SQL query with filtering, sorting, and pagination
+    query := `
+    SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
+           COALESCE(l.Likes, 0) AS Likes, 
+           COALESCE(l.Dislikes, 0) AS Dislikes, 
+           p.CreatedAt
+    FROM Post p
+    LEFT JOIN (
+        SELECT PostID, 
+               SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+               SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+        FROM PostLikes
+        GROUP BY PostID
+    ) l ON p.PostID = l.PostID
+    WHERE ` + categoryCondition + `
+    ORDER BY 
+        p.CreatedAt ` + sortOrder + `,
+        l.Likes ` + likesOrder + `
+    LIMIT ? OFFSET ?`
 
-	// Safely get the authenticated value from the context
-	authenticated, ok := r.Context().Value(session.Authenticated).(bool)
-	if !ok {
-		authenticated = false // Default to false if not authenticated
-	}
+    // Append limit and offset to args
+    args = append(args, pageSize, offset)
 
-	// Safely get the username value from the context
-	username, ok := r.Context().Value(session.Username).(string)
-	if !ok {
-		username = "" // Default to empty string if no username is found
-	}
+    // Execute the query
+    rows, err := database.DB.Query(query, args...)
+    if err != nil {
+        http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
+        log.Printf("Error retrieving posts: %v", err)
+        return
+    }
+    defer rows.Close()
 
-	// Prepare data for rendering the template
-	data := PageData{
-		Posts:         posts,
-		Authenticated: authenticated,
-		Username:      username,
-	}
+    var posts []Post
+    for rows.Next() {
+        var post Post
+        err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID, &post.CategoryID, &post.Likes, &post.Dislikes, &post.CreatedAt)
+        if err != nil {
+            http.Error(w, "Could not scan post", http.StatusInternalServerError)
+            log.Printf("Error scanning post: %v", err)
+            return
+        }
 
-	// Render the template
-	tmpl, err := template.New("post.html").Funcs(template.FuncMap{
-		"add": add,
-		"sub": sub,
-	}).ParseFiles("static/html/post.html")
-	if err != nil {
-		http.Error(w, "Template parsing error", http.StatusInternalServerError)
-		log.Printf("Error details: %v", err)
-		return
-	}
-	if err := tmpl.ExecuteTemplate(w, "post.html", data); err != nil {
-		http.Error(w, "Template execution error", http.StatusInternalServerError)
-		log.Printf("Error details: %v", err)
-		return
-	}
+        // Fetch the category name for each post
+        var categoryName string
+        err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+        if err != nil {
+            http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+            log.Printf("Error retrieving category: %v", err)
+            return
+        }
+        post.Category = categoryName
+
+        // Fetch the username for each post
+        var username string
+        err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
+        if err != nil {
+            http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+            log.Printf("Error retrieving username: %v", err)
+            return
+        }
+        post.Username = username
+
+        posts = append(posts, post)
+    }
+
+    // Calculate the total number of pages
+    totalPages := (totalPosts + pageSize - 1) / pageSize
+
+    // Set up the pagination data
+    pagination := Pagination{
+        CurrentPage: currentPage,
+        TotalPages:  totalPages,
+        PageSize:    pageSize,
+    }
+
+    // Use session data from the request context
+    authenticated := r.Context().Value(session.Authenticated).(bool)
+    username := r.Context().Value(session.Username).(string)
+
+    // Prepare data for rendering the template
+    data := PageData{
+        Posts:         posts,
+        Pagination:    pagination,
+        Authenticated: authenticated,
+        Username:      username,
+        Filter: FilterParams{
+            Category:  category,
+            SortOrder: sortOrder,
+            LikesOrder: likesOrder,
+        },
+    }
+
+    tmpl, err := template.New("post.html").Funcs(template.FuncMap{
+        "add": add,
+        "sub": sub,
+    }).ParseFiles("static/html/post.html")
+    if err != nil {
+        http.Error(w, "Template parsing error", http.StatusInternalServerError)
+        log.Printf("Error details: %v", err)
+        return
+    }
+    if err := tmpl.ExecuteTemplate(w, "post.html", data); err != nil {
+        http.Error(w, "Template execution error", http.StatusInternalServerError)
+        log.Printf("Error details: %v", err)
+        return
+    }
 }
 
 func savePostImageToDB(postImage PostImage) error {
