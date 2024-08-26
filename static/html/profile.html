@@ -18,7 +18,8 @@
     <header>
         <!-- Main heading of the page -->
 
-        <p  class="welcome">WELCOME TO</p><br><h1>LITERARY LIONS FORUM</h1>
+        <p  class="welcome">WELCOME TO</p>
+        <h1>LITERARY LIONS FORUM</h1>
 
         <nav>
             <!-- Navigation links -->
@@ -45,10 +46,10 @@
                 <strong>Email:</strong> {{.Email}}
             </div>
             <div class="overlay-text likes">
-                <strong>Likes:</strong> {{.Likes}}
+                <strong>Likes:</strong> {{ .Post.Likes }}
             </div>
             <div class="overlay-text dislikes">
-                <strong>Dislikes:</strong> {{.Dislikes}}
+                <strong>Dislikes:</strong> {{ .Post.Dislikes }}
             </div>
             <div class="overlay-text post">
                 <strong>Number of Posts: </strong> {{.NumPosts}}

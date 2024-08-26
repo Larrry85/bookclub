@@ -3,6 +3,7 @@ package post
 
 import (
 	"database/sql"
+	"fmt"
 	"lions/database"
 	"lions/session"
 	"log"
@@ -11,7 +12,6 @@ import (
 	"strconv"
 	"text/template"
 	"time"
-
 
 	"github.com/google/uuid"
 
@@ -32,9 +32,9 @@ type Post struct {
 	UserID        int            // ID of the user who created the post
 	RepliesCount  int            // Number of replies to the post
 	Views         int            // Number of views of the post
-	LastReplyDate sql.NullString // Date of the last reply
+	LastReplyDate sql.NullTime   // Date of the last reply
 	LastReplyUser sql.NullString // Username of the user who made the last reply
-	CreatedAt     sql.NullTime   // Timestamp when the post was created
+	CreatedAt     time.Time      // Timestamp when the post was created
 	Images        []PostImage    // List of images associated with the post
 }
 
@@ -52,20 +52,29 @@ type PageData struct {
 	Post          Post       // Single post for detailed view
 	Replies       []Reply    // List of replies to a post
 	Pagination    Pagination // Pagination data
+
 }
 
 // Reply represents a reply to a post with user information.
 type Reply struct {
-	Content  string // Content of the reply
-	Username string // Username of the reply author
+	Content   string
+	Username  string
+	CreatedAt time.Time
+}
+
+type FormattedReply struct {
+	Reply
+	FormattedCreatedAt string
 }
 
 // PostViewData holds data for rendering a single post with its replies.
 type PostViewData struct {
-	Post          Post    // Post details
-	Replies       []Reply // Replies to the post
-	Authenticated bool    // Whether the user is authenticated
-	Username      string  // Username of the authenticated user
+	Post                   Post
+	Replies                []FormattedReply
+	Authenticated          bool
+	Username               string
+	FormattedCreatedAt     string
+	LastReplyDateFormatted string
 }
 
 // PostImage represents an image associated with a blog post.
@@ -96,7 +105,6 @@ func sub(a, b int) int {
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Parse the form data including file uploads
 		err := r.ParseMultipartForm(10 << 20) // 10 MB
 		if err != nil {
 			http.Error(w, "Unable to parse form", http.StatusBadRequest)
@@ -112,13 +120,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Validate input data
 		if title == "" || content == "" || category == "" {
 			http.Error(w, "All fields are required", http.StatusBadRequest)
 			return
 		}
 
-		// Check if the user is authenticated
 		authenticated := r.Context().Value(session.Authenticated).(bool)
 		username := r.Context().Value(session.Username).(string)
 		if !authenticated {
@@ -127,7 +133,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var userID int
-		// Retrieve userID based on the username
 		err = database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
 		if err != nil {
 			http.Error(w, "Could not find user", http.StatusInternalServerError)
@@ -135,7 +140,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var categoryID int
-		// Retrieve categoryID or create a new category if it does not exist
 		err = database.DB.QueryRow(`SELECT CategoryID FROM Category WHERE CategoryName = ?`, category).Scan(&categoryID)
 		if err != nil && err != sql.ErrNoRows {
 			http.Error(w, "Could not find category", http.StatusInternalServerError)
@@ -143,7 +147,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err == sql.ErrNoRows {
-			// Insert a new category if it does not exist
 			result, err := database.DB.Exec(`INSERT INTO Category (CategoryName) VALUES (?)`, category)
 			if err != nil {
 				http.Error(w, "Could not create category", http.StatusInternalServerError)
@@ -157,22 +160,18 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			categoryID = int(categoryID64)
 		}
 
-		// Insert the new post into the database
-
 		_, err = database.DB.Exec(`INSERT INTO Post (Title, Content, UserID, CategoryID, CreatedAt) VALUES (?, ?, ?, ?, ?)`,
 			title, content, userID, categoryID, time.Now().Format(time.RFC3339))
 		if err != nil {
-			log.Printf("Error creating post: %v", err) // Log the actual error
+			log.Printf("Error creating post: %v", err)
 			http.Error(w, "Could not create post", http.StatusInternalServerError)
 			return
 		}
 
-		// Handle image upload if there is an image
 		if file != nil {
 			fileName := uuid.New().String() + "_" + handler.Filename
 			filePath := "uploads/" + fileName
 
-			// Ensure the uploads directory exists
 			if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
 				http.Error(w, "Unable to create uploads directory", http.StatusInternalServerError)
 				return
@@ -193,10 +192,8 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			userID, _ := r.Context().Value(session.UserID).(int)
 			postID := r.FormValue("post_id")
 
-			// Save the image information to the database
 			postImage := PostImage{
 				ID:        uuid.New().String(),
 				PostID:    postID,
@@ -214,19 +211,17 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			log.Println("Image saved to database:", postImage)
 		}
 
-		// Redirect to the list of posts
 		http.Redirect(w, r, "/post", http.StatusSeeOther)
 	} else {
-		// Render the create post template for GET requests
-		tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
+		tmpl, err := template.New("create_post.html").Funcs(template.FuncMap{
 			"add": add,
 			"sub": sub,
-		}).ParseFiles("static/html/view_post.html")
+		}).ParseFiles("static/html/create_post.html")
 		if err != nil {
 			http.Error(w, "Template parsing error", http.StatusInternalServerError)
 			return
 		}
-		if err := tmpl.ExecuteTemplate(w, "view_post.html", nil); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "create_post.html", nil); err != nil {
 			http.Error(w, "Template execution error", http.StatusInternalServerError)
 			return
 		}
@@ -234,127 +229,110 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func ViewPost(w http.ResponseWriter, r *http.Request) {
-    // Retrieve post ID from query parameters
-    postID := r.URL.Query().Get("id")
-    if postID == "" {
-        http.Error(w, "Post ID is required", http.StatusBadRequest)
-        return
-    }
+	// Parse the post ID from the query parameters
+	postID := r.URL.Query().Get("id")
+	if postID == "" {
+		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		return
+	}
 
-    var post Post
-    // Retrieve post details from the database
-    err := database.DB.QueryRow(`
-        SELECT PostID, Title, Content, CategoryID, UserID, 
-               LastReplyDate, LastReplyUser, CreatedAt
-        FROM Post
-        WHERE PostID = ?`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CategoryID, &post.UserID,
-        &post.LastReplyDate, &post.LastReplyUser, &post.CreatedAt)
-    if err != nil {
-        http.Error(w, "Could not retrieve post", http.StatusInternalServerError)
-        return
-    }
+	// Fetch the post from the database
+	var post Post
+	err := database.DB.QueryRow(`
+        SELECT p.PostID, p.Title, p.Content, p.CreatedAt, p.LastReplyDate, p.LastReplyUser, 
+               u.Username, c.CategoryName, 
+               (SELECT COUNT(*) FROM Comment WHERE PostID = p.PostID) AS RepliesCount,
+			    p.LikesCount, p.DislikesCount  -- Fetching Likes and Dislikes counts
+        FROM Post p
+        JOIN User u ON p.UserID = u.UserID
+        JOIN Category c ON p.CategoryID = c.CategoryID
+        WHERE p.PostID = ?`, postID).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Content,
+		&post.CreatedAt,
+		&post.LastReplyDate,
+		&post.LastReplyUser,
+		&post.Username,
+		&post.Category,
+		&post.RepliesCount,
+		&post.Likes,
+		&post.Dislikes,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Post not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
+		return
+	}
 
-    // Retrieve images for the post
-    rows, err := database.DB.Query(`SELECT ID, PostID, ImagePath FROM PostImage WHERE PostID = ?`, postID)
-    if err != nil {
-        http.Error(w, "Could not retrieve images", http.StatusInternalServerError)
-        return
-    }
-    defer rows.Close()
-
-    var postImage PostImage
-    var postImages []PostImage
-
-    for rows.Next() {
-        if err := rows.Scan(&postImage.ID, &postImage.PostID, &postImage.ImagePath); err != nil {
-            http.Error(w, "Could not scan image", http.StatusInternalServerError)
-            return
-        }
-        postImages = append(postImages, postImage)
-    }
-    post.Images = postImages
-
-    // Retrieve category name for the post
-    var categoryName string
-    err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
-    if err != nil {
-        http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
-        return
-    }
-    post.Category = categoryName
-
-    // Retrieve username of the post author
-    var username string
-    err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
-    if err != nil {
-        http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
-        return
-    }
-    post.Username = username
-
-    // Retrieve likes, dislikes, and replies count for the post
-    err = database.DB.QueryRow(`
-        SELECT 
-            COALESCE(SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END), 0) AS Likes,
-            COALESCE(SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END), 0) AS Dislikes,
-            COALESCE((SELECT COUNT(*) FROM Comment WHERE PostID = ?), 0) AS RepliesCount
-        FROM PostLikes
-        WHERE PostID = ?`, postID, postID).Scan(&post.Likes, &post.Dislikes, &post.RepliesCount)
-    if err != nil {
-        http.Error(w, "Could not retrieve post stats", http.StatusInternalServerError)
-        return
-    }
-
-    // Retrieve replies for the post
-    rows, err = database.DB.Query(`
-        SELECT c.Content, u.Username
+	// Fetch the replies for the post
+	rows, err := database.DB.Query(`
+        SELECT c.Content, c.CreatedAt, u.Username
         FROM Comment c
         JOIN User u ON c.UserID = u.UserID
-        WHERE c.PostID = ?`, postID)
-    if err != nil {
-        http.Error(w, "Could not retrieve replies", http.StatusInternalServerError)
-        return
-    }
-    defer rows.Close()
+        WHERE c.PostID = ?
+        ORDER BY c.CreatedAt DESC`, postID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-    var replies []Reply
-    for rows.Next() {
-        var reply Reply
-        if err := rows.Scan(&reply.Content, &reply.Username); err != nil {
-            http.Error(w, "Could not scan reply", http.StatusInternalServerError)
-            return
-        }
-        replies = append(replies, reply)
-    }
+	var replies []FormattedReply
+	for rows.Next() {
+		var reply Reply
+		var formattedReply FormattedReply
+		err := rows.Scan(&reply.Content, &reply.CreatedAt, &reply.Username)
+		if err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		formattedReply = FormattedReply{
+			Reply:              reply,
+			FormattedCreatedAt: reply.CreatedAt.Format("January 2, 2006 at 3:04pm"),
+		}
+		replies = append(replies, formattedReply)
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
-    // Use session data from the request context
-    authenticated := r.Context().Value(session.Authenticated).(bool)
-    currentUser := r.Context().Value(session.Username).(string)
+	// Format last reply date for display
+	var lastReplyDateFormatted string
+	if post.LastReplyDate.Valid {
+		lastReplyDateFormatted = post.LastReplyDate.Time.Format("January 2, 2006 at 3:04pm")
+	} else {
+		lastReplyDateFormatted = "No replies yet"
+	}
 
-    // Prepare data for rendering the template
-    data := PostViewData{
-        Post:          post,
-        Replies:       replies,
-        Authenticated: authenticated,
-        Username:      currentUser,
-    }
+	// Prepare data for the template
+	data := PostViewData{
+		Post:                   post,
+		Replies:                replies,
+		Authenticated:          r.Context().Value(session.Authenticated).(bool),
+		Username:               r.Context().Value(session.Username).(string),
+		FormattedCreatedAt:     post.CreatedAt.Format("January 2, 2006 at 3:04pm"),
+		LastReplyDateFormatted: lastReplyDateFormatted,
+	}
 
-    // Log the data being passed to the template
-    log.Println("Post View Data:", data)
+	// Parse and execute the template
+	tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
+		"add": add,
+		"sub": sub,
+	}).ParseFiles("static/html/view_post.html")
+	if err != nil {
+		http.Error(w, "Template parsing error", http.StatusInternalServerError)
+		return
+	}
 
-    // Parse and execute the template
-    tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
-        "add": add,
-        "sub": sub,
-    }).ParseFiles("static/html/view_post.html")
-    if err != nil {
-        http.Error(w, "Could not parse template", http.StatusInternalServerError)
-        return
-    }
-
-    if err := tmpl.Execute(w, data); err != nil {
-        http.Error(w, "Template execution error", http.StatusInternalServerError)
-    }
+	if err := tmpl.ExecuteTemplate(w, "view_post.html", data); err != nil {
+		http.Error(w, "Template execution error", http.StatusInternalServerError)
+		return
+	}
 }
 
 // ListPosts handles displaying a paginated list of posts.
@@ -471,63 +449,64 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// AddReply handles adding a reply to a post.
 func AddReply(w http.ResponseWriter, r *http.Request) {
-	// Ensure the request method is POST
+	// Ensure it's a POST request
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Check if the user is authenticated using session context
+	// Check if the user is authenticated
 	authenticated := r.Context().Value(session.Authenticated).(bool)
 	if !authenticated {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	// Retrieve username from the session
+	// Get the username from session
 	username := r.Context().Value(session.Username).(string)
 
-	// Get the post ID and reply content from the form data
+	// Get the post ID and content from the form data
 	postID := r.FormValue("postID")
 	content := r.FormValue("content")
-	log.Printf("Received postID: %s, content: %s", postID, content)
 
-	// Validate the input data
+	// Validate input
 	if postID == "" || content == "" {
 		http.Error(w, "Post ID and content are required", http.StatusBadRequest)
 		return
 	}
 
-	// Retrieve the user ID from the database based on the username
+	// Get the user ID
 	var userID int
 	err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
 	if err != nil {
+		log.Printf("Error retrieving user ID for username %s: %v", username, err)
 		http.Error(w, "Could not retrieve user ID", http.StatusInternalServerError)
 		return
 	}
 
+	// Get the current time
+	now := time.Now()
+
 	// Insert the reply into the database
-	_, err = database.DB.Exec(`INSERT INTO Comment (PostID, UserID, Content) VALUES (?, ?, ?)`,
-		postID, userID, content)
+	_, err = database.DB.Exec(`INSERT INTO Comment (PostID, UserID, Content, CreatedAt) VALUES (?, ?, ?, ?)`,
+		postID, userID, content, now)
 	if err != nil {
-		log.Printf("Error adding reply: %v", err) // Log the actual error
-		http.Error(w, "Could not add reply: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Error inserting reply into database: %v", err)
+		http.Error(w, "Could not add reply", http.StatusInternalServerError)
 		return
 	}
 
-	// Update the last reply date and user for the post
-	_, err = database.DB.Exec(`
-        UPDATE Post 
-        SET LastReplyDate = ?, LastReplyUser = ?
-        WHERE PostID = ?`, time.Now(), username, postID)
+	// Update the last reply info in the post
+	_, err = database.DB.Exec(`UPDATE Post SET LastReplyDate = ?, LastReplyUser = ? WHERE PostID = ?`,
+		now, username, postID)
 	if err != nil {
-		http.Error(w, "Could not update post with last reply info", http.StatusInternalServerError)
+		log.Printf("Error updating post last reply: %v", err)
+		http.Error(w, "Could not update post last reply", http.StatusInternalServerError)
 		return
 	}
 
-	// Redirect back to the post view page
+	// Redirect to the post view page
 	redirectURL := "/post/view?id=" + url.QueryEscape(postID)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
@@ -542,60 +521,46 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	sortOrder := r.URL.Query().Get("sort")
 	likesOrder := r.URL.Query().Get("likes")
 
-	// If neither sorting nor likesOrder is provided, randomize the post order
-	randomOrder := false
-	if sortOrder == "" && likesOrder == "" {
-		randomOrder = true
-	} else {
-		// Default values if parameters are provided but empty
-		if sortOrder == "" {
-			sortOrder = "desc"
-		}
-		if likesOrder == "" {
-			likesOrder = "desc"
-		}
+	// Default values for sorting if not provided
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+	if likesOrder == "" {
+		likesOrder = "desc"
 	}
 
-	// Construct SQL query with filtering and sorting or random order
-	var query string
-	if randomOrder {
-		query = `
-		SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-			   COALESCE(l.Likes, 0) AS Likes, 
-			   COALESCE(l.Dislikes, 0) AS Dislikes, 
-			   p.CreatedAt
-		FROM Post p
-		LEFT JOIN (
-			SELECT PostID, 
-				   SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-				   SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
-			FROM PostLikes
-			GROUP BY PostID
-		) l ON p.PostID = l.PostID
-		WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
-			   OR ? = 'all')
-		ORDER BY RAND()`
+	// Prepare category condition
+	var categoryCondition string
+	var args []interface{}
+
+	if category == "all" || category == "" {
+		categoryCondition = "1=1" // No filter
 	} else {
-		query = `
-		SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-			   COALESCE(l.Likes, 0) AS Likes, 
-			   COALESCE(l.Dislikes, 0) AS Dislikes, 
-			   p.CreatedAt
-		FROM Post p
-		LEFT JOIN (
-			SELECT PostID, 
-				   SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-				   SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
-			FROM PostLikes
-			GROUP BY PostID
-		) l ON p.PostID = l.PostID
-		WHERE (p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ? OR ? = 'all') 
-			   OR ? = 'all')
-		ORDER BY p.CreatedAt ` + sortOrder + `, l.Likes ` + likesOrder
+		categoryCondition = "p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ?)"
+		args = append(args, category)
 	}
+
+	// Construct SQL query with filtering and sorting
+	query := `
+	SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
+	       COALESCE(l.Likes, 0) AS Likes, 
+	       COALESCE(l.Dislikes, 0) AS Dislikes, 
+	       p.CreatedAt
+	FROM Post p
+	LEFT JOIN (
+		SELECT PostID, 
+		       SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+		       SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+		FROM PostLikes
+		GROUP BY PostID
+	) l ON p.PostID = l.PostID
+	WHERE ` + categoryCondition + `
+	ORDER BY 
+		p.CreatedAt ` + sortOrder + `,
+		l.Likes ` + likesOrder
 
 	// Execute the query
-	rows, err := database.DB.Query(query, category, category, category)
+	rows, err := database.DB.Query(query, args...)
 	if err != nil {
 		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
 		log.Printf("Error retrieving posts: %v", err)
@@ -623,14 +588,12 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	// Safely get the authenticated value from the context
 	authenticated, ok := r.Context().Value(session.Authenticated).(bool)
 	if !ok {
-		// Handle cases where the value is not present or not a bool
-		authenticated = true // Default to false if not authenticated
+		authenticated = false // Default to false if not authenticated
 	}
 
 	// Safely get the username value from the context
 	username, ok := r.Context().Value(session.Username).(string)
 	if !ok {
-		// Handle cases where the value is not present or not a string
 		username = "" // Default to empty string if no username is found
 	}
 
@@ -664,6 +627,127 @@ func savePostImageToDB(postImage PostImage) error {
         VALUES (?, ?, ?, ?, ?)`,
 		postImage.ID, postImage.PostID, postImage.UserID, postImage.ImagePath, postImage.CreatedAt)
 	return err
+}
+
+// DeletePostHandler handles requests to delete a post
+func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if the user is authenticated from the context
+	ctx := r.Context()
+	authenticated, ok := ctx.Value(session.Authenticated).(bool)
+	if !ok || !authenticated {
+		http.Error(w, "Unauthorized: User not logged in", http.StatusUnauthorized)
+		return
+	}
+
+	// Parse form data
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+		return
+	}
+
+	// Extract post ID
+	postIDStr := r.FormValue("post_id")
+	if postIDStr == "" {
+		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		return
+	}
+
+	postID := postIDStr // Use postIDStr directly if it's a UUID
+
+	userID, ok := ctx.Value(session.UserID).(int)
+	if !ok {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Call function to handle the post deletion
+	err = deletePost(userID, postID)
+	if err != nil {
+		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect back to the posts list or home page
+	http.Redirect(w, r, "/post", http.StatusSeeOther)
+}
+
+// deletePost deletes a post from the database
+func deletePost(userID int, postID string) error {
+	tx, err := database.DB.Begin()
+	if err != nil {
+		log.Printf("Failed to begin transaction: %v", err)
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	// Check if the user is the owner of the post or has permissions to delete it
+	err = checkPostOwnership(tx, userID, postID)
+	if err != nil {
+		return err
+	}
+
+	// Delete likes and comments related to the post
+	err = deletePostLikesAndCommentsTx(tx, postID)
+	if err != nil {
+		log.Printf("Error deleting post likes and comments: %v", err)
+		return err
+	}
+
+	// Delete the post
+	_, err = tx.Exec("DELETE FROM Post WHERE PostID = ?", postID)
+	if err != nil {
+		log.Printf("Error deleting post: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// checkPostOwnership checks if the user owns the post or has permissions to delete it
+func checkPostOwnership(tx *sql.Tx, userID int, postID string) error {
+	var ownerID int
+	err := tx.QueryRow("SELECT UserID FROM Post WHERE PostID = ?", postID).Scan(&ownerID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Post not found with ID: %s", postID)
+			return fmt.Errorf("Post not found")
+		}
+		log.Printf("Error querying post ownership: %v", err)
+		return err
+	}
+
+	if ownerID != userID {
+		log.Printf("User %d is not authorized to delete post %s owned by %d", userID, postID, ownerID)
+		return fmt.Errorf("unauthorized: User does not own the post")
+	}
+
+	return nil
+}
+
+// deletePostLikesAndCommentsTx deletes likes and comments associated with the post
+func deletePostLikesAndCommentsTx(tx *sql.Tx, postID string) error {
+	// Delete post likes
+	_, err := tx.Exec("DELETE FROM PostLikes WHERE PostID = ?", postID)
+	if err != nil {
+		log.Printf("Error deleting post likes for post ID: %s", postID)
+		return err
+	}
+
+	// Delete post comments (corrected table name)
+	_, err = tx.Exec("DELETE FROM Comment WHERE PostID = ?", postID)
+	if err != nil {
+		log.Printf("Error deleting post comments for post ID: %s", postID)
+		return err
+	}
+
+	return nil
 }
 
 ////////////////////////////////////////////////7

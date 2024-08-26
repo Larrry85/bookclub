@@ -118,8 +118,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Login attempt with email: %s", email)
 
 		var dbPassword, username string
+		var userID int
 		// Fetch the hashed password and username from the database
-		err := database.DB.QueryRow(`SELECT Password, Username FROM User WHERE Email = ?`, email).Scan(&dbPassword, &username)
+		err := database.DB.QueryRow(`SELECT UserID, Password, Username FROM User WHERE Email = ?`, email).Scan(&userID, &dbPassword, &username)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				log.Printf("Email not found: %s", email)
@@ -145,6 +146,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		sessionID := uuid.New().String()
 		session.SetSession(sessionID, session.SessionData{
 			Username:      username,
+			UserID:        userID, // Ensure this is an int
 			Authenticated: true,
 		})
 
