@@ -12,16 +12,19 @@
 </head>
 <body>
     <header>
-        <h1>{{if .Authenticated}}LITERARY LIONS FORUM
-            {{else}}
-            WELCOME TO LITERARY LIONS FORUM{{end}}</h1>
+        {{if .Authenticated}}
+        <p class="welcome">WELCOME TO</p><h1>LITERARY LIONS FORUM</h1>
+        {{else}}
+        <h1>LITERARY LIONS FORUM</h1>
+        {{end}}
         <nav>
             <a class="headerlinks" href="/">Home</a>
             <a class="headerlinks" href="/post">Forum</a>
             {{if .Authenticated}}
                 <a class="headerlinks" href="/logout">Logout</a>
                 <a class="headerlinks" href="/profile">My Page</a>
-                <p class="loggedin">Logged in as <strong>{{.Username}}</strong></p>
+                <p class="loggedin">Logged in as</p>
+                <strong><p class="usernamelogged">{{.Username}}</p></strong>
             {{else}}
                 <a class="headerlinks" href="/login">Login</a>
                 <a class="headerlinks" href="/register">Register</a>
@@ -33,17 +36,43 @@
         <section class="post-details">
             <h2>{{.Post.Title}}</h2>
             <p>{{.Post.Content}}</p>
+            <br><h2></h2>
             <p>Category: {{.Post.Category}}</p>
             <p>Posted by: {{.Post.Username}}</p>
             <p>Likes: {{ .Post.Likes }} | Dislikes: {{ .Post.Dislikes }} | Replies: {{.Post.RepliesCount}} | Posted on: {{.FormattedCreatedAt}}</p>
             {{if .Authenticated}}
             <div class="actions">
-                <form action="/like" method="post">
-                    <input type="hidden" name="post_id" value="{{.Post.ID}}">
-                    <button type="submit" name="is_like" value="true">Like</button>
-                    <button type="submit" name="is_like" value="false">Dislike</button>
-                </form>
-                
+                <div class="left-buttons">
+                    <form action="/like" method="post">
+                        <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                        <button type="submit" name="is_like" value="true">Like</button>
+                        <button type="submit" name="is_like" value="false">Dislike</button>
+                    </form>
+                </div>
+                <div class="right-buttons">
+                    <form action="/post" method="post" class="action-form">
+                        <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                        <button type="submit" name="back" value="true" class="action-button">Back</button>
+                    </form>
+                    {{if .SameUser}}
+                    <button><a href="#openModal" class="open-modal-btn">Delete Post</a></button>
+                    {{end}}
+                </div>
+            </div>
+        
+            <!-- Modal structure -->
+            <div id="openModal" class="modal">
+                <div class="modal-content">
+                    <!-- Close button -->
+                    <a href="#" class="close">&times;</a>
+                    <!-- Content inside modal -->
+                    <p>Are you sure you want to delete this post?</p>
+                    <form action="/post/delete" method="post">
+                        <input type="hidden" name="post_id" value="{{.Post.ID}}">
+                        <br><button type="submit" class="action-button delete-button">Yes, Delete</button>
+                    </form>
+                    <br><a href="#" class="action-button cancel-button">Cancel</a>
+                </div>
             </div>
             {{end}}
         </section>
@@ -84,18 +113,8 @@
         {{end}}
     </main>
 
-    <section class="action-buttons">
-        <form action="/post" method="post" class="action-form">
-            <input type="hidden" name="post_id" value="{{.Post.ID}}">
-            <button type="submit" name="back" value="true" class="action-button">Back</button>
-        </form>
-    {{if .Authenticated}}    
-    <form action="/post/delete" method="post" onsubmit="return confirm('Are you sure you want to delete this post?');" class="action-form">
-        <input type="hidden" name="post_id" value="{{.Post.ID}}">
-        <button type="submit" class="action-button delete-button">Delete Post</button>
-    </form>
-    {{end}}
-    </section>
+
+
     <footer>
         <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>

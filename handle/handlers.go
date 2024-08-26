@@ -8,7 +8,7 @@ import (
 	"lions/database"
 	"lions/email"
 
-	//"lions/post"
+	//"strconv"
 	"lions/session"
 	"log"
 	"net/http"
@@ -479,6 +479,7 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Delete the user's account from the database
 	_, err = database.DB.Exec(`DELETE FROM User WHERE Username = ?`, sessionData.Username)
+	log.Printf("User deleted: %s", sessionData.Username)
 	if err != nil {
 		log.Println("Error deleting user:", err)
 		http.Error(w, "Failed to delete account", http.StatusInternalServerError)
@@ -499,15 +500,27 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// Redirect to the login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
-
-/*/ PostsHandler handles displaying and creating posts
-func PostsHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		post.ListPosts(w, r)  // List existing posts
-	case http.MethodPost:
-		post.CreatePost(w, r)  // Create a new post
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+/*
+func ConfirmDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	postID := r.URL.Query().Get("post_id")
+	postIDInt, err := strconv.Atoi(postID)
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
 	}
+
+	data := struct {
+		PostID int
+	}{
+		PostID: postIDInt,
+	}
+
+	tmpl, err := template.ParseFiles("static/html/confirm_delete.html")
+	if err != nil {
+		log.Println("Template parsing error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl.Execute(w, data)
 }*/
