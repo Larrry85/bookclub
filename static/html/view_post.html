@@ -77,17 +77,23 @@
             {{end}}
         </section>
 
-       
-        
-
         <section class="replies">
             <h2>Replies:</h2>
             {{if .Replies}}
                 <ul class="reply-list">
                     {{range .Replies}}
                     <li class="reply">
-                        <p><strong>{{.Username}}:</strong>Replied on: {{.FormattedCreatedAt}}</p>
-                        <p class="reply-content">{{.Content}}</p>
+                        <p><strong>{{.Reply.Username}}:</strong> Replied on: {{.FormattedCreatedAt}}</p>
+                        <p class="reply-content">{{.Reply.Content}}</p>
+                        <p>Likes: {{.LikesCount}} | Dislikes: {{.DislikesCount}}</p>
+                        <div class="left-buttons">
+                            <form action="/like/comment" method="post">
+                                <input type="hidden" name="comment_id" value="{{.Reply.ID}}">
+                                <input type="hidden" name="post_id" value="{{$.Post.ID}}">
+                                <button type="submit" name="is_like" value="true">Like</button>
+                                <button type="submit" name="is_like" value="false">Dislike</button>
+                            </form>
+                        </div>
                     </li>
                     {{else}}
                         <p>No replies yet.</p>
@@ -112,8 +118,6 @@
         <p>You need to <a class="loginlink" href="/login">login</a> to reply.</p>
         {{end}}
     </main>
-
-
 
     <footer>
         <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>

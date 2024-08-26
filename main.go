@@ -1,6 +1,7 @@
 package main
 
 import (
+	"lions/comment"
 	"lions/database"
 	"lions/handle"
 	"lions/like"
@@ -35,6 +36,7 @@ func main() {
 	http.Handle("/post/reply", session.SessionMiddleware(http.HandlerFunc(post.AddReply)))
 	http.Handle("/post/delete", session.SessionMiddleware(http.HandlerFunc(post.DeletePostHandler)))
 	http.Handle("/like", session.SessionMiddleware(http.HandlerFunc(like.LikeHandler)))
+	http.Handle("/like/comment", session.SessionMiddleware(http.HandlerFunc(comment.CommentLikeHandler)))
 
 	// Define routes that do not use session middleware
 	http.HandleFunc("/confirm", handle.ConfirmEmailHandler)

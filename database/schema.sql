@@ -54,12 +54,15 @@ CREATE TABLE IF NOT EXISTS PostImage (
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
 );
 
+
 -- Table to store comments on posts
 CREATE TABLE IF NOT EXISTS Comment (
     CommentID INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for each comment
     PostID INTEGER, -- ID of the post to which the comment belongs
     UserID INTEGER, -- ID of the user who made the comment
     Content TEXT NOT NULL, -- Content of the comment
+    CommentLikesCount INTEGER DEFAULT 0,
+    CommentDislikesCount INTEGER DEFAULT 0,
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the comment was created
     FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table
