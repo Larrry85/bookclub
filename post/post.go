@@ -53,6 +53,7 @@ type PageData struct {
 	Replies       []Reply    // List of replies to a post
 	Pagination    Pagination // Pagination data
 
+
 }
 
 // Reply represents a reply to a post with user information.
@@ -75,6 +76,7 @@ type PostViewData struct {
 	Username               string
 	FormattedCreatedAt     string
 	LastReplyDateFormatted string
+	SameUser	  bool
 }
 
 // PostImage represents an image associated with a blog post.
@@ -309,6 +311,12 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		lastReplyDateFormatted = "No replies yet"
 	}
 
+	
+	// Determine if the current user is the same as the post creator
+	currentUsername := r.Context().Value(session.Username).(string)
+	sameUser := currentUsername == post.Username
+
+
 	// Prepare data for the template
 	data := PostViewData{
 		Post:                   post,
@@ -317,6 +325,7 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		Username:               r.Context().Value(session.Username).(string),
 		FormattedCreatedAt:     post.CreatedAt.Format("January 2, 2006 at 3:04pm"),
 		LastReplyDateFormatted: lastReplyDateFormatted,
+		SameUser:               sameUser,
 	}
 
 	// Parse and execute the template

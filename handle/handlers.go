@@ -8,7 +8,7 @@ import (
 	"lions/database"
 	"lions/email"
 
-	"strconv"
+	//"strconv"
 	"lions/session"
 	"log"
 	"net/http"
@@ -479,6 +479,7 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Delete the user's account from the database
 	_, err = database.DB.Exec(`DELETE FROM User WHERE Username = ?`, sessionData.Username)
+	log.Printf("User deleted: %s", sessionData.Username)
 	if err != nil {
 		log.Println("Error deleting user:", err)
 		http.Error(w, "Failed to delete account", http.StatusInternalServerError)
@@ -499,7 +500,7 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// Redirect to the login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
-
+/*
 func ConfirmDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	postID := r.URL.Query().Get("post_id")
 	postIDInt, err := strconv.Atoi(postID)
@@ -522,4 +523,4 @@ func ConfirmDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl.Execute(w, data)
-}
+}*/
