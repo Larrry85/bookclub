@@ -201,7 +201,7 @@ button {
     padding: 0.75rem; /* Padding inside buttons */
     border: none; /* Removes default border */
     color: #fff; /* White text color */
-    background-color: #2401e9;
+    background-color: #5A2D82;
     font-size: 1rem; /* Standard font size */
     font-weight: bold; /* Bold text for emphasis */
     border-radius: 5px; /* Rounded corners */
@@ -268,12 +268,12 @@ button:hover {
 
 /* Specific styles for back button */
 .action-button {
-    background-color: #3498db; /* Blue background for back */
+    background-color: #5A2D82; /* Blue background for back */
     color: white;             /* White text color */
 }
 
 .action-button:hover {
-    background-color: #2980b9; /* Darker blue on hover */
+    background-color: #e4befa /* Darker blue on hover */
 }
 
 
@@ -412,7 +412,7 @@ button:hover {
 /* Reply Form Button */
 .reply-form button {
     padding: 0.75rem 1.5rem; /* Padding inside the button */
-    background-color: #2401e9; /* Black background color */
+    background-color: #5A2D82; /* Black background color */
     color: #fff; /* White text color */
     border: none; /* Removes default border */
     border-radius: 5px; /* Rounded corners */
@@ -423,7 +423,7 @@ button:hover {
 }
 
 .reply-form button:hover {
-    background-color: #a90ad1; /* Darker black on hover */
+    background-color: #333; /* Darker black on hover */
 }
 
 /* ----------------------------footer---------------------------- */
