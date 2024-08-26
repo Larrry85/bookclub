@@ -12,16 +12,19 @@
 </head>
 <body>
     <header>
-        <h1>{{if .Authenticated}}LITERARY LIONS FORUM
-            {{else}}
-            WELCOME TO LITERARY LIONS FORUM{{end}}</h1>
+        {{if .Authenticated}}
+        <p class="welcome">WELCOME TO</p><h1>LITERARY LIONS FORUM</h1>
+        {{else}}
+        <h1>LITERARY LIONS FORUM</h1>
+        {{end}}
         <nav>
             <a class="headerlinks" href="/">Home</a>
             <a class="headerlinks" href="/post">Forum</a>
             {{if .Authenticated}}
                 <a class="headerlinks" href="/logout">Logout</a>
                 <a class="headerlinks" href="/profile">My Page</a>
-                <p class="loggedin">Logged in as <strong>{{.Username}}</strong></p>
+                <p class="loggedin">Logged in as</p>
+                <strong><p class="usernamelogged">{{.Username}}</p></strong>
             {{else}}
                 <a class="headerlinks" href="/login">Login</a>
                 <a class="headerlinks" href="/register">Register</a>
