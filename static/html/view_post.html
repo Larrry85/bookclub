@@ -86,6 +86,7 @@
                         <p><strong>{{.Reply.Username}}:</strong> Replied on: {{.FormattedCreatedAt}}</p>
                         <p class="reply-content">{{.Reply.Content}}</p>
                         <p>Likes: {{.LikesCount}} | Dislikes: {{.DislikesCount}}</p>
+                        {{if $.Authenticated}} <!-- Ensure user is authenticated before showing like/dislike buttons -->
                         <div class="left-buttons">
                             <form action="/like/comment" method="post">
                                 <input type="hidden" name="comment_id" value="{{.Reply.ID}}">
@@ -94,6 +95,7 @@
                                 <button type="submit" name="is_like" value="false">Dislike</button>
                             </form>
                         </div>
+                        {{end}}
                     </li>
                     {{else}}
                         <p>No replies yet.</p>

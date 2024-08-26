@@ -500,6 +500,7 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// Redirect to the login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
 /*
 func ConfirmDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	postID := r.URL.Query().Get("post_id")
