@@ -577,8 +577,10 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 
     // Fetch total number of posts matching the filter criteria
     var totalPosts int
-    err := database.DB.QueryRow("SELECT COUNT(*) FROM Post p WHERE " + categoryCondition, args...).Scan(&totalPosts)
-    if err != nil {
+	log.Printf("Total Posts: %v", totalPosts)
+	err := database.DB.QueryRow("SELECT COUNT(*) FROM Post p WHERE " + categoryCondition, args...).Scan(&totalPosts)
+  
+	if err != nil {
         http.Error(w, "Could not retrieve total post count", http.StatusInternalServerError)
         log.Printf("Error retrieving total post count: %v", err)
         return
