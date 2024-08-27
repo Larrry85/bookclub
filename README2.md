@@ -37,7 +37,8 @@ you can now login using youre
 - Password
 
 if you dont remenber youre password you can click the reset password link below login.
-then you can enter yore email and literary.lions.verf@gmail.com will send you a email with a reset password link.
+then you can enter youre email and literary.lions.verf@gmail.com will send you a email with a reset password link.
+click the link and you will get to a page where you can input youre new password
 
 
 ## Forum
@@ -54,11 +55,10 @@ if you are logged in:
 - filter by time/likes/category
 - delete posts
 
-## MyPage
+## My Page / need to be logged in
 
 here you can see youre:
 - Username
-
 - Email
 - number of likes
 - number of dislikes
@@ -66,5 +66,7 @@ here you can see youre:
 - Number of posts
 - delete accaunt
 
+## My Posts / need to be logged in
 
+here yoy can see all youre posts and likes and can click on them to get you to the post
 
