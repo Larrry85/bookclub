@@ -1,7 +1,7 @@
 # Literary Lions Forum
 
 A web forum for Literary Lions allowing users to communicate, associate categories with posts, like/dislike posts & comments, and filter posts.
-Test
+
 
 ## starting the program
 
@@ -11,7 +11,7 @@ go run .
 ```
 
 a server will start at localhost:8080.
-if you enter localhost:8080 in youre web browser you will eter our Literary Lions forum.
+if you enter localhost:8080 in youre web browser you will enter our Literary Lions forum.
 
 ## Register
 
