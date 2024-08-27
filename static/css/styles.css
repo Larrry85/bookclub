@@ -159,11 +159,47 @@ footer {
 /* Container for login and register form */
 .login {
     display: flex; /* Flexbox layout */
-    flex-direction: column; /* Stack items vertically */
+   flex-direction: column; /* Stack items vertically */
     align-items: center; /* Center items horizontally */
+    text-align: justify;
     background-color: white; /* White background */
     padding: 10px; /* Padding inside container */
     border-radius: 8px; /* Rounded corners */
+}
+/* Align labels and inputs in login form */
+.login-form label {
+    display: inline-block; /* Inline-block display */
+    width: 100px; /* Fixed width for labels */
+    text-align: right; /* Align text to the right */
+    margin-right: 10px; /* Space between label and input */
+}
+
+
+/* Container for password setting forms */
+.passwordstyle, .emailstyle {
+    display: flex; /* Flexbox layout */
+    flex-direction: row; /* Align items in a row */
+    align-items: center; /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
+    margin-bottom: 15px; /* Space between rows */
+}
+
+/* Center the text inside the label for password setting forms */
+.passwordstyle label, .emailstyle label {
+    display: block; /* Make the label a block element */
+    text-align: center; /* Center the text inside the label */
+    width: 100%; /* Full width */
+    margin-bottom: 10px; /* Space between label and input */
+}
+
+/* Style the input fields for password setting forms */
+.passwordstyle input, .emailstyle input {
+    flex: 1; /* Take the remaining space */
+    padding: 10px; /* Padding inside input */
+    border: 1px solid #ccc; /* Light gray border */
+    border-radius: 5px; /* Rounded corners */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    text-align: center; /* Center the text inside the input */
 }
 
 /* Style for links */
@@ -178,13 +214,7 @@ a:hover {
     text-decoration: underline; /* Underline on hover */
 }
 
-/* Align labels and inputs in login form */
-.login-form label {
-    display: inline-block; /* Inline-block display */
-    width: 100px; /* Fixed width for labels */
-    text-align: right; /* Align text to the right */
-    margin-right: 10px; /* Space between label and input */
-}
+
 
 /* Style the login form */
 .login-form {
