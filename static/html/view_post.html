@@ -34,7 +34,12 @@
     </header>
 
     <main>
+        {{if .Authenticated}}
+        {{else}}
+        <p>You need to <a class="loginlink" href="/login">login</a> to reply.</p>
+        {{end}}
         <section class="post-details">
+
             <h2>{{.Post.Title}}</h2>
             <p>{{.Post.Content}}</p>
             <br><h2></h2>
@@ -60,6 +65,8 @@
                     {{end}}
                 </div>
             </div>
+
+
         
             <!-- Modal structure -->
             <div id="openModal" class="modal">
@@ -75,6 +82,7 @@
                     <br><a href="#" class="action-button cancel-button">Cancel</a>
                 </div>
             </div>
+
             {{end}}
         </section>
 
@@ -130,8 +138,6 @@
                 <button type="submit">Submit Reply</button>
             </form>
         </section>
-        {{else}}
-        <p>You need to <a class="loginlink" href="/login">login</a> to reply.</p>
         {{end}}
     </main>
 
