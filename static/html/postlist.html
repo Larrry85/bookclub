@@ -19,11 +19,11 @@
         {{end}}
         <nav>
             <a class="headerlinks" href="/">Home</a>
-            <a class="headerlinks" href="/post">Create and browse Posts</a>
-            <a class="headerlinks" href="/categories">Categories</a>
+            <a class="headerlinks" href="/post">Forum</a>
             {{if .Authenticated}}
                 <a class="headerlinks" href="/logout">Logout</a>
                 <a class="headerlinks" href="/profile">My Page</a>
+                <a class="headerlinks" href="/categories">My Posts</a>
                 <p class="loggedin">Logged in as</p>
                 <strong><p class="usernamelogged">{{.Username}}</p></strong>
             {{else}}
@@ -36,48 +36,7 @@
     <main>
 
 <section class="categories">
-    <h2>Categories</h2><br>
 
-    <!-- General Category -->
-    <div class="category">
-        <h3>General</h3>
-        <div class="posts-table">
-            {{range .GeneralPosts}}
-            <div class="table-row">
-                <div class="status-icon">
-                    <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
-                </div>
-                <div class="subjects">
-                    <a class="titlefont" href="/post/view?id={{.ID}}">{{.Title}}</a>
-                    <br>
-                </div>
-            </div>
-            {{else}}
-            <p>No posts available in this category.</p>
-            {{end}}
-        </div>
-    </div>
-
-<!-- Genres Category -->
-<div class="category">
-    <h3>Genres</h3>
-    <div class="posts-table">
-        {{range .GenrePosts}}
-        <div class="table-row">
-            <div class="status-icon">
-                <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
-            </div>
-            <div class="subjects">
-                <a class="titlefont" href="/post/view?id={{.ID}}">{{.Title}}</a>
-                <br>
-                <span class="genre">{{.Genre}}</span>
-            </div>
-        </div>
-        {{else}}
-        <p>No posts available in this category.</p>
-        {{end}}
-    </div>
-</div>
 
     <!-- My Posts Category -->
     <div class="category">

@@ -27,14 +27,14 @@
             <!-- Link to the home page -->
             <a class="headerlinks" href="/">Home</a>
             <!-- Link to the forum page -->
-            <a class="headerlinks" href="/post">Create and browse Posts</a>
-            <a class="headerlinks" href="/categories">Categories</a>
+            <a class="headerlinks" href="/post">Forum</a>
             <!-- Conditional rendering of navigation links based on authentication -->
             {{if .Authenticated}}
                 <!-- Link to logout if user is authenticated -->
                 <a class="headerlinks" href="/logout">Logout</a>
                 <!-- Link to profile page if user is authenticated -->
                 <a class="headerlinks" href="/profile">My Page</a>
+                <a class="headerlinks" href="/categories">My Posts</a>
                 <br>
                 <!-- Display username if user is authenticated -->
                 <p class="loggedin">Logged in as</p>

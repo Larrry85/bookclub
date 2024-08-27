@@ -19,11 +19,11 @@
         {{end}}
         <nav>
             <a class="headerlinks" href="/">Home</a>
-            <a class="headerlinks" href="/post">Create and browse Posts</a>
-            <a class="headerlinks" href="/categories">Categories</a>
+            <a class="headerlinks" href="/post">Forum</a>
             {{if .Authenticated}}
                 <a class="headerlinks" href="/logout">Logout</a>
                 <a class="headerlinks" href="/profile">My Page</a>
+                <a class="headerlinks" href="/categories">My Posts</a>
                 <p class="loggedin">Logged in as</p>
                 <strong><p class="usernamelogged">{{.Username}}</p></strong>
             {{else}}
