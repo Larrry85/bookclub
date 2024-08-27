@@ -139,10 +139,10 @@
             {{if gt .Pagination.TotalPages 1}}
                 <span>Page {{.Pagination.CurrentPage}} of {{.Pagination.TotalPages}}</span>
                 {{if gt .Pagination.CurrentPage 1}}
-                    <a href="/post?page={{sub .Pagination.CurrentPage 1}}&pageSize={{.Pagination.PageSize}}&category={{.Filter.Category}}&sort={{.Filter.SortOrder}}&likes={{.Filter.LikesOrder}}">Previous</a>
+                    <a href="/filter?page={{sub .Pagination.CurrentPage 1}}&pageSize={{.Pagination.PageSize}}&category={{.Filter.Category}}&sort={{.Filter.SortOrder}}&likes={{.Filter.LikesOrder}}">Previous</a>
                 {{end}}
                 {{if lt .Pagination.CurrentPage .Pagination.TotalPages}}
-                    <a href="/post?page={{add .Pagination.CurrentPage 1}}&pageSize={{.Pagination.PageSize}}&category={{.Filter.Category}}&sort={{.Filter.SortOrder}}&likes={{.Filter.LikesOrder}}">Next</a>
+                    <a href="/filter?page={{add .Pagination.CurrentPage 1}}&pageSize={{.Pagination.PageSize}}&category={{.Filter.Category}}&sort={{.Filter.SortOrder}}&likes={{.Filter.LikesOrder}}">Next</a>
                 {{end}}
             {{end}}
         </div>
