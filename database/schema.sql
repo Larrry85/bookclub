@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS Comment (
     Content TEXT NOT NULL, -- Content of the comment
     CommentLikesCount INTEGER DEFAULT 0,
     CommentDislikesCount INTEGER DEFAULT 0,
+    TaggedUser VARCHAR(255),
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the comment was created
     FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE, -- Foreign key to Post table
     FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE SET NULL -- Foreign key to User table

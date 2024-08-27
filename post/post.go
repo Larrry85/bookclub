@@ -72,6 +72,7 @@ type Reply struct {
 	Content   string
 	Username  string
 	CreatedAt time.Time
+	TaggedUser  string
 }
 
 type FormattedReply struct {
@@ -79,6 +80,7 @@ type FormattedReply struct {
 	FormattedCreatedAt string
 	LikesCount         int
 	DislikesCount      int
+	TaggedUser  string
 }
 
 // PostViewData holds data for rendering a single post with its replies.
@@ -90,6 +92,7 @@ type PostViewData struct {
 	FormattedCreatedAt     string
 	LastReplyDateFormatted string
 	SameUser               bool
+	Users				  []string
 }
 
 // PostImage represents an image associated with a blog post.
@@ -244,14 +247,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func ViewPost(w http.ResponseWriter, r *http.Request) {
-	postID := r.URL.Query().Get("id")
-	if postID == "" {
-		http.Error(w, "Post ID is required", http.StatusBadRequest)
-		return
-	}
+    postID := r.URL.Query().Get("id")
+    if postID == "" {
+        http.Error(w, "Post ID is required", http.StatusBadRequest)
+        return
+    }
 
-	var post Post
-	err := database.DB.QueryRow(`
+    var post Post
+    err := database.DB.QueryRow(`
         SELECT p.PostID, p.Title, p.Content, p.CreatedAt, p.LastReplyDate, p.LastReplyUser, 
                u.Username, c.CategoryName, 
                (SELECT COUNT(*) FROM Comment WHERE PostID = p.PostID) AS RepliesCount,
@@ -260,103 +263,98 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
         JOIN User u ON p.UserID = u.UserID
         JOIN Category c ON p.CategoryID = c.CategoryID
         WHERE p.PostID = ?`, postID).Scan(
-		&post.ID,
-		&post.Title,
-		&post.Content,
-		&post.CreatedAt,
-		&post.LastReplyDate,
-		&post.LastReplyUser,
-		&post.Username,
-		&post.Category,
-		&post.RepliesCount,
-		&post.Likes,
-		&post.Dislikes,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			http.Error(w, "Post not found", http.StatusNotFound)
-		} else {
-			log.Printf("Database error while fetching post: %v", err)
-			http.Error(w, "Database error", http.StatusInternalServerError)
-		}
-		return
-	}
+        &post.ID,
+        &post.Title,
+        &post.Content,
+        &post.CreatedAt,
+        &post.LastReplyDate,
+        &post.LastReplyUser,
+        &post.Username,
+        &post.Category,
+        &post.RepliesCount,
+        &post.Likes,
+        &post.Dislikes,
+    )
+    if err != nil {
+        log.Printf("Error fetching post: %v", err)
+        http.Error(w, "Could not fetch post", http.StatusInternalServerError)
+        return
+    }
 
-	rows, err := database.DB.Query(`
-        SELECT c.CommentID, c.Content, c.CreatedAt, u.Username,
+    rows, err := database.DB.Query(`
+        SELECT c.CommentID, c.Content, c.CreatedAt, u.Username, c.TaggedUser,
                (SELECT COUNT(*) FROM CommentLikes WHERE CommentID = c.CommentID AND IsLike = 1) AS LikesCount,
                (SELECT COUNT(*) FROM CommentLikes WHERE CommentID = c.CommentID AND IsLike = 0) AS DislikesCount
         FROM Comment c
         JOIN User u ON c.UserID = u.UserID
         WHERE c.PostID = ?
         ORDER BY c.CreatedAt DESC`, postID)
-	if err != nil {
-		log.Printf("Database error while fetching comments: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+    if err != nil {
+        log.Printf("Error fetching replies: %v", err)
+        http.Error(w, "Could not fetch replies", http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	var replies []FormattedReply
-	for rows.Next() {
-		var reply Reply
-		var formattedReply FormattedReply
-		var likesCount, dislikesCount int
-		err := rows.Scan(&reply.ID, &reply.Content, &reply.CreatedAt, &reply.Username, &likesCount, &dislikesCount)
-		if err != nil {
-			log.Printf("Error scanning reply: %v", err)
-			http.Error(w, "Database error", http.StatusInternalServerError)
-			return
-		}
-		formattedReply = FormattedReply{
-			Reply:              reply,
-			FormattedCreatedAt: reply.CreatedAt.Format("January 2, 2006 at 3:04pm"),
-			LikesCount:         likesCount,
-			DislikesCount:      dislikesCount,
-		}
-		replies = append(replies, formattedReply)
-	}
-	if err := rows.Err(); err != nil {
-		log.Printf("Error iterating through replies: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
+    var replies []FormattedReply
+    for rows.Next() {
+        var reply Reply
+        var likesCount, dislikesCount int
+        if err := rows.Scan(&reply.ID, &reply.Content, &reply.CreatedAt, &reply.Username, &reply.TaggedUser, &likesCount, &dislikesCount); err != nil {
+            log.Printf("Error scanning reply: %v", err)
+            continue
+        }
+        formattedReply := FormattedReply{
+            Reply:              reply,
+            FormattedCreatedAt: reply.CreatedAt.Format("January 2, 2006 at 3:04pm"),
+            LikesCount:         likesCount,
+            DislikesCount:      dislikesCount,
+        }
+        replies = append(replies, formattedReply)
+    }
 
-	var lastReplyDateFormatted string
-	if post.LastReplyDate.Valid {
-		lastReplyDateFormatted = post.LastReplyDate.Time.Format("January 2, 2006 at 3:04pm")
-	} else {
-		lastReplyDateFormatted = "No replies yet"
-	}
+    var lastReplyDateFormatted string
+    if post.LastReplyDate.Valid {
+        lastReplyDateFormatted = post.LastReplyDate.Time.Format("January 2, 2006 at 3:04pm")
+    } else {
+        lastReplyDateFormatted = "No replies yet"
+    }
 
-	currentUsername := r.Context().Value(session.Username).(string)
-	sameUser := currentUsername == post.Username
+    currentUsername := r.Context().Value(session.Username).(string)
+    sameUser := currentUsername == post.Username
 
-	data := PostViewData{
-		Post:                   post,
-		Replies:                replies,
-		Authenticated:          r.Context().Value(session.Authenticated).(bool),
-		Username:               currentUsername,
-		FormattedCreatedAt:     post.CreatedAt.Format("January 2, 2006 at 3:04pm"),
-		LastReplyDateFormatted: lastReplyDateFormatted,
-		SameUser:               sameUser,
-	}
+    users, err := fetchUsers()
+    if err != nil {
+        log.Printf("Error fetching users: %v", err)
+        http.Error(w, "Could not fetch users", http.StatusInternalServerError)
+        return
+    }
 
-	tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
-		"add": add,
-		"sub": sub,
-	}).ParseFiles("static/html/view_post.html")
-	if err != nil {
-		log.Printf("Template parsing error: %v", err)
-		http.Error(w, "Template parsing error", http.StatusInternalServerError)
-		return
-	}
+    data := PostViewData{
+        Post:                   post,
+        Replies:                replies,
+        Authenticated:          r.Context().Value(session.Authenticated).(bool),
+        Username:               currentUsername,
+        FormattedCreatedAt:     post.CreatedAt.Format("January 2, 2006 at 3:04pm"),
+        LastReplyDateFormatted: lastReplyDateFormatted,
+        SameUser:               sameUser,
+        Users:                  users,
+    }
 
-	if err := tmpl.ExecuteTemplate(w, "view_post.html", data); err != nil {
-		log.Printf("Template execution error: %v", err)
-		http.Error(w, "Template execution error", http.StatusInternalServerError)
-		return
-	}
+    tmpl, err := template.New("view_post.html").Funcs(template.FuncMap{
+        "add": add,
+        "sub": sub,
+    }).ParseFiles("static/html/view_post.html")
+    if err != nil {
+        log.Printf("Error parsing template: %v", err)
+        http.Error(w, "Could not load template", http.StatusInternalServerError)
+        return
+    }
+
+    if err := tmpl.Execute(w, data); err != nil {
+        log.Printf("Error executing template: %v", err)
+        http.Error(w, "Could not render template", http.StatusInternalServerError)
+    }
 }
 
 // ListPosts handles displaying a paginated list of posts.
@@ -474,68 +472,89 @@ func ListPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddReply(w http.ResponseWriter, r *http.Request) {
-	// Ensure it's a POST request
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
+    // Ensure it's a POST request
+    if r.Method != http.MethodPost {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
 
-	// Check if the user is authenticated
-	authenticated := r.Context().Value(session.Authenticated).(bool)
-	if !authenticated {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
+    // Check if the user is authenticated
+    authenticated := r.Context().Value(session.Authenticated).(bool)
+    if !authenticated {
+        http.Error(w, "User not authenticated", http.StatusUnauthorized)
+        return
+    }
 
-	// Get the username from session
-	username := r.Context().Value(session.Username).(string)
+    // Get the username from session
+    username := r.Context().Value(session.Username).(string)
 
-	// Get the post ID and content from the form data
-	postID := r.FormValue("postID")
-	content := r.FormValue("content")
+    // Get the post ID and content from the form data
+    postID := r.FormValue("postID")
+    content := r.FormValue("content")
+    taggedUser := r.FormValue("tagged_user")
 
-	// Validate input
-	if postID == "" || content == "" {
-		http.Error(w, "Post ID and content are required", http.StatusBadRequest)
-		return
-	}
+    // Validate input
+    if postID == "" || content == "" {
+        http.Error(w, "Post ID and content are required", http.StatusBadRequest)
+        return
+    }
 
-	// Get the user ID
-	var userID int
-	err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
-	if err != nil {
-		log.Printf("Error retrieving user ID for username %s: %v", username, err)
-		http.Error(w, "Could not retrieve user ID", http.StatusInternalServerError)
-		return
-	}
+    // Get the user ID
+    var userID int
+    err := database.DB.QueryRow(`SELECT UserID FROM User WHERE Username = ?`, username).Scan(&userID)
+    if err != nil {
+        log.Printf("Error retrieving user ID for username %s: %v", username, err)
+        http.Error(w, "Could not retrieve user ID", http.StatusInternalServerError)
+        return
+    }
 
-	// Get the current time
-	now := time.Now()
+    // Get the current time
+    now := time.Now()
 
-	// Insert the reply into the database
-	_, err = database.DB.Exec(`INSERT INTO Comment (PostID, UserID, Content, CreatedAt) VALUES (?, ?, ?, ?)`,
-		postID, userID, content, now)
-	if err != nil {
-		log.Printf("Error inserting reply into database: %v", err)
-		http.Error(w, "Could not add reply", http.StatusInternalServerError)
-		return
-	}
+    // Insert the reply into the database
+    _, err = database.DB.Exec(`INSERT INTO Comment (PostID, UserID, Content, TaggedUser, CreatedAt) VALUES (?, ?, ?, ?, ?)`,
+        postID, userID, content, taggedUser, now)
+    if err != nil {
+        log.Printf("Error inserting reply into database: %v", err)
+        http.Error(w, "Could not add reply", http.StatusInternalServerError)
+        return
+    }
 
-	// Update the last reply info in the post
-	_, err = database.DB.Exec(`UPDATE Post SET LastReplyDate = ?, LastReplyUser = ? WHERE PostID = ?`,
-		now, username, postID)
-	if err != nil {
-		log.Printf("Error updating post last reply: %v", err)
-		http.Error(w, "Could not update post last reply", http.StatusInternalServerError)
-		return
-	}
+    // Update the last reply info in the post
+    _, err = database.DB.Exec(`UPDATE Post SET LastReplyDate = ?, LastReplyUser = ? WHERE PostID = ?`,
+        now, username, postID)
+    if err != nil {
+        log.Printf("Error updating post last reply: %v", err)
+        http.Error(w, "Could not update post last reply", http.StatusInternalServerError)
+        return
+    }
 
-	// Redirect to the post view page
-	redirectURL := "/post/view?id=" + url.QueryEscape(postID)
-	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+    // Redirect to the post view page
+    redirectURL := "/post/view?id=" + url.QueryEscape(postID)
+    http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
 
 ///////////////SessionMiddleware END////////////////////
+
+
+func fetchUsers() ([]string, error) {
+    rows, err := database.DB.Query(`SELECT Username FROM User`)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var users []string
+    for rows.Next() {
+        var username string
+        if err := rows.Scan(&username); err != nil {
+            return nil, err
+        }
+        users = append(users, username)
+    }
+    return users, nil
+}
+
 
 ///////////////Filter posts ////////////////////
 
