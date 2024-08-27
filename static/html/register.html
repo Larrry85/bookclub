@@ -23,7 +23,8 @@
         <nav>
             <!-- Navigation links -->
             <a class="headerlinks" href="/">Home</a>
-            <a class="headerlinks" href="/post">Forum</a>
+            <a class="headerlinks" href="/post">Create and browse Posts</a>
+            <a class="headerlinks" href="/categories">Categories</a>
             <a class="headerlinks" href="/login">Login</a>
             <a class="headerlinks" href="/register">Register</a>
         </nav>
@@ -35,16 +36,23 @@
         <h1>Register</h1>
         <!-- Form for user registration -->
         <form action="/register" method="post" class="login-form">
-            <!-- Username input field -->
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required><br>
+
+
             <!-- Email input field -->
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required><br>
+
+
+
             <div class="password">
                 <!-- Password input field -->
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required><br>
+
+            <!-- Username input field -->
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required><br>
+
             </div>
             <!-- Submit button for the form -->
             <button type="submit">Register</button>

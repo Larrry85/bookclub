@@ -19,7 +19,8 @@
         {{end}}
         <nav>
             <a class="headerlinks" href="/">Home</a>
-            <a class="headerlinks" href="/post">Forum</a>
+            <a class="headerlinks" href="/post">Create and browse Posts</a>
+            <a class="headerlinks" href="/categories">Categories</a>
             {{if .Authenticated}}
                 <a class="headerlinks" href="/logout">Logout</a>
                 <a class="headerlinks" href="/profile">My Page</a>
@@ -33,7 +34,12 @@
     </header>
 
     <main>
+        {{if .Authenticated}}
+        {{else}}
+        <p>You need to <a class="loginlink" href="/login">login</a> to reply.</p>
+        {{end}}
         <section class="post-details">
+
             <h2>{{.Post.Title}}</h2>
             <p>{{.Post.Content}}</p>
             <br><h2></h2>
@@ -48,17 +54,25 @@
                         <button type="submit" name="is_like" value="true">Like</button>
                         <button type="submit" name="is_like" value="false">Dislike</button>
                     </form>
+                    {{end}}
                 </div>
                 <div class="right-buttons">
                     <form action="/post" method="post" class="action-form">
                         <input type="hidden" name="post_id" value="{{.Post.ID}}">
+
+
                         <button type="submit" name="back" value="true" class="action-button">Back</button>
+
                     </form>
+                    {{if .Authenticated}}
                     {{if .SameUser}}
                     <button><a href="#openModal" class="open-modal-btn">Delete Post</a></button>
                     {{end}}
+
                 </div>
             </div>
+
+
         
             <!-- Modal structure -->
             <div id="openModal" class="modal">
@@ -74,6 +88,7 @@
                     <br><a href="#" class="action-button cancel-button">Cancel</a>
                 </div>
             </div>
+
             {{end}}
         </section>
 
@@ -84,8 +99,13 @@
                     {{range .Replies}}
                     <li class="reply">
                         <p><strong>{{.Reply.Username}}:</strong> Replied on: {{.FormattedCreatedAt}}</p>
-                        <p class="reply-content">{{.Reply.Content}}</p>
-                        <p>Likes: {{.LikesCount}} | Dislikes: {{.DislikesCount}}</p>
+
+                        {{if .Reply.TaggedUser}}
+                        <p><em>Tagged user: {{.Reply.TaggedUser}}</em></p>
+                        {{end}}
+
+                        <br><p class="reply-content">{{.Reply.Content}}</p>
+                        <br><p>Likes: {{.LikesCount}} | Dislikes: {{.DislikesCount}}</p>
                         {{if $.Authenticated}} <!-- Ensure user is authenticated before showing like/dislike buttons -->
                         <div class="left-buttons">
                             <form action="/like/comment" method="post">
@@ -113,11 +133,17 @@
                 <input type="hidden" name="postID" value="{{.Post.ID}}">
                 <label for="content">Reply:</label>
                 <textarea id="content" name="content" required></textarea>
+                
+                <select name="tagged_user">
+                    <option value="">Tag a user</option>
+                    {{range .Users}}
+                    <option value="{{.}}">{{.}}</option>
+                    {{end}}
+                </select>
+
                 <button type="submit">Submit Reply</button>
             </form>
         </section>
-        {{else}}
-        <p>You need to <a class="loginlink" href="/login">login</a> to reply.</p>
         {{end}}
     </main>
 
