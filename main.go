@@ -33,6 +33,8 @@ func main() {
 	http.Handle("/post/view", session.SessionMiddleware(http.HandlerFunc(post.ViewPost)))
 
 	http.Handle("/post", session.SessionMiddleware(http.HandlerFunc(post.ListPosts)))
+	http.Handle("/categories", session.SessionMiddleware(http.HandlerFunc(post.CategoriesHandler)))
+
 	http.Handle("/post/reply", session.SessionMiddleware(http.HandlerFunc(post.AddReply)))
 	http.Handle("/post/delete", session.SessionMiddleware(http.HandlerFunc(post.DeletePostHandler)))
 	http.Handle("/like", session.SessionMiddleware(http.HandlerFunc(like.LikeHandler)))

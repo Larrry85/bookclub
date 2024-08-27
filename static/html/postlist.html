@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="View all categories and posts.">
+    <meta name="keywords" content="forum, categories, posts, genres">
+    <title>Literary Lions Forum Categories</title>
+    <link rel="stylesheet" href="/static/css/postStyles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        {{if .Authenticated}}
+        <p class="welcome">WELCOME TO</p><h1>LITERARY LIONS FORUM</h1>
+        {{else}}
+        <h1>LITERARY LIONS FORUM</h1>
+        {{end}}
+        <nav>
+            <a class="headerlinks" href="/">Home</a>
+            <a class="headerlinks" href="/post">Create and browse Posts</a>
+            <a class="headerlinks" href="/categories">Categories</a>
+            {{if .Authenticated}}
+                <a class="headerlinks" href="/logout">Logout</a>
+                <a class="headerlinks" href="/profile">My Page</a>
+                <p class="loggedin">Logged in as</p>
+                <strong><p class="usernamelogged">{{.Username}}</p></strong>
+            {{else}}
+                <a class="headerlinks" href="/login">Login</a>
+                <a class="headerlinks" href="/register">Register</a>
+            {{end}}
+        </nav>
+    </header>
+
+    <main>
+
+<section class="categories">
+    <h2>Categories</h2><br>
+
+    <!-- General Category -->
+    <div class="category">
+        <h3>General</h3>
+        <div class="posts-table">
+            {{range .GeneralPosts}}
+            <div class="table-row">
+                <div class="status-icon">
+                    <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
+                </div>
+                <div class="subjects">
+                    <a class="titlefont" href="/post/view?id={{.ID}}">{{.Title}}</a>
+                    <br>
+                </div>
+            </div>
+            {{else}}
+            <p>No posts available in this category.</p>
+            {{end}}
+        </div>
+    </div>
+
+<!-- Genres Category -->
+<div class="category">
+    <h3>Genres</h3>
+    <div class="posts-table">
+        {{range .GenrePosts}}
+        <div class="table-row">
+            <div class="status-icon">
+                <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
+            </div>
+            <div class="subjects">
+                <a class="titlefont" href="/post/view?id={{.ID}}">{{.Title}}</a>
+                <br>
+                <span class="genre">{{.Genre}}</span>
+            </div>
+        </div>
+        {{else}}
+        <p>No posts available in this category.</p>
+        {{end}}
+    </div>
+</div>
+
+    <!-- My Posts Category -->
+    <div class="category">
+        <h3>My Posts</h3>
+        <div class="posts-table">
+            {{range .MyPosts}}
+            <div class="table-row">
+                <div class="status-icon">
+                    <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
+                </div>
+                <div class="subjects">
+                    <a class="titlefont" href="/post/view?id={{.ID}}">{{.Title}}</a>
+                    <br>
+                </div>
+            </div>
+            {{else}}
+            <p>No posts available in this category.</p>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- My Likes Category -->
+    <div class="category">
+        <h3>My Likes</h3>
+        <div class="posts-table">
+            {{range .LikedPosts}}
+            <div class="table-row">
+                <div class="status-icon">
+                    <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
+                </div>
+                <div class="subjects">
+                    <a class="titlefont" href="/post/view?id={{.ID}}">{{.Title}}</a>
+                    <br>
+                </div>
+            </div>
+            {{else}}
+            <p>No posts available in this category.</p>
+            {{end}}
+        </div>
+    </div>
+</section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
+    </footer>
+</body>
+</html>

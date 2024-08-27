@@ -40,6 +40,11 @@ type Post struct {
 	Images          []PostImage    // List of images associated with the post
 }
 
+type Category struct {
+    Name  string
+    Posts []Post
+}
+
 // Pagination represents pagination data for listing posts.
 type Pagination struct {
 	CurrentPage int // Current page number
@@ -58,6 +63,7 @@ type PageData struct {
 	CurrentPage   int
 	TotalPages    int
 	Filter        FilterParams
+    Categories    []Category
 }
 
 type FilterParams struct {
@@ -846,75 +852,98 @@ func deletePostLikesAndCommentsTx(tx *sql.Tx, postID string) error {
 	return nil
 }
 
-////////////////////////////////////////////////7
 
-/*
-func UploadImage(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
-
-    err := r.ParseMultipartForm(10 << 20) // 10 MB
+// CategoriesHandler handles the request to fetch and display categories and their posts.
+func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
+    // Fetch categories and their associated posts from the database
+    categories, err := fetchCategoriesWithPosts()
     if err != nil {
-        http.Error(w, "Unable to parse form", http.StatusBadRequest)
+        http.Error(w, "Unable to fetch categories", http.StatusInternalServerError)
         return
     }
 
-    file, handler, err := r.FormFile("image")
+    // Extract session ID from cookies
+    sessionCookie, err := r.Cookie("session_id")
     if err != nil {
-        http.Error(w, "Error retrieving the file", http.StatusBadRequest)
-        return
-    }
-    defer file.Close()
-
-    // Ensure the uploads directory exists
-    uploadsDir := "uploads/"
-    if err := os.MkdirAll(uploadsDir, os.ModePerm); err != nil {
-        log.Println("Error creating uploads directory:", err)
-        http.Error(w, "Unable to create directory", http.StatusInternalServerError)
+        http.Error(w, "Unable to retrieve session", http.StatusUnauthorized)
         return
     }
 
-    fileName := uuid.New().String() + "_" + handler.Filename
-    filePath := uploadsDir + fileName
+    // Use session data from the request context
+    sessionData, authenticated := session.GetSession(sessionCookie.Value)
+    if !authenticated {
+        http.Error(w, "User not authenticated", http.StatusUnauthorized)
+        return
+    }
 
-    dst, err := os.Create(filePath)
+    // Prepare data for rendering the template
+    data := PageData{
+        Authenticated: sessionData.Authenticated,
+        Username:      sessionData.Username,
+        Categories:    categories,
+    }
+
+    // Parse and execute the template
+    tmpl, err := template.ParseFiles("templates/postlist.html")
     if err != nil {
-		log.Println("Error creating file:", err)
-        http.Error(w, "Unable to create the file", http.StatusInternalServerError)
+        http.Error(w, "Unable to load template", http.StatusInternalServerError)
         return
     }
-    defer dst.Close()
 
-    _, err = io.Copy(dst, file)
+    err = tmpl.Execute(w, data)
     if err != nil {
-		log.Println("Error saving file:", err)
-        http.Error(w, "Unable to save the file", http.StatusInternalServerError)
-        return
+        http.Error(w, "Unable to render template", http.StatusInternalServerError)
     }
-
-    log.Println("File saved successfully:", filePath)
-
-    userID, _ := r.Context().Value(session.UserID).(int)
-    postID := r.FormValue("post_id")
-    postImage := PostImage{
-        ID:        uuid.New().String(),
-        PostID:    postID,
-        UserID:    userID,
-        ImagePath: filePath,
-        CreatedAt: sql.NullTime{Time: time.Now(), Valid: true},
-    }
-
-    err = savePostImageToDB(postImage)
-    if err != nil {
-		log.Println("Error saving image to database:", err)
-        http.Error(w, "Unable to save image information", http.StatusInternalServerError)
-        return
-    }
-
-    log.Println("Image saved to database:", postImage)
-
-    http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
 }
-*/
+
+
+// fetchCategoriesWithPosts fetches categories and their associated posts from the database.
+func fetchCategoriesWithPosts() ([]Category, error) {
+    rows, err := database.DB.Query(`
+        SELECT c.CategoryID, c.CategoryName, p.PostID, p.Title, p.Content, u.Username
+        FROM Category c
+        LEFT JOIN Post p ON c.CategoryID = p.CategoryID
+        LEFT JOIN User u ON p.UserID = u.UserID
+        ORDER BY c.CategoryName, p.CreatedAt DESC
+    `)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    categoriesMap := make(map[int]*Category)
+    for rows.Next() {
+        var categoryID int
+        var categoryName, postID, title, content, username sql.NullString
+
+        err := rows.Scan(&categoryID, &categoryName, &postID, &title, &content, &username)
+        if err != nil {
+            return nil, err
+        }
+
+        if _, exists := categoriesMap[categoryID]; !exists {
+            categoriesMap[categoryID] = &Category{
+                Name:  categoryName.String,
+                Posts: []Post{},
+            }
+        }
+
+        if postID.Valid {
+            categoriesMap[categoryID].Posts = append(categoriesMap[categoryID].Posts, Post{
+                ID:       postID.String,
+                Title:    title.String,
+                Content:  content.String,
+                Username: username.String,
+            })
+        }
+    }
+
+    var categories []Category
+    for _, category := range categoriesMap {
+        categories = append(categories, *category)
+    }
+
+    return categories, nil
+}
+
+////////////////////////////////////////////////

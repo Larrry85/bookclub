@@ -560,3 +560,44 @@ footer p {
         transform: translateY(0);
     }
 }
+
+
+/* ----------------------------Posts---------------------------- */
+/* Add styles for categories and posts */
+/* Add styles for categories and posts */
+.categories {
+    margin: 20px;
+}
+
+.category {
+    margin-bottom: 30px;
+}
+
+.category h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.posts-table {
+    display: flex;
+    flex-direction: column;
+}
+
+.table-row {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.status-icon {
+    margin-right: 10px;
+}
+
+.subjects {
+    flex: 1;
+}
+
+.replies, .actions {
+    margin-left: 20px;
+}
