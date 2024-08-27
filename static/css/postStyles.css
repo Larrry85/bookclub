@@ -583,12 +583,7 @@ footer p {
     flex-direction: column;
 }
 
-.table-row {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-}
+
 
 .status-icon {
     margin-right: 10px;
