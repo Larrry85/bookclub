@@ -54,15 +54,21 @@
                         <button type="submit" name="is_like" value="true">Like</button>
                         <button type="submit" name="is_like" value="false">Dislike</button>
                     </form>
+                    {{end}}
                 </div>
                 <div class="right-buttons">
                     <form action="/post" method="post" class="action-form">
                         <input type="hidden" name="post_id" value="{{.Post.ID}}">
+
+
                         <button type="submit" name="back" value="true" class="action-button">Back</button>
+
                     </form>
+                    {{if .Authenticated}}
                     {{if .SameUser}}
                     <button><a href="#openModal" class="open-modal-btn">Delete Post</a></button>
                     {{end}}
+
                 </div>
             </div>
 
