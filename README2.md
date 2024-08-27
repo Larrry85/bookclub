@@ -58,6 +58,7 @@ if you are logged in:
 
 here you can see youre:
 - Username
+
 - Email
 - number of likes
 - number of dislikes
