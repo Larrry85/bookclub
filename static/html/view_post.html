@@ -40,8 +40,12 @@
         {{end}}
         <section class="post-details">
 
-            <h2>{{.Post.Title}}</h2>
-            <p>{{.Post.Content}}</p>
+            <b><p class="titlefont">{{.Post.Title}}</p></b>
+            <h2></h2>
+
+            <div class="post-content">{{.Post.Content}} <!-- Render content as HTML -->
+            </div>
+
             <br><h2></h2>
             <p>Category: {{.Post.Category}}</p>
             <p>Posted by: {{.Post.Username}}</p>
@@ -93,7 +97,11 @@
         </section>
 
         <section class="replies">
-            <h2>Replies:</h2>
+            {{if .Replies}}
+            <h3 class="biggerheader">Replies:</h3>
+            {{else}}
+            <h2 class="biggerheader">Replies:</h2>
+            {{end}}
             {{if .Replies}}
                 <ul class="reply-list">
                     {{range .Replies}}
@@ -103,9 +111,11 @@
                         {{if .Reply.TaggedUser}}
                         <p><em>Tagged user: {{.Reply.TaggedUser}}</em></p>
                         {{end}}
+                        <h2></h2>
+                        <p class="post-content">{{.Reply.Content}}</p>
+                        <h2></h2>
 
-                        <br><p class="reply-content">{{.Reply.Content}}</p>
-                        <br><p>Likes: {{.LikesCount}} | Dislikes: {{.DislikesCount}}</p>
+                        <p>Likes: {{.LikesCount}} | Dislikes: {{.DislikesCount}}</p>
                         {{if $.Authenticated}} <!-- Ensure user is authenticated before showing like/dislike buttons -->
                         <div class="left-buttons">
                             <form action="/like/comment" method="post">
@@ -131,7 +141,6 @@
             <h3>Add a Reply:</h3>
             <form action="/post/reply" method="POST">
                 <input type="hidden" name="postID" value="{{.Post.ID}}">
-                <label for="content">Reply:</label>
                 <textarea id="content" name="content" required></textarea>
                 
                 <select name="tagged_user">

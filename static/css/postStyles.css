@@ -90,11 +90,21 @@ main {
 }
 
 h2 {
-    font-size: 1.75rem; /* Size of the heading text */
+    font-size: 1.3rem; /* Size of the heading text */
     margin-bottom: 1rem; /* Space below the heading */
     color: #333; /* Dark gray text color */
     border-bottom: 3px solid #bda0d0; /* Light purple bottom border for emphasis */
     padding-bottom: 0.5rem; /* Padding below the heading text */
+}
+
+h3 {
+    font-size: 1.3rem; /* Size of the heading text */
+    margin-bottom: 1rem; /* Space below the heading */
+    color: #333; /* Dark gray text color */
+    padding-bottom: 0.5rem; /* Padding below the heading text */
+}
+.biggerheader {
+    font-size: 1.75rem; /* Size of the heading text */
 }
 
 /* ----------------------------Styles for various sections including posts and comments---------------------------- */
@@ -305,13 +315,29 @@ button:hover {
 }
 
 /* Username in the Reply */
-.table-row .titlefont {
-    font-size: 1.5rem;
+.table-row {
+    font-size: 1rem;
+}
+
+.titlefont {
+    font-size: 1.2rem;
 }
 
 
 .table-row:hover {
     background-color: #f1f1f1; /* Light gray background on hover */
+}
+
+
+.post-content {
+    white-space: pre-wrap; /* Preserve whitespace and line breaks */
+}
+
+/* Style the button */
+.postpagebutton {
+    display: flex;
+    justify-content: center; /* Center content horizontally */
+    align-items: center;     /* Center content vertically */
 }
 
 /* ----------------------------Status icon styles---------------------------- */
@@ -560,8 +586,3 @@ footer p {
         transform: translateY(0);
     }
 }
-
-
-/* ----------------------------Posts---------------------------- */
-/* Add styles for categories and posts */
-/* Add styles for categories and posts */

@@ -57,10 +57,10 @@
                     <option value="Historical">Historical</option>
                     </select>
         
-                    <label for="image">Image:</label>
-                    <input type="file" id="image" name="image" accept="image/*">
+                   <!-- <label for="image">Image:</label>
+                    <input type="file" id="image" name="image" accept="image/*">-->
                     
-                    <button type="submit">Post</button>
+                    <button type="submit" class="postpagebutton">Post</button>
                 </form>
             </section>
             {{else}}
@@ -68,47 +68,59 @@
             {{end}}
 
             <section class="filter-posts">
-                <h2>Filter Posts</h2>
+                <h2>Filter Posts by</h2>
                 <form action="/filter" method="get">
-                {{if .Authenticated}}
-                    <label for="time-filter">Sort by Time:</label>
-                    <select id="time-filter" name="sort">
-                        <option value="">All</option>
-                        <option value="asc">Oldest First</option>
-                        <option value="desc">Newest First</option>
+
+                    <label for="category-filter">Category:</label>
+                    <select id="category-filter" name="category">
+                        <option value="all">All</option>
+                        <option value="General">General</option>
+                        <option value="Thriller">Thriller</option>
+                        <option value="Fantasy">Fantasy</option>
+                        <option value="Science fiction">Science Fiction</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Mystery">Mystery</option>
+                        <option value="Adventure">Adventure</option>
+                        <option value="Historical">Historical</option>
                     </select>
-                    <label for="likes-filter">Sort by Likes:</label>
+
+                </select>
+                <label for="replies-filter">Replies:</label>
+                <select id="replies-filter" name="replies">
+                <option value="">All</option>
+                <option value="asc">Least Replies</option>
+                <option value="desc">Most Replies</option>
+                </select>
+
+                {{if .Authenticated}}
+                   <label for="likes-filter">Likes:</label>
                     <select id="likes-filter" name="likes">
                     <option value="">All</option>
                     <option value="asc">Least Likes</option>
                     <option value="desc">Most Likes</option>
                     </select>
-                {{end}}
-                <label for="category-filter">Category:</label>
-                <select id="category-filter" name="category">
-                    <option value="all">All</option>
-                    <option value="General">General</option>
-                    <option value="Thriller">Thriller</option>
-                    <option value="Fantasy">Fantasy</option>
-                    <option value="Science fiction">Science Fiction</option>
-                    <option value="Romance">Romance</option>
-                    <option value="Mystery">Mystery</option>
-                    <option value="Adventure">Adventure</option>
-                    <option value="Historical">Historical</option>
-                </select>
-                <button type="submit">Filter</button>
+
+                   <label for="time-filter">Time:</label>
+                    <select id="time-filter" name="sort">
+                        <option value="">All</option>
+                        <option value="asc">Oldest First</option>
+                        <option value="desc">Newest First</option>
+                    </select>
+                    {{end}}  
+
+                <br><button type="submit" class="postpagebutton">Filter</button>
                 </form>
             </section>
         </div>
 
         <section class="posts">
-            <h2>Posts</h2><br>
+            <h2 class="biggerheader">Posts</h2><br>
             <div class="posts-table">
                 <div class="table-head">
                     <div class="status"></div>
                     <div class="subjects">Title</div>
-                    <div class="replies">Replies</div>
-                    <div class="actions">Likes</div>
+                    <div class="subjects">Replies</div>
+                    <div class="subjects">Likes</div>
                 </div>
                 {{range .Posts}}
                 <div class="table-row">
@@ -116,16 +128,16 @@
                         <i class="fa-solid fa-book-open-reader" style="color: #B197FC;"></i>
                     </div>
                     <div class="subjects">
-                        <a class="titlefont" href="/post/view?id={{.ID}}">{{.Title}}</a>
+                        <a class="titlefont" href="/post/view?id={{.ID}}"><b>{{.Title}}</b></a>
                         <br>
-                        Started by <b>{{.Username}}</b>
+                        <p>Started by {{.Username}}</p>
                         <p>Category: {{.Category}}</p>
                         <p>Last Reply: {{.LastReplyUser.String}}</p>
                     </div>
-                    <div class="replies">
+                    <div class="subjects">
                         {{.RepliesCount}} replies
                     </div>
-                    <div class="actions">
+                    <div class="subjects">
                         <p>Likes: {{ .Likes }}</p>
                         <p>Dislikes: {{ .Dislikes }}</p>
                     </div>
