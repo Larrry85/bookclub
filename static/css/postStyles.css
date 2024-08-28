@@ -315,8 +315,12 @@ button:hover {
 }
 
 /* Username in the Reply */
-.table-row .titlefont {
-    font-size: 1.3rem;
+.table-row {
+    font-size: 1rem;
+}
+
+.titlefont {
+    font-size: 1.2rem;
 }
 
 
