@@ -590,6 +590,9 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	pageSize := 10
 	if pageSizeParam != "" {
 		pageSize, _ = strconv.Atoi(pageSizeParam)
+		if pageSize < 1 {
+			pageSize = 10 // Default to 10 if pageSize is zero or negative
+		}
 	}
 	offset := (currentPage - 1) * pageSize
 
@@ -615,23 +618,23 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct SQL query with filtering, sorting, and pagination
 	query := `
-    SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
-           COALESCE(l.Likes, 0) AS Likes, 
-           COALESCE(l.Dislikes, 0) AS Dislikes, 
-           p.CreatedAt
-    FROM Post p
-    LEFT JOIN (
-        SELECT PostID, 
-               SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
-               SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
-        FROM PostLikes
-        GROUP BY PostID
-    ) l ON p.PostID = l.PostID
-    WHERE ` + categoryCondition + `
-    ORDER BY 
-        p.CreatedAt ` + sortOrder + `,
-        l.Likes ` + likesOrder + `
-    LIMIT ? OFFSET ?`
+        SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
+               COALESCE(l.Likes, 0) AS Likes, 
+               COALESCE(l.Dislikes, 0) AS Dislikes, 
+               p.CreatedAt
+        FROM Post p
+        LEFT JOIN (
+            SELECT PostID, 
+                   SUM(CASE WHEN IsLike = 1 THEN 1 ELSE 0 END) AS Likes,
+                   SUM(CASE WHEN IsLike = 0 THEN 1 ELSE 0 END) AS Dislikes
+            FROM PostLikes
+            GROUP BY PostID
+        ) l ON p.PostID = l.PostID
+        WHERE ` + categoryCondition + `
+        ORDER BY 
+            p.CreatedAt ` + sortOrder + `,
+            l.Likes ` + likesOrder + `
+        LIMIT ? OFFSET ?`
 
 	// Append limit and offset to args
 	args = append(args, pageSize, offset)
