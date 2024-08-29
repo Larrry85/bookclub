@@ -587,10 +587,8 @@ footer p {
     }
 }
 
-.editpostcontent textarea {
-    height: 60rem; /* Sets a fixed height for the textarea */
+.editpostcontent {
+    height: 20rem; /* Sets a fixed height for the textarea */
+    width: 35rem;
 }
-.modaledit {
-    width: 100rem;
-    height: 100rem;
-}
+
