@@ -1,51 +1,78 @@
 ```
-┌───────────┐        ┌───────────┐        ┌───────────┐
-│   User    │        │  Category │        │  Session  │
-│───────────│        │───────────│        │───────────│
-│ UserID PK │◄──────┬│ CategoryID│        │ SessionID │
-│ Username  │       ││ Name      │        │ UserID FK │
-│ Email     │       │└───────────┘        │ Authenticated│
-│ Password  │       │                      │ Username  │
-└───────────┘       │                      └───────────┘
-    │               │                          ▲
-    │  ┌───────────►│                          │
-    │  │            │                          │
-    │  │            │                          │
-    ▼  │            │                          │
-┌───────────┐       │                          │
-│   Post    │       │                          │
-│───────────│       │                          │
-│ PostID PK │       │                          │
-│ Title     │       │                          │
-│ Content   │       │                          │
-│ CategoryID│──────►┘                          │
-│ UserID FK │                                  │
-└───────────┘                                  │
-    ▲                                          │
-    │                                          │
-    │                                          │
-    │                                          │
-    │                                          │
-    │     ┌─────────────┐                      │
-    │     │ LikeDislike │                      │
-    │     ├─────────────┤                      │
-    │     │ LikeDislikeID│                      │
-    │     │ PostID FK    │                      │
-    └────►│ UserID FK    │                      │
-          │ Type         │                      │
-          └─────────────┘                      │
-                                               │
-                                               │
-                                               │
-                                               │
-                                               │
-      ┌────────────┐                           │
-      │  Comment   │                           │
-      ├────────────┤                           │
-      │ CommentID  │                           │
-      │ Content    │                           │
-      │ PostID FK  │◄──────────────────────────┘
-      │ UserID FK  │
-      └────────────┘
+
+┌────────────┐        ┌──────────────┐      ┌───────────┐
+│   User     │        │  Category    │      │  Session  │
+│────────────│        │──────────────│      │───────────│
+│ UserID PK  │◄───────│ CategoryID   │      │ SessionID │
+│ Username   │        │ CategoryName │      │ UserID FK │
+│ Email      │        └──────────────┘      │ CreatedAt │
+│ Password   │                              └───────────┘
+└────────────┘              ▲                      ▲
+    │                       │                      │
+    │                       │                      │
+    │                       │                      │
+    ▼                       │                      │
+┌───────────────┐           │                      │
+│   Post        │           │                      │
+│───────────────│           │                      │
+│ PostID PK     │──────────►┘                      │
+│ Title         │                                  │
+│ Content       │                                  │
+│ CategoryID FK │                                  │
+│ UserID FK     │                                  │
+│ LikesCount    │                                  │
+│ DislikesCount │                                  │
+│ LastReplyUser │                                  │
+│ LastReplyDate │                                  │
+│ CreatedAt     │                                  │
+└───────────────┘                                  │
+    ▲                                              │
+    │                                              │
+    │                                              │
+    │                                              │
+    │                                              │
+    │     ┌──────────────┐                         │
+    │     │ PostLikes    │                         │
+    │     ├──────────────┤                         │
+    │     │ UserID FK    │                         │
+    │     │ PostID FK    │                         │
+    │     │ IsLike       │                         │
+    └────►└──────────────┘                        │
+                                                 │
+                                                 │
+                                                 │
+                                                 │
+                                                 │
+      ┌──────────────────────┐                   │
+      │  Comment             │                   │
+      ├──────────────────────┤                   │
+      │ CommentID PK         │                   │
+      │ Content              │                   │
+      │ PostID FK            │◄──────────────────┘
+      │ UserID FK            │
+      │ CommentLikesCount    │
+      │ CommentDislikesCount │
+      │ TaggedUser           │
+      │ CreatedAt            │
+      └──────────────────────┘
+           │
+           ▼
+┌──────────────┐
+│ PostImage    │
+├──────────────┤
+│ ID PK        │
+│ PostID FK    │
+│ UserID FK    │
+│ ImagePath    │
+│ CreatedAt    │
+└──────────────┘
+
+┌──────────────┐
+│ CommentLikes │
+├──────────────┤
+│ UserID FK    │
+│ CommentID FK │
+│ IsLike       │
+└──────────────┘
 
 ```
