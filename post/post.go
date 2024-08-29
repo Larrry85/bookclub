@@ -67,9 +67,9 @@ type PageData struct {
 }
 
 type FilterParams struct {
-	Category   string
-	SortOrder  string
-	LikesOrder string
+	Category     string
+	SortOrder    string
+	LikesOrder   string
 	RepliesOrder string
 }
 
@@ -564,74 +564,74 @@ func fetchUsers() ([]string, error) {
 ///////////////Filter posts ////////////////////
 
 func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
-    // Retrieve filter, sort, and pagination parameters from query
-    category := r.URL.Query().Get("category")
-    sortOrder := r.URL.Query().Get("sort")
-    likesOrder := r.URL.Query().Get("likes")
-    repliesOrder := r.URL.Query().Get("replies")
-    pageParam := r.URL.Query().Get("page")
-    pageSizeParam := r.URL.Query().Get("pageSize")
+	// Retrieve filter, sort, and pagination parameters from query
+	category := r.URL.Query().Get("category")
+	sortOrder := r.URL.Query().Get("sort")
+	likesOrder := r.URL.Query().Get("likes")
+	repliesOrder := r.URL.Query().Get("replies")
+	pageParam := r.URL.Query().Get("page")
+	pageSizeParam := r.URL.Query().Get("pageSize")
 
-    // Default values for sorting if not provided
-    if sortOrder == "" {
-        sortOrder = "desc"
-    }
-    if likesOrder == "" {
-        likesOrder = "desc"
-    }
-    if repliesOrder == "" {
-        repliesOrder = "desc"
-    }
+	// Default values for sorting if not provided
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+	if likesOrder == "" {
+		likesOrder = "desc"
+	}
+	if repliesOrder == "" {
+		repliesOrder = "desc"
+	}
 
-    // Default values for pagination if not provided
-    currentPage := 1
-    if pageParam != "" {
-        var err error
-        currentPage, err = strconv.Atoi(pageParam)
-        if err != nil || currentPage < 1 {
-            currentPage = 1
-        }
-    }
-    pageSize := 10
-    if pageSizeParam != "" {
-        pageSize, _ = strconv.Atoi(pageSizeParam)
-        if pageSize < 1 {
-            pageSize = 10 // Default to 10 if pageSize is zero or negative
-        }
-    }
-    offset := (currentPage - 1) * pageSize
+	// Default values for pagination if not provided
+	currentPage := 1
+	if pageParam != "" {
+		var err error
+		currentPage, err = strconv.Atoi(pageParam)
+		if err != nil || currentPage < 1 {
+			currentPage = 1
+		}
+	}
+	pageSize := 10
+	if pageSizeParam != "" {
+		pageSize, _ = strconv.Atoi(pageSizeParam)
+		if pageSize < 1 {
+			pageSize = 10 // Default to 10 if pageSize is zero or negative
+		}
+	}
+	offset := (currentPage - 1) * pageSize
 
-    // Prepare category condition
-    var categoryCondition string
-    var args []interface{}
+	// Prepare category condition
+	var categoryCondition string
+	var args []interface{}
 
-    if category == "all" || category == "" {
-        categoryCondition = "1=1" // No filter
-    } else {
-        categoryCondition = "p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ?)"
-        args = append(args, category)
-    }
+	if category == "all" || category == "" {
+		categoryCondition = "1=1" // No filter
+	} else {
+		categoryCondition = "p.CategoryID = (SELECT CategoryID FROM Category WHERE CategoryName = ?)"
+		args = append(args, category)
+	}
 
-    // Fetch total number of posts matching the filter criteria
-    var totalPosts int
-    err := database.DB.QueryRow("SELECT COUNT(*) FROM Post p WHERE "+categoryCondition, args...).Scan(&totalPosts)
-    if err != nil {
-        http.Error(w, "Could not retrieve total post count", http.StatusInternalServerError)
-        log.Printf("Error retrieving total post count: %v", err)
-        return
-    }
+	// Fetch total number of posts matching the filter criteria
+	var totalPosts int
+	err := database.DB.QueryRow("SELECT COUNT(*) FROM Post p WHERE "+categoryCondition, args...).Scan(&totalPosts)
+	if err != nil {
+		http.Error(w, "Could not retrieve total post count", http.StatusInternalServerError)
+		log.Printf("Error retrieving total post count: %v", err)
+		return
+	}
 
-    // Construct dynamic ORDER BY clause
-    orderByClause := "p.CreatedAt " + sortOrder
-    if likesOrder != "" {
-        orderByClause += ", l.Likes " + likesOrder
-    }
-    if repliesOrder != "" {
-        orderByClause += ", c.RepliesCount " + repliesOrder
-    }
+	// Construct dynamic ORDER BY clause
+	orderByClause := "p.CreatedAt " + sortOrder
+	if likesOrder != "" {
+		orderByClause += ", l.Likes " + likesOrder
+	}
+	if repliesOrder != "" {
+		orderByClause += ", c.RepliesCount " + repliesOrder
+	}
 
-    // Construct SQL query with filtering, sorting, and pagination
-    query := `
+	// Construct SQL query with filtering, sorting, and pagination
+	query := `
     SELECT p.PostID, p.Title, p.Content, p.UserID, p.CategoryID, 
            COALESCE(l.Likes, 0) AS Likes, 
            COALESCE(l.Dislikes, 0) AS Dislikes, 
@@ -654,93 +654,93 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
     ORDER BY ` + orderByClause + `
     LIMIT ? OFFSET ?`
 
-    // Append limit and offset to args
-    args = append(args, pageSize, offset)
+	// Append limit and offset to args
+	args = append(args, pageSize, offset)
 
-    // Execute the query
-    rows, err := database.DB.Query(query, args...)
-    if err != nil {
-        http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
-        log.Printf("Error retrieving posts: %v", err)
-        return
-    }
-    defer rows.Close()
+	// Execute the query
+	rows, err := database.DB.Query(query, args...)
+	if err != nil {
+		http.Error(w, "Could not retrieve posts", http.StatusInternalServerError)
+		log.Printf("Error retrieving posts: %v", err)
+		return
+	}
+	defer rows.Close()
 
-    var posts []Post
-    for rows.Next() {
-        var post Post
-        err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID, &post.CategoryID, &post.Likes, &post.Dislikes, &post.CreatedAt, &post.RepliesCount)
-        if err != nil {
-            http.Error(w, "Could not scan post", http.StatusInternalServerError)
-            log.Printf("Error scanning post: %v", err)
-            return
-        }
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID, &post.CategoryID, &post.Likes, &post.Dislikes, &post.CreatedAt, &post.RepliesCount)
+		if err != nil {
+			http.Error(w, "Could not scan post", http.StatusInternalServerError)
+			log.Printf("Error scanning post: %v", err)
+			return
+		}
 
-        // Fetch the category name for each post
-        var categoryName string
-        err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
-        if err != nil {
-            http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
-            log.Printf("Error retrieving category: %v", err)
-            return
-        }
-        post.Category = categoryName
+		// Fetch the category name for each post
+		var categoryName string
+		err = database.DB.QueryRow(`SELECT CategoryName FROM Category WHERE CategoryID = ?`, post.CategoryID).Scan(&categoryName)
+		if err != nil {
+			http.Error(w, "Could not retrieve category", http.StatusInternalServerError)
+			log.Printf("Error retrieving category: %v", err)
+			return
+		}
+		post.Category = categoryName
 
-        // Fetch the username for each post
-        var username string
-        err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
-        if err != nil {
-            http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
-            log.Printf("Error retrieving username: %v", err)
-            return
-        }
-        post.Username = username
+		// Fetch the username for each post
+		var username string
+		err = database.DB.QueryRow(`SELECT Username FROM User WHERE UserID = ?`, post.UserID).Scan(&username)
+		if err != nil {
+			http.Error(w, "Could not retrieve username", http.StatusInternalServerError)
+			log.Printf("Error retrieving username: %v", err)
+			return
+		}
+		post.Username = username
 
-        posts = append(posts, post)
-    }
+		posts = append(posts, post)
+	}
 
-    // Calculate the total number of pages
-    totalPages := (totalPosts + pageSize - 1) / pageSize
+	// Calculate the total number of pages
+	totalPages := (totalPosts + pageSize - 1) / pageSize
 
-    // Set up the pagination data
-    pagination := Pagination{
-        CurrentPage: currentPage,
-        TotalPages:  totalPages,
-        PageSize:    pageSize,
-    }
+	// Set up the pagination data
+	pagination := Pagination{
+		CurrentPage: currentPage,
+		TotalPages:  totalPages,
+		PageSize:    pageSize,
+	}
 
-    // Use session data from the request context
-    authenticated := r.Context().Value(session.Authenticated).(bool)
-    username := r.Context().Value(session.Username).(string)
+	// Use session data from the request context
+	authenticated := r.Context().Value(session.Authenticated).(bool)
+	username := r.Context().Value(session.Username).(string)
 
-    // Prepare data for rendering the template
-    data := PageData{
-        Posts:         posts,
-        Pagination:    pagination,
-        Authenticated: authenticated,
-        Username:      username,
-        Filter: FilterParams{
-            Category:   category,
-            SortOrder:  sortOrder,
-            LikesOrder: likesOrder,
-            RepliesOrder: repliesOrder,
-        },
-    }
+	// Prepare data for rendering the template
+	data := PageData{
+		Posts:         posts,
+		Pagination:    pagination,
+		Authenticated: authenticated,
+		Username:      username,
+		Filter: FilterParams{
+			Category:     category,
+			SortOrder:    sortOrder,
+			LikesOrder:   likesOrder,
+			RepliesOrder: repliesOrder,
+		},
+	}
 
-    tmpl, err := template.New("post.html").Funcs(template.FuncMap{
-        "add": add,
-        "sub": sub,
-    }).ParseFiles("static/html/post.html")
-    if err != nil {
-        http.Error(w, "Template parsing error", http.StatusInternalServerError)
-        log.Printf("Error details: %v", err)
-        return
-    }
-    if err := tmpl.ExecuteTemplate(w, "post.html", data); err != nil {
-        http.Error(w, "Template execution error", http.StatusInternalServerError)
-        log.Printf("Error details: %v", err)
-        return
-    }
+	tmpl, err := template.New("post.html").Funcs(template.FuncMap{
+		"add": add,
+		"sub": sub,
+	}).ParseFiles("static/html/post.html")
+	if err != nil {
+		http.Error(w, "Template parsing error", http.StatusInternalServerError)
+		log.Printf("Error details: %v", err)
+		return
+	}
+	if err := tmpl.ExecuteTemplate(w, "post.html", data); err != nil {
+		http.Error(w, "Template execution error", http.StatusInternalServerError)
+		log.Printf("Error details: %v", err)
+		return
+	}
 }
 
 func savePostImageToDB(postImage PostImage) error {
@@ -988,92 +988,92 @@ func fetchLikedPosts(userID int) ([]Post, error) {
 	return likedPosts, nil
 }
 
-//////////////////////////////////////////////////////////////////////7
+// ////////////////////////////////////////////////////////////////////7
 // EditPostHandler handles requests to edit a post
 func EditPostHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method == http.MethodPost {
-        postID := r.FormValue("postID")
-        content := r.FormValue("content")
+	if r.Method == http.MethodPost {
+		postID := r.FormValue("postID")
+		content := r.FormValue("content")
 
-        // Debug statements
-        log.Printf("Received form data - postID: %s, content: %s", postID, content)
+		// Debug statements
+		log.Printf("Received form data - postID: %s, content: %s", postID, content)
 
-        if postID == "" || content == "" {
-            log.Printf("Missing form data - postID: %s, content: %s", postID, content)
-            http.Error(w, "Missing form data", http.StatusBadRequest)
-            return
-        }
+		if postID == "" || content == "" {
+			log.Printf("Missing form data - postID: %s, content: %s", postID, content)
+			http.Error(w, "Missing form data", http.StatusBadRequest)
+			return
+		}
 
-        // Update the post content in the database
-        result, err := database.DB.Exec(`UPDATE Post SET Content = ? WHERE PostID = ?`, content, postID)
-        if err != nil {
-            log.Printf("Error updating post: %v", err)
-            http.Error(w, "Error updating post", http.StatusInternalServerError)
-            return
-        }
+		// Update the post content in the database
+		result, err := database.DB.Exec(`UPDATE Post SET Content = ? WHERE PostID = ?`, content, postID)
+		if err != nil {
+			log.Printf("Error updating post: %v", err)
+			http.Error(w, "Error updating post", http.StatusInternalServerError)
+			return
+		}
 
-        // Check if the update affected any rows
-        rowsAffected, err := result.RowsAffected()
-        if err != nil {
-            log.Printf("Error fetching rows affected: %v", err)
-            http.Error(w, "Error updating post", http.StatusInternalServerError)
-            return
-        }
-        if rowsAffected == 0 {
-            log.Printf("No rows affected for postID: %s", postID)
-            http.Error(w, "Post not found", http.StatusNotFound)
-            return
-        }
+		// Check if the update affected any rows
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			log.Printf("Error fetching rows affected: %v", err)
+			http.Error(w, "Error updating post", http.StatusInternalServerError)
+			return
+		}
+		if rowsAffected == 0 {
+			log.Printf("No rows affected for postID: %s", postID)
+			http.Error(w, "Post not found", http.StatusNotFound)
+			return
+		}
 
-        log.Printf("Successfully updated postID: %s", postID)
-        http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
-    } else {
-        log.Printf("Invalid request method: %s", r.Method)
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-    }
+		log.Printf("Successfully updated postID: %s", postID)
+		http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
+	} else {
+		log.Printf("Invalid request method: %s", r.Method)
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+	}
 }
 
 // EditReplyHandler handles requests to edit a reply
 func EditReplyHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method == http.MethodPost {
-        replyID := r.FormValue("replyID")
-        postID := r.FormValue("postID")
-        content := r.FormValue("content")
+	if r.Method == http.MethodPost {
+		replyID := r.FormValue("replyID")
+		postID := r.FormValue("postID")
+		content := r.FormValue("content")
 
-        // Debug statements
-        log.Printf("Received form data - replyID: %s, postID: %s, content: %s", replyID, postID, content)
+		// Debug statements
+		log.Printf("Received form data - replyID: %s, postID: %s, content: %s", replyID, postID, content)
 
-        if replyID == "" || postID == "" || content == "" {
-            log.Printf("Missing form data - replyID: %s, postID: %s, content: %s", replyID, postID, content)
-            http.Error(w, "Missing form data", http.StatusBadRequest)
-            return
-        }
+		if replyID == "" || postID == "" || content == "" {
+			log.Printf("Missing form data - replyID: %s, postID: %s, content: %s", replyID, postID, content)
+			http.Error(w, "Missing form data", http.StatusBadRequest)
+			return
+		}
 
-        // Update the reply in the database
-        result, err := database.DB.Exec(`UPDATE Comment SET Content = ? WHERE CommentID = ?`, content, replyID)
-        if err != nil {
-            log.Printf("Error updating reply: %v", err)
-            http.Error(w, "Error updating reply", http.StatusInternalServerError)
-            return
-        }
+		// Update the reply in the database
+		result, err := database.DB.Exec(`UPDATE Comment SET Content = ? WHERE CommentID = ?`, content, replyID)
+		if err != nil {
+			log.Printf("Error updating reply: %v", err)
+			http.Error(w, "Error updating reply", http.StatusInternalServerError)
+			return
+		}
 
-        // Check if the update affected any rows
-        rowsAffected, err := result.RowsAffected()
-        if err != nil {
-            log.Printf("Error fetching rows affected: %v", err)
-            http.Error(w, "Error updating reply", http.StatusInternalServerError)
-            return
-        }
-        if rowsAffected == 0 {
-            log.Printf("No rows affected for replyID: %s", replyID)
-            http.Error(w, "Reply not found", http.StatusNotFound)
-            return
-        }
+		// Check if the update affected any rows
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			log.Printf("Error fetching rows affected: %v", err)
+			http.Error(w, "Error updating reply", http.StatusInternalServerError)
+			return
+		}
+		if rowsAffected == 0 {
+			log.Printf("No rows affected for replyID: %s", replyID)
+			http.Error(w, "Reply not found", http.StatusNotFound)
+			return
+		}
 
-        log.Printf("Successfully updated replyID: %s", replyID)
-        http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
-    } else {
-        log.Printf("Invalid request method: %s", r.Method)
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-    }
+		log.Printf("Successfully updated replyID: %s", replyID)
+		http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
+	} else {
+		log.Printf("Invalid request method: %s", r.Method)
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+	}
 }
