@@ -13,7 +13,8 @@
 <body>
     <header>
         {{if .Authenticated}}
-        <p class="welcome">WELCOME TO</p><h1>LITERARY LIONS FORUM</h1>
+        <p class="welcome">WELCOME TO</p>
+        <h1>LITERARY LIONS FORUM</h1>
         {{else}}
         <h1>LITERARY LIONS FORUM</h1>
         {{end}}
@@ -39,13 +40,9 @@
         <p>You need to <a class="loginlink" href="/login">login</a> to reply.</p>
         {{end}}
         <section class="post-details">
-
             <b><p class="titlefont">{{.Post.Title}}</p></b>
             <h2></h2>
-
-            <div class="post-content">{{.Post.Content}} <!-- Render content as HTML -->
-            </div>
-
+            <div class="post-content">{{.Post.Content}} <!-- Render content as HTML --></div>
             <br><h2></h2>
             <p>Category: {{.Post.Category}}</p>
             <p>Posted by: {{.Post.Username}}</p>
@@ -63,10 +60,7 @@
                 <div class="right-buttons">
                     <form action="/post" method="post" class="action-form">
                         <input type="hidden" name="post_id" value="{{.Post.ID}}">
-
-
                         <button type="submit" name="back" value="true" class="action-button">Back</button>
-
                     </form>
                     {{if .Authenticated}}
                     {{if .SameUser}}
@@ -76,12 +70,8 @@
                     {{if eq $.Username .Post.Username}}
                     <button><a href="#openEditPostModal" class="open-modal-btn">Edit Post</a></button>
                     {{end}}
-
                 </div>
             </div>
-
-
-        
             <!-- Modal structure -->
             <div id="openModal" class="modal">
                 <div class="modal-content">
@@ -96,26 +86,21 @@
                     <br><a href="#" class="action-button cancel-button">Cancel</a>
                 </div>
             </div>
-
-<!-- Edit Post Modal -->
-<div id="openEditPostModal" class="modal">
-    <div class="modal-content">
-        <a href="#" class="close">&times;</a>
-
-        <h1>Edit my Post</h1>
-        <form action="/post/edit" method="POST">
-            <input type="hidden" name="postID" value="{{.Post.ID}}">
-            
-            <label for="content">Content:</label><br>
-            <textarea id="content" name="content" class="editpostcontent" required>{{.Post.Content}}</textarea>
-            <br><button type="submit" class="action-button">Save Changes</button>
-        </form>
-    </div>
-</div>
-
+            <!-- Edit Post Modal -->
+            <div id="openEditPostModal" class="modal">
+                <div class="modal-content">
+                    <a href="#" class="close">&times;</a>
+                    <h1>Edit my Post</h1>
+                    <form action="/post/edit" method="POST">
+                        <input type="hidden" name="postID" value="{{.Post.ID}}">
+                        <label for="content">Content:</label><br>
+                        <textarea id="content" name="content" class="editpostcontent" required>{{.Post.Content}}</textarea>
+                        <br><button type="submit" class="action-button">Save Changes</button>
+                    </form>
+                </div>
+            </div>
             {{end}}
         </section>
-
         <section class="replies">
             {{if .Replies}}
             <h3 class="biggerheader">Replies:</h3>
@@ -127,14 +112,12 @@
                     {{range .Replies}}
                     <li class="reply">
                         <p><strong>{{.Reply.Username}}:</strong> Replied on: {{.FormattedCreatedAt}}</p>
-
                         {{if .Reply.TaggedUser}}
                         <p><em>Tagged user: {{.Reply.TaggedUser}}</em></p>
                         {{end}}
                         <h2></h2>
                         <p class="post-content">{{.Reply.Content}}</p>
                         <h2></h2>
-
                         <p>Likes: {{.LikesCount}} | Dislikes: {{.DislikesCount}}</p>
                         {{if $.Authenticated}} <!-- Ensure user is authenticated before showing like/dislike buttons -->
                         <div class="left-buttons">
@@ -148,24 +131,22 @@
                             <button><a href="#openEditReplyModal" class="open-modal-btn">Edit Reply</a></button>
                             {{end}}
                         </div>
-
-<!-- Modal structure for the reply form -->
-<div id="openEditReplyModal" class="modal">
-    <div class="modal-content">
-        <!-- Close button -->
-        <a href="#" class="close">&times;</a>
-        <!-- Content inside modal -->
-        <h1>Edit my Reply</h1>
-        <form action="/reply/edit" method="POST">
-            <input type="hidden" name="replyID" value="{{.Reply.ID}}">
-            <input type="hidden" name="postID" value="{{$.Post.ID}}">
-
-            <label for="content">Content:</label>
-            <br><textarea id="content" name="content" class="editpostcontent" required>{{.Reply.Content}}</textarea>
-            <br><button type="submit" class="action-button">Save Changes</button>
-        </form>
-    </div>
-</div>
+                        <!-- Modal structure for the reply form -->
+                        <div id="openEditReplyModal" class="modal">
+                            <div class="modal-content">
+                                <!-- Close button -->
+                                <a href="#" class="close">&times;</a>
+                                <!-- Content inside modal -->
+                                <h1>Edit my Reply</h1>
+                                <form action="/reply/edit" method="POST">
+                                    <input type="hidden" name="replyID" value="{{.Reply.ID}}">
+                                    <input type="hidden" name="postID" value="{{$.Post.ID}}">
+                                    <label for="content">Content:</label>
+                                    <br><textarea id="content" name="content" class="editpostcontent" required>{{.Reply.Content}}</textarea>
+                                    <br><button type="submit" class="action-button">Save Changes</button>
+                                </form>
+                            </div>
+                        </div>
                         {{end}}
                     </li>
                     {{else}}
@@ -176,32 +157,23 @@
                 <p>No replies yet.</p>
             {{end}}
         </section>
-
-
-
-
-
-
         {{if .Authenticated}}
         <section class="reply-form">
             <h3>Add a Reply:</h3>
             <form action="/post/reply" method="POST">
                 <input type="hidden" name="postID" value="{{.Post.ID}}">
                 <textarea id="content" name="content" required></textarea>
-                
                 <select name="tagged_user">
                     <option value="">Tag a user</option>
                     {{range .Users}}
                     <option value="{{.}}">{{.}}</option>
                     {{end}}
                 </select>
-
                 <button type="submit">Submit Reply</button>
             </form>
         </section>
         {{end}}
     </main>
-
     <footer>
         <p>&copy; 2024 - Jonathan Dahl & Laura Levistö - KOOD/Sisu</p>
     </footer>
