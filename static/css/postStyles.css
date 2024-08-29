@@ -586,3 +586,11 @@ footer p {
         transform: translateY(0);
     }
 }
+
+.editpostcontent textarea {
+    height: 60rem; /* Sets a fixed height for the textarea */
+}
+.modaledit {
+    width: 100rem;
+    height: 100rem;
+}

@@ -72,6 +72,10 @@
                     {{if .SameUser}}
                     <button><a href="#openModal" class="open-modal-btn">Delete Post</a></button>
                     {{end}}
+                    <!-- Add Edit button for the post if the user is the author -->
+                    {{if eq $.Username .Post.Username}}
+                    <button><a href="#openEditPostModal" class="open-modal-btn">Edit Post</a></button>
+                    {{end}}
 
                 </div>
             </div>
@@ -92,6 +96,22 @@
                     <br><a href="#" class="action-button cancel-button">Cancel</a>
                 </div>
             </div>
+
+<!-- Edit Post Modal -->
+<div id="openEditPostModal" class="modal">
+    <div class="modal-content">
+        <a href="#" class="close">&times;</a>
+
+        <h1>Edit my Post</h1>
+        <form action="/post/edit" method="POST">
+            <input type="hidden" name="postID" value="{{.Post.ID}}">
+            
+            <label for="content">Content:</label><br>
+            <textarea id="content" name="content" class="editpostcontent" required>{{.Post.Content}}</textarea>
+            <br><button type="submit" class="action-button">Save Changes</button>
+        </form>
+    </div>
+</div>
 
             {{end}}
         </section>
@@ -124,7 +144,28 @@
                                 <button type="submit" name="is_like" value="true">Like</button>
                                 <button type="submit" name="is_like" value="false">Dislike</button>
                             </form>
+                            {{if eq $.Username .Reply.Username}}
+                            <button><a href="#openEditReplyModal" class="open-modal-btn">Edit Reply</a></button>
+                            {{end}}
                         </div>
+
+<!-- Modal structure for the reply form -->
+<div id="openEditReplyModal" class="modal">
+    <div class="modal-content">
+        <!-- Close button -->
+        <a href="#" class="close">&times;</a>
+        <!-- Content inside modal -->
+        <h1>Edit my Reply</h1>
+        <form action="/reply/edit" method="POST">
+            <input type="hidden" name="replyID" value="{{.Reply.ID}}">
+            <input type="hidden" name="postID" value="{{$.Post.ID}}">
+
+            <label for="content">Content:</label>
+            <br><textarea id="content" name="content" class="editpostcontent" required>{{.Reply.Content}}</textarea>
+            <br><button type="submit" class="action-button">Save Changes</button>
+        </form>
+    </div>
+</div>
                         {{end}}
                     </li>
                     {{else}}
@@ -135,6 +176,11 @@
                 <p>No replies yet.</p>
             {{end}}
         </section>
+
+
+
+
+
 
         {{if .Authenticated}}
         <section class="reply-form">

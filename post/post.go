@@ -968,3 +968,93 @@ func fetchLikedPosts(userID int) ([]Post, error) {
 
 	return likedPosts, nil
 }
+
+//////////////////////////////////////////////////////////////////////7
+// EditPostHandler handles requests to edit a post
+func EditPostHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == http.MethodPost {
+        postID := r.FormValue("postID")
+        content := r.FormValue("content")
+
+        // Debug statements
+        log.Printf("Received form data - postID: %s, content: %s", postID, content)
+
+        if postID == "" || content == "" {
+            log.Printf("Missing form data - postID: %s, content: %s", postID, content)
+            http.Error(w, "Missing form data", http.StatusBadRequest)
+            return
+        }
+
+        // Update the post content in the database
+        result, err := database.DB.Exec(`UPDATE Post SET Content = ? WHERE PostID = ?`, content, postID)
+        if err != nil {
+            log.Printf("Error updating post: %v", err)
+            http.Error(w, "Error updating post", http.StatusInternalServerError)
+            return
+        }
+
+        // Check if the update affected any rows
+        rowsAffected, err := result.RowsAffected()
+        if err != nil {
+            log.Printf("Error fetching rows affected: %v", err)
+            http.Error(w, "Error updating post", http.StatusInternalServerError)
+            return
+        }
+        if rowsAffected == 0 {
+            log.Printf("No rows affected for postID: %s", postID)
+            http.Error(w, "Post not found", http.StatusNotFound)
+            return
+        }
+
+        log.Printf("Successfully updated postID: %s", postID)
+        http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
+    } else {
+        log.Printf("Invalid request method: %s", r.Method)
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+    }
+}
+
+// EditReplyHandler handles requests to edit a reply
+func EditReplyHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == http.MethodPost {
+        replyID := r.FormValue("replyID")
+        postID := r.FormValue("postID")
+        content := r.FormValue("content")
+
+        // Debug statements
+        log.Printf("Received form data - replyID: %s, postID: %s, content: %s", replyID, postID, content)
+
+        if replyID == "" || postID == "" || content == "" {
+            log.Printf("Missing form data - replyID: %s, postID: %s, content: %s", replyID, postID, content)
+            http.Error(w, "Missing form data", http.StatusBadRequest)
+            return
+        }
+
+        // Update the reply in the database
+        result, err := database.DB.Exec(`UPDATE Comment SET Content = ? WHERE CommentID = ?`, content, replyID)
+        if err != nil {
+            log.Printf("Error updating reply: %v", err)
+            http.Error(w, "Error updating reply", http.StatusInternalServerError)
+            return
+        }
+
+        // Check if the update affected any rows
+        rowsAffected, err := result.RowsAffected()
+        if err != nil {
+            log.Printf("Error fetching rows affected: %v", err)
+            http.Error(w, "Error updating reply", http.StatusInternalServerError)
+            return
+        }
+        if rowsAffected == 0 {
+            log.Printf("No rows affected for replyID: %s", replyID)
+            http.Error(w, "Reply not found", http.StatusNotFound)
+            return
+        }
+
+        log.Printf("Successfully updated replyID: %s", replyID)
+        http.Redirect(w, r, "/post/view?id="+postID, http.StatusSeeOther)
+    } else {
+        log.Printf("Invalid request method: %s", r.Method)
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+    }
+}

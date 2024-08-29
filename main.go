@@ -40,6 +40,10 @@ func main() {
 	http.Handle("/like", session.SessionMiddleware(http.HandlerFunc(like.LikeHandler)))
 	http.Handle("/like/comment", session.SessionMiddleware(http.HandlerFunc(comment.CommentLikeHandler)))
 
+	http.Handle("/post/edit", session.SessionMiddleware(http.HandlerFunc(post.EditPostHandler)))
+	http.Handle("/reply/edit", session.SessionMiddleware(http.HandlerFunc(post.EditReplyHandler)))
+	
+
 	// Define routes that do not use session middleware
 	http.HandleFunc("/confirm", handle.ConfirmEmailHandler)
 	http.HandleFunc("/password-reset-request", handle.PasswordResetRequestHandler)
