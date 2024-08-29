@@ -44,15 +44,18 @@ click the link and you will get to a page where you can input youre new password
 ## Forum
 
 if you are not logged in you can:
-- filter by category
+- filter by category and replies
 - read posts and comments 
 
 if you are logged in:
 - create posts
-- comment on posts
+- reply on posts
+- edit posts
+- edit replies
+- tag users in posts
 - like/dislike post
 - like/dislike comments
-- filter by time/likes/category
+- filter by time/likes/category/replies
 - delete posts
 
 ## My Page / need to be logged in

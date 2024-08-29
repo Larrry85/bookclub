@@ -73,7 +73,7 @@
 
                     <label for="category-filter">Category:</label>
                     <select id="category-filter" name="category">
-                        <option value="all">All</option>
+                        <option value="">All</option>
                         <option value="General">General</option>
                         <option value="Thriller">Thriller</option>
                         <option value="Fantasy">Fantasy</option>
@@ -130,7 +130,8 @@
                     <div class="subjects">
                         <a class="titlefont" href="/post/view?id={{.ID}}"><b>{{.Title}}</b></a>
                         <br>
-                        <p>Started by {{.Username}}</p>
+                        <p>Started by: {{.Username}}</p>
+                        <p>Posted at: {{.CreatedAtFormatted}}</p>
                         <p>Category: {{.Category}}</p>
                         <p>Last Reply: {{.LastReplyUser.String}}</p>
                     </div>
