@@ -575,6 +575,7 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 	sortOrder := r.URL.Query().Get("sort")
 	likesOrder := r.URL.Query().Get("likes")
+	dislikesOrder := r.URL.Query().Get("dislikes")
 	repliesOrder := r.URL.Query().Get("replies")
 	pageParam := r.URL.Query().Get("page")
 	pageSizeParam := r.URL.Query().Get("pageSize")
@@ -627,6 +628,9 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if likesOrder != "" {
 		orderByClause = append(orderByClause, "l.Likes "+likesOrder)
+	}
+	if dislikesOrder != "" {
+		orderByClause = append(orderByClause, "l.Dislikes "+dislikesOrder)
 	}
 	if repliesOrder != "" {
 		orderByClause = append(orderByClause, "c.RepliesCount "+repliesOrder)
