@@ -163,7 +163,7 @@ h3 {
 }
 
 /* Specifically style the sorting dropdowns to distinguish them */
-#time-filter, #likes-filter {
+#time-filter, #likes-filter, #dislikes-filter {
     width: 15%; /* Width for sorting dropdowns */
     font-size: 16px; /* Font size for category dropdown */
     padding: 3px; /* Padding inside dropdowns */
@@ -171,7 +171,7 @@ h3 {
 }
 
 /* Style for other dropdowns */
-#category-filter {
+#category-filter, #replies-filter {
     width: 15%; /* Width for sorting dropdowns */
     font-size: 16px; /* Font size for category dropdown */
     padding: 3px; /* Padding inside dropdowns */
