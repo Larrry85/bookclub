@@ -55,7 +55,7 @@ if you are logged in:
 - tag users in posts
 - like/dislike post
 - like/dislike comments
-- filter by time/likes/category/replies
+- filter by time/likes/dislike/category/replies
 - delete posts
 
 ## My Page / need to be logged in
