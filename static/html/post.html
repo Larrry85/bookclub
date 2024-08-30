@@ -93,11 +93,18 @@
                 </select>
 
                 {{if .Authenticated}}
-                   <label for="likes-filter">Likes:</label>
+                   <br><label for="likes-filter">Likes:</label>
                     <select id="likes-filter" name="likes">
                     <option value="">All</option>
                     <option value="asc">Least Likes</option>
                     <option value="desc">Most Likes</option>
+                    </select>
+
+                    <label for="dislikes-filter">Dislikes:</label>
+                    <select id="dislikes-filter" name="dislikes">
+                        <option value="">All</option>
+                        <option value="asc">Least Dislikes</option>
+                        <option value="desc">Most Dislikes</option>
                     </select>
 
                    <label for="time-filter">Time:</label>
