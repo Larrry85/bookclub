@@ -69,10 +69,11 @@ type PageData struct {
 }
 
 type FilterParams struct {
-	Category     string
-	SortOrder    string
-	LikesOrder   string
-	RepliesOrder string
+	Category      string
+	SortOrder     string
+	LikesOrder    string
+	RepliesOrder  string
+	DislikesOrder string
 }
 
 // Reply represents a reply to a post with user information.
@@ -739,10 +740,11 @@ func FilterPostHandler(w http.ResponseWriter, r *http.Request) {
 		Authenticated: authenticated,
 		Username:      username,
 		Filter: FilterParams{
-			Category:     category,
-			SortOrder:    sortOrder,
-			LikesOrder:   likesOrder,
-			RepliesOrder: repliesOrder,
+			Category:      category,
+			SortOrder:     sortOrder,
+			LikesOrder:    likesOrder,
+			RepliesOrder:  repliesOrder,
+			DislikesOrder: dislikesOrder,
 		},
 	}
 
