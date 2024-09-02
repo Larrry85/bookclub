@@ -99,7 +99,7 @@ When you have registered you will get a confirmation email from literary.lions.v
 
 Here are 2 email addresses you can test the forum with
 
-Email: lionsreviewer1@gmail.com
+Email: lionsreviewer1@gmail.com  
 Password: Reviewer1-
 
 Email: lionsreviewer2@gmail.com  
