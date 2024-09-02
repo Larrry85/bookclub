@@ -1,7 +1,6 @@
 # Literary Lions Forum
 
-A web forum for Literary Lions allowing users to communicate, associate categories with posts, like/dislike posts & comments, and filter posts.
-Test
+A web forum for Literary Lions. Users can post & comment, view posts & comments, like or dislike posts & comments, and filter posts.
 
 
 ## Before starting the program
@@ -14,14 +13,14 @@ sudo apt update
 sudo apt install sqlite3
 ```
 
-- HOW TO USE SQLite
+HOW TO USE SQLite
 
-Open SQLite Command Line Interface:
+Open SQLite Command Line Interface (split the terminal window):
 ```
 sqlite3 user.db
 ```
 
-- Basic SQLite Commands:
+Basic SQLite Commands:
 
 View All Tables:
 ```
@@ -51,9 +50,9 @@ Run the Docker Container:
 sudo docker run -p 8080:8080 literary-lions
 ```
 
-- HOW TO USE Docker
+HOW TO USE Docker
 
-View Running Containers (split terminal window):
+View Running Containers (split the terminal window):
 ```
 sudo docker ps
 ```
@@ -77,75 +76,81 @@ sqlitebrowser
 ```
 
 
-## starting the program
+## Starting the program
 
-by entering 
+Type in terminal window 
 ```
 go run .
 ```
 
-a server will start at localhost:8080.
-if you enter localhost:8080 in youre web browser you will enter our Literary Lions forum.
+A server will start at localhost:8080.
+If you type localhost:8080 in your web browser our Literary Lions forum will open.
 
 
 ## Register
 
-you can register by entering 
-- Username
-- Email
+You can register by entering 
+
 - Password
+- Email
+- Username
   
-when you have registered you will get a confirmation email from literary.lions.verf@gmail.com.
+When you have registered you will get a confirmation email from literary.lions.verf@gmail.com.
 
-here are 2 email you can test with
+Here are 2 email addresses you can test the forum with
 
-Email: lionsreviewer1@gmail.com \
-Password: Reviewer1- \
+Email: lionsreviewer1@gmail.com
+Password: Reviewer1-
+
 Email: lionsreviewer2@gmail.com  
 Password: Reviewer2test
 
 
 ## Login
 
-you can now login using youre
+-You can now log in using your
 
 - Email
 - Password
 
-if you dont remenber youre password you can click the reset password link below login.
-then you can enter youre email and literary.lions.verf@gmail.com will send you a email with a reset password link.
-click the link and you will get to a page where you can input youre new password
+If you don't remember your password you can click on the reset password link below login form.
+Then you can enter your email and literary.lions.verf@gmail.com will send you an email with a reset password link.
+Click the link and you will get to a page where you can input your new password.
 
 
 ## Forum
 
-if you are not logged in you can:
-- filter by category and replies
+If you are not logged in you can
+
+- filter posts by category and replies
 - read posts and comments 
 
-if you are logged in:
+If you are logged in you can
+
 - create posts
 - reply on posts
-- edit posts
-- edit replies
+- edit your post
+- edit your reply
 - tag users in posts
-- like/dislike post
+- like/dislike posts
 - like/dislike comments
-- filter by time/likes/dislike/category/replies
-- delete posts
+- filter posts by category/replies/likes/dislikes/time
+- delete your post
 
 ## My Page / need to be logged in
 
-here you can see youre:
-- Username
-- Email
-- number of likes
-- number of dislikes
-- Number of Comments
-- Number of posts
-- delete accaunt
+Here you can see your
+
+- username
+- email
+- number of posts you have liked
+- number of posts you have disliked
+- Number of comments you have replied
+- Number of posts you have posted
+
+And delete your account.
 
 ## My Posts / need to be logged in
 
-here you can see all youre posts and likes and can click on them to get you to the post
+Here you can see all your posts and likes, and if you click on them the post opens.
 
