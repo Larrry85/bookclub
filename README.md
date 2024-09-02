@@ -108,7 +108,7 @@ Password: Reviewer2test
 
 ## Login
 
--You can now log in using your
+You can now log in using your
 
 - Email
 - Password
