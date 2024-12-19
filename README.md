@@ -2,7 +2,6 @@
 
 A web forum for Literary Lions. Users can post & comment, view posts & comments, like or dislike posts & comments, and filter posts.
 
-
 ## Before starting the program
 
 - Instal Golang
@@ -86,6 +85,7 @@ go run .
 A server will start at localhost:8080.
 If you type localhost:8080 in your web browser our Literary Lions forum will open.
 
+![Screenshot](bookclub.png)
 
 ## Register
 
