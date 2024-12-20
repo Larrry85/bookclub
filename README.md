@@ -153,4 +153,3 @@ And delete your account.
 ## My Posts / need to be logged in
 
 Here you can see all your posts and likes, and if you click on them the post opens.
-
